@@ -2,6 +2,7 @@
 // import the API.
 // See xxx for the javadocs.
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 import bc.*;
 
@@ -11,6 +12,8 @@ public class Player {
 	static ArrayList<Unit> blueprints;
 	static int workerCount;
 	static Team enemy;
+	static Navigation nav;
+	static Hashtable<Integer, RobotMemory> robotMemory;
 
 	public static boolean tryAndBuild(int workerId, UnitType type) {
 		for (Direction direction : Direction.values()) {
@@ -53,9 +56,13 @@ public class Player {
 	}
 
 	public static void main(String[] args) {
-
 		// Connect to the manager, starting the game
 		gc = new GameController();
+
+		robotMemory = new Hashtable<Integer, RobotMemory>();
+		nav = new Navigation(gc.startingMap(gc.planet()));
+
+		gc.nextTurn();
 
 		if (gc.team() == Team.Red) {
 			enemy = Team.Blue;
@@ -70,6 +77,9 @@ public class Player {
 				break;
 			}
 		}
+		
+		gc.nextTurn();
+		
 		for (int index = 0; index < startingWorkers.size(); index++) {
 			Unit worker = startingWorkers.get(index);
 			tryAndReplicate(worker.id());
@@ -79,6 +89,11 @@ public class Player {
 
 		while (true) {
 			VecUnit units = gc.myUnits();
+			for (int index = 0; index < units.size(); index++) {
+				if (!robotMemory.contains(units.get(index).id())) {
+					robotMemory.put(units.get(index).id(), new RobotMemory());
+				}
+			}
 			organizeUnits(units);
 
 			for (int index = 0; index < units.size(); index++) {
@@ -121,13 +136,41 @@ public class Player {
 			VecUnit foes = gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.attackRange(), enemy);
 			if (unit.attackHeat() < 10) {
 				for (int index = 0; index < foes.size(); index++) {
-					if(gc.canAttack(unit.id(), foes.get(index).id())) {
+					if (gc.canAttack(unit.id(), foes.get(index).id())) {
 						gc.attack(unit.id(), foes.get(index).id());
 						break;
 					}
 				}
 			}
-			moveRandom(unit);
+			VecUnit startingUnits = gc.startingMap(Planet.Earth).getInitial_units();
+			Location target = null;
+			for (int index = 0; index < startingUnits.size(); index++) {
+				if (startingUnits.get(index).team() == enemy && (target == null || Math.random() > .5)) {
+					target = startingUnits.get(index).location();
+				}
+			}
+
+			if (robotMemory.get(unit.id()).currentTarget == null) {
+				robotMemory.get(unit.id()).currentTarget = target.mapLocation();
+				robotMemory.get(unit.id()).pathToTarget = nav.getPathToDest(unit.location().mapLocation(),
+						target.mapLocation());
+			}
+
+			if (unit.movementHeat() < 10 && robotMemory.get(unit.id()).pathToTarget != null && robotMemory.get(unit.id()).reachedDest == false) {
+				Direction toMove = nav.directionTowards(unit.location().mapLocation(),
+						robotMemory.get(unit.id()).pathToTarget.pop());
+
+				System.out.println("Target is " + target);
+				if (toMove == null) {
+					System.out.println("Trying to move to null location.");
+					return;
+				}
+				if (gc.canMove(unit.id(), toMove)) {
+					gc.moveRobot(unit.id(), toMove);
+				}
+			} else if(robotMemory.get(unit.id()).reachedDest) {
+				Player.moveRandom(unit);
+			}
 		}
 	}
 
@@ -152,10 +195,13 @@ public class Player {
 				built = true;
 			}
 		}
-		if (workerCount < 3 && !built) {
+		if (workerCount < 5 && !built) {
 			Player.tryAndReplicate(id);
 		} else if (!built && !tryAndHarvest(id)) {
 			moveRandom(unit);
+			if (gc.karbonite() > 50) {
+				Player.tryAndBuild(unit.id(), UnitType.Factory);
+			}
 		}
 
 	}
