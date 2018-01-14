@@ -156,6 +156,9 @@ public class Player {
 						target.mapLocation());
 			}
 
+			
+			// reachedDest is never changed so pathToTarget could be empty and then 
+			// pop will cause this to crash
 			if (unit.movementHeat() < 10 && robotMemory.get(unit.id()).pathToTarget != null && robotMemory.get(unit.id()).reachedDest == false) {
 				Direction toMove = nav.directionTowards(unit.location().mapLocation(),
 						robotMemory.get(unit.id()).pathToTarget.pop());
