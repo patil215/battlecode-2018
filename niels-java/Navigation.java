@@ -11,19 +11,9 @@ import bc.*;
  */
 
 public class Navigation {
-	MapLocation[][] prevNodes;
-	int[][] distances;
-	PlanetMap map;
-
-	private class Tuple<A, B> {
-		public A x;
-		public B y;
-
-		public Tuple(A x, B y) {
-			this.x = x;
-			this.y = y;
-		}
-	}
+	private static MapLocation[][] prevNodes;
+	private static int[][] distances;
+	static PlanetMap map;
 
 	public Direction directionTowards(MapLocation start, MapLocation end) {
 		if (start.getX() < end.getX() && start.getY() < end.getY()) {
@@ -70,7 +60,7 @@ public class Navigation {
 		}
 	}
 
-	private void bfsFromPoint(MapLocation start) {
+	private static void bfsFromPoint(MapLocation start) {
 		Queue<Tuple<MapLocation, Integer>> points = new ArrayDeque<Tuple<MapLocation, Integer>>();
 		points.add(new Tuple<MapLocation, Integer>(start, 0));
 		prevNodes = new MapLocation[(int) map.getWidth()][(int) map.getHeight()];
@@ -105,7 +95,7 @@ public class Navigation {
 		this.map = map;
 	}
 
-	public Deque<MapLocation> getPathToDest(MapLocation start, MapLocation end) {
+	public static Deque<MapLocation> getPathToDest(MapLocation start, MapLocation end) {
 		bfsFromPoint(start);
 		Deque<MapLocation> path = new ArrayDeque<MapLocation>();
 		MapLocation current = end;
