@@ -68,7 +68,6 @@ public class Player {
 
 	private static void InitialTurns() {
 		gc.nextTurn();
-
 		VecUnit startingWorkers = gc.units();
 		for (int index = 0; index < startingWorkers.size(); index++) {
 			Unit worker = startingWorkers.get(index);

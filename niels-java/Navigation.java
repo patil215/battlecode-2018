@@ -76,12 +76,13 @@ public class Navigation {
 					}
 					if (map.onMap(location) && map.isPassableTerrainAt(location) != 0 && location.getX() > 0
 							&& location.getY() > 0) {
-						if (((distances[location.getX() - 1][location.getY() - 1] == 0)
-								|| distances[location.getX() - 1][location.getY() - 1] > current.y + 1)) {
+						// the coordinates are not 1-indexed
+						if (((distances[location.getX()][location.getY()] == 0)
+								|| distances[location.getX()][location.getY()] > current.y + 1)) {
 
 							points.add(new Tuple<MapLocation, Integer>(location, current.y + 1));
-							distances[location.getX() - 1][location.getY() - 1] = current.y + 1;
-							prevNodes[location.getX() - 1][location.getY() - 1] = current.x;
+							distances[location.getX()][location.getY()] = current.y + 1;
+							prevNodes[location.getX()][location.getY()] = current.x;
 						}
 					}
 				}
@@ -100,12 +101,12 @@ public class Navigation {
 		Deque<MapLocation> path = new ArrayDeque<MapLocation>();
 		MapLocation current = end;
 		while (current.getX() != start.getX() || current.getY() != start.getY()) {
-			if (prevNodes[current.getX() - 1][current.getY() - 1] == null) {
+			if (prevNodes[current.getX()][current.getY()] == null) {
 				System.out.println("No path found");
 				return null;
 			} else {
 				path.push(current);
-				current = prevNodes[current.getX() - 1][current.getY() - 1];
+				current = prevNodes[current.getX()][current.getY()];
 			}
 		}
 		System.out.println("Path found");
