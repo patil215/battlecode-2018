@@ -31,6 +31,11 @@ public class RangerController {
 						target.mapLocation());
 			}
 
+			if (Player.robotMemory.get(unit.id()).pathToTarget != null
+					&& Player.robotMemory.get(unit.id()).pathToTarget.size() == 0) {
+				Player.robotMemory.get(unit.id()).reachedDest = true;
+			}
+
 			if (unit.movementHeat() < 10 && Player.robotMemory.get(unit.id()).pathToTarget != null
 					&& Player.robotMemory.get(unit.id()).reachedDest == false) {
 				Direction toMove = Player.nav.directionTowards(unit.location().mapLocation(),

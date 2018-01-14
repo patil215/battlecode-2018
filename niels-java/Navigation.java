@@ -76,7 +76,6 @@ public class Navigation {
 					}
 					if (map.onMap(location) && map.isPassableTerrainAt(location) != 0 && location.getX() > 0
 							&& location.getY() > 0) {
-						// the coordinates are not 1-indexed
 						if (((distances[location.getX()][location.getY()] == 0)
 								|| distances[location.getX()][location.getY()] > current.y + 1)) {
 
