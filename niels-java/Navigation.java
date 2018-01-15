@@ -10,7 +10,7 @@ import bc.*;
 public class Navigation {
 	private int[][] distances; 
 	private final PlanetMap map;
-  private final Planet planet;
+	private final Planet planet;
 	private Set<Point> targets;
 
 	private class Tuple<A, B> {
@@ -25,7 +25,7 @@ public class Navigation {
 
 	private static final Map<Direction, Point> createDirToDispMap() {
 		EnumMap<Direction, Point> map = 
-      new EnumMap<Direction, Point>(Direction.class);
+			new EnumMap<Direction, Point>(Direction.class);
 		map.put(Direction.Northeast, new Point(1, 1));
 		map.put(Direction.East, new Point(1, 0));
 		map.put(Direction.Southeast, new Point(1, -1));
@@ -100,39 +100,39 @@ public class Navigation {
 				distances[i][j] = Integer.MAX_VALUE;
 			}
 		}
-    recalcDistanceMap();
+		recalcDistanceMap();
 	}
 
 	public Navigation(PlanetMap map, List<Point> targets) {
 		this.map = map;
-    this.planet = map.getPlanet();
+		this.planet = map.getPlanet();
 		this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
 		this.targets = new HashSet<>(targets);
 	}
 
 
 	public Direction getNextDirection(MapLocation start) {
-    int minDist = Integer.MAX_VALUE;
-    Direction next = Direction.Center;
-    for(Direction dir : Direction.values()) {
-      Point delta = dirToDisp.get(dir);
-      int newX = start.getX();
-      int newY = start.getY();
-      MapLocation newLoc = new MapLocation(planet, newX, newY);
-      if(map.onMap(newLoc) && distances[newX][newY] < minDist) {
-        next = dir;
-        minDist = distances[newX][newY];
-      }
-    }
-    return next;
+		int minDist = Integer.MAX_VALUE;
+		Direction next = Direction.Center;
+		for(Direction dir : Direction.values()) {
+			Point delta = dirToDisp.get(dir);
+			int newX = start.getX();
+			int newY = start.getY();
+			MapLocation newLoc = new MapLocation(planet, newX, newY);
+			if(map.onMap(newLoc) && distances[newX][newY] < minDist) {
+				next = dir;
+				minDist = distances[newX][newY];
+			}
+		}
+		return next;
 	}
 
-  public void addTarget(MapLocation pos) {
-    targets.add(new Point(pos.getX(), pos.getY()));
-  }
+	public void addTarget(MapLocation pos) {
+		targets.add(new Point(pos.getX(), pos.getY()));
+	}
 
 
-  public void removeTarget(MapLocation pos) {
-    targets.remove(new Point(pos.getX(), pos.getY()));
-  }
+	public void removeTarget(MapLocation pos) {
+		targets.remove(new Point(pos.getX(), pos.getY()));
+	}
 }
