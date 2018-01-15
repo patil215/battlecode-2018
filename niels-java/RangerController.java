@@ -47,27 +47,14 @@ public class RangerController {
 			}
 		}
 
-		if (Player.robotMemory.get(unit.id()).currentTarget == null) {
-			Player.robotMemory.get(unit.id()).currentTarget = target.mapLocation();
-			Player.robotMemory.get(unit.id()).pathToTarget = Player.nav.getPathToDest(unit.location().mapLocation(),
-					target.mapLocation());
-		}
+		if (unit.movementHeat() < 10) {
+			Direction toMove = Player.armyNav.getNextDirection(unit.location().mapLocation());
 
-		if (Player.robotMemory.get(unit.id()).pathToTarget != null
-				&& Player.robotMemory.get(unit.id()).pathToTarget.size() == 0) {
-			Player.robotMemory.get(unit.id()).reachedDest = true;
-		}
-
-		if (unit.movementHeat() < 10 && Player.robotMemory.get(unit.id()).pathToTarget != null
-				&& Player.robotMemory.get(unit.id()).reachedDest == false) {
-			Direction toMove = Player.nav.directionTowards(unit.location().mapLocation(),
-					Player.robotMemory.get(unit.id()).pathToTarget.pop());
-
-			System.out.println("Target is " + target);
 			if (toMove == null) {
 				System.out.println("Trying to move to null location.");
 				return;
 			}
+			
 			if (Player.gc.canMove(unit.id(), toMove)) {
 				Player.gc.moveRobot(unit.id(), toMove);
 			}

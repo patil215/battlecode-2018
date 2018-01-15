@@ -20,9 +20,9 @@ public class Player {
 
 	private static List<Point> getEnemyUnits(VecUnit initUnits) {
 		List<Point> targets = new ArrayList<>();
-		for(int i = 0; i < initUnits.size(); i++) {
+		for (int i = 0; i < initUnits.size(); i++) {
 			Unit unit = initUnits.get(i);
-			if(unit.team() == enemy) {
+			if (unit.team() == enemy) {
 				MapLocation unitLoc = unit.location().mapLocation();
 				targets.add(new Point(unitLoc.getX(), unitLoc.getY()));
 			}
@@ -35,11 +35,11 @@ public class Player {
 		long maxX = map.getWidth();
 		long maxY = map.getHeight();
 		List<Point> targets = new ArrayList<>();
-		for(int x = 0; x < maxX; x++) {
-			for(int y = 0; y < maxY; y++) {
+		for (int x = 0; x < maxX; x++) {
+			for (int y = 0; y < maxY; y++) {
 				MapLocation loc = new MapLocation(planet, x, y);
-				if(map.initialKarboniteAt(loc) > 0) {
-					targets.add(new Point(x, y)); 
+				if (map.initialKarboniteAt(loc) > 0) {
+					targets.add(new Point(x, y));
 				}
 			}
 		}
@@ -57,11 +57,27 @@ public class Player {
 		PlanetMap map = gc.startingMap(gc.planet());
 		armyNav = new Navigation(map, getEnemyUnits(map.getInitial_units()));
 		workerNav = new Navigation(map, getInitialKarb(map));
-		
+
 		InitialTurns();
 
 		while (true) {
 			VecUnit units = gc.myUnits();
+			VecUnit foes = gc.senseNearbyUnitsByTeam(new MapLocation(gc.planet(), 1, 1), 250, Utils.getEnemyTeam());
+
+			for (Point loc : new HashSet<Point>(armyNav.getTargets())) {
+				MapLocation target = new MapLocation(gc.planet(), loc.x, loc.y);
+				if (gc.canSenseLocation(target)
+						&& (!gc.hasUnitAtLocation(target) || gc.senseUnitAtLocation(target).team() == gc.team())) {
+					armyNav.removeTarget(target);
+				}
+			}
+
+			for (int index = 0; index < foes.size(); index++) {
+				armyNav.addTarget(foes.get(index).location().mapLocation());
+			}
+
+			armyNav.recalcDistanceMap();
+
 			for (int index = 0; index < units.size(); index++) {
 				if (!robotMemory.containsKey(units.get(index).id())) {
 					robotMemory.put(units.get(index).id(), new RobotMemory());
