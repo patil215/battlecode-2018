@@ -1,27 +1,18 @@
+import bc.Direction;
+import bc.MapLocation;
+import bc.Planet;
+import bc.PlanetMap;
+
+import java.awt.*;
 import java.util.*;
-import java.awt.Point;
-
-import bc.*;
-
-/*
- * TODO: Fix / make work
- */
+import java.util.List;
+import java.util.Queue;
 
 public class Navigation {
 	private int[][] distances; 
 	private final PlanetMap map;
 	private final Planet planet;
 	private Set<Point> targets;
-
-	private class Tuple<A, B> {
-		public A x;
-		public B y;
-
-		public Tuple(A x, B y) {
-			this.x = x;
-			this.y = y;
-		}
-	}
 
 	private static final Map<Direction, Point> createDirToDispMap() {
 		EnumMap<Direction, Point> map = 
@@ -50,29 +41,11 @@ public class Navigation {
 
 	public static final Map<Point, Direction> dispToDir = createDispToDirMap();
 
-	private static int getDispTowards(int start, int end) {
-		if(start < end) {
-			return 1;
-		} else if(start == end) {
-			return 0;
-		}
-		return -1;
-	}
-
-	public Direction directionTowards(MapLocation start, MapLocation end) {
-		int dispX = getDispTowards(start.getX(), end.getX());
-		int dispY = getDispTowards(start.getY(), end.getY());
-		return dispToDir.get(new Point(dispX, dispY));
-	}
-
-	private Direction getDirection(int deltaX, int deltaY) {
-		return dispToDir.get(new Point(deltaX, deltaY));
-	}
-	
 	public void recalcDistanceMap() {
 		Queue<MapLocation> queue = new ArrayDeque<>();
 		for(Point target : targets) {
 			distances[target.x][target.y] = 0;
+			queue.add(new MapLocation(planet, target.x, target.y));
 		}
 		while(!queue.isEmpty()) {
 			MapLocation loc = queue.poll();
@@ -94,7 +67,7 @@ public class Navigation {
 		}
 	}
 
-	private void initializeDistances(VecUnit units) {
+	private void initializeDistances() {
 		for(int i = 0; i < distances.length; i++) {
 			for(int j = 0; j < distances[0].length; j++) {
 				distances[i][j] = Integer.MAX_VALUE;
@@ -108,6 +81,7 @@ public class Navigation {
 		this.planet = map.getPlanet();
 		this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
 		this.targets = new HashSet<>(targets);
+		initializeDistances();
 	}
 
 
@@ -116,8 +90,8 @@ public class Navigation {
 		Direction next = Direction.Center;
 		for(Direction dir : Direction.values()) {
 			Point delta = dirToDisp.get(dir);
-			int newX = start.getX();
-			int newY = start.getY();
+			int newX = start.getX() + delta.x;
+			int newY = start.getY() + delta.y;
 			MapLocation newLoc = new MapLocation(planet, newX, newY);
 			if(map.onMap(newLoc) && distances[newX][newY] < minDist) {
 				next = dir;
