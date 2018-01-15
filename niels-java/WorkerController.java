@@ -22,7 +22,7 @@ public class WorkerController {
 		}
 
 		// Try to replicate
-		if (Player.workerCount < MAX_NUMBER_WORKERS) {
+		if (CensusCounts.workerCount < MAX_NUMBER_WORKERS) {
 			Utils.tryAndReplicate(unit);
 		}
 

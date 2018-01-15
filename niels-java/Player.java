@@ -12,13 +12,10 @@ public class Player {
 
 	public static GameController gc;
 	static ArrayList<Unit> blueprints;
-	static int workerCount;
 	static Team enemy;
 	static Navigation workerNav;
 	static Navigation armyNav;
 	static HashMap<Integer, RobotMemory> robotMemory;
-	static int workerHarvesterCount;
-	static int workerBuilderCount;
 
 	private static List<Point> getEnemyUnits(VecUnit initUnits) {
 		List<Point> targets = new ArrayList<>();
@@ -93,7 +90,7 @@ public class Player {
 			Unit unit = units.get(index);
 			if (!robotMemory.containsKey(units.get(index).id())) {
 				RobotMemory memory = new RobotMemory();
-				if(Player.workerBuilderCount >= 2 && unit.unitType() == UnitType.Worker) {
+				if(CensusCounts.workerBuilderCount >= 2 && unit.unitType() == UnitType.Worker) {
 					memory.workerRole = RobotMemory.WorkerRole.HARVESTER;
 				}
 				robotMemory.put(unit.id(), memory);
@@ -146,20 +143,22 @@ public class Player {
 	}
 
 	private static void computeCensus(VecUnit units) {
-		workerCount = 0;
-		workerHarvesterCount=0;
-		workerBuilderCount=0;
+		CensusCounts.workerCount = 0;
+		CensusCounts.workerHarvesterCount = 0;
+		CensusCounts.workerBuilderCount = 0;
+
 		ArrayList<Unit> blueprints = new ArrayList<Unit>();
+
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
 			if (unit.unitType() == UnitType.Worker) {
-				workerCount++;
+				CensusCounts.workerCount++;
 				switch (Utils.getMemory(unit).workerRole) {
 					case HARVESTER:
-						Player.workerHarvesterCount++;
+						CensusCounts.workerHarvesterCount++;
 						break;
 					case BUILDER:
-						Player.workerBuilderCount++;
+						CensusCounts.workerBuilderCount++;
 						break;
 				}
 			}
