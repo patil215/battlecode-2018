@@ -79,5 +79,22 @@ public class Utils {
 			}
 		}
 		return null;
+	
+	}
+	public static Planet getLocationPlanet(Location loc) {
+		Planet planet = null;
+		for(Planet p : Planet.values()) {
+			if(loc.isOnPlanet(p)) {
+				planet = p;
+			}
+		}
+		return planet;
+	}
+
+	public static Team getEnemyTeam() {
+		if (Player.gc.team() == Team.Red) {
+			return Team.Blue;
+		}
+		return Team.Red;
 	}
 }

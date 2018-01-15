@@ -1,10 +1,12 @@
 
 // import the API.
 // See xxx for the javadocs.
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import bc.*;
+import java.util.*;
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Player {
 
@@ -12,8 +14,37 @@ public class Player {
 	static ArrayList<Unit> blueprints;
 	static int workerCount;
 	static Team enemy;
-	static Navigation nav;
+	static Navigation workerNav;
+	static Navigation armyNav;
 	static HashMap<Integer, RobotMemory> robotMemory;
+
+	private static List<Point> getEnemyUnits(VecUnit initUnits) {
+		List<Point> targets = new ArrayList<>();
+		for(int i = 0; i < initUnits.size(); i++) {
+			Unit unit = initUnits.get(i);
+			if(unit.team() == enemy) {
+				MapLocation unitLoc = unit.location().mapLocation();
+				targets.add(new Point(unitLoc.getX(), unitLoc.getY()));
+			}
+		}
+		return targets;
+	}
+
+	private static List<Point> getInitialKarb(PlanetMap map) {
+		Planet planet = map.getPlanet();
+		long maxX = map.getWidth();
+		long maxY = map.getHeight();
+		List<Point> targets = new ArrayList<>();
+		for(int x = 0; x < maxX; x++) {
+			for(int y = 0; y < maxY; y++) {
+				MapLocation loc = new MapLocation(planet, x, y);
+				if(map.initialKarboniteAt(loc) > 0) {
+					targets.add(new Point(x, y)); 
+				}
+			}
+		}
+		return targets;
+	}
 
 	public static void main(String[] args) {
 		// Connect to the manager, starting the game
@@ -21,14 +52,12 @@ public class Player {
 
 		robotMemory = new HashMap<Integer, RobotMemory>();
 
-		nav = new Navigation(gc.startingMap(gc.planet()));
+		enemy = Utils.getEnemyTeam();
 
-		if (gc.team() == Team.Red) {
-			enemy = Team.Blue;
-		} else {
-			enemy = Team.Red;
-		}
-
+		PlanetMap map = gc.startingMap(gc.planet());
+		armyNav = new Navigation(map, getEnemyUnits(map.getInitial_units()));
+		workerNav = new Navigation(map, getInitialKarb(map));
+		
 		InitialTurns();
 
 		while (true) {
