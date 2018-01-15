@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.awt.Point;
 
 import bc.*;
 
@@ -59,5 +60,14 @@ public class Utils {
 			Player.gc.moveRobot(unit.id(), nextMoves.get((int) (Math.random() * nextMoves.size())));
 		}
 	}
-
+  
+  public static Planet getLocationPlanet(Location loc) {
+    Planet planet = null;
+    for(Planet p : Planet.values()) {
+      if(loc.isOnPlanet(p)) {
+        planet = p;
+      }
+    }
+    return planet;
+  }
 }

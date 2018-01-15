@@ -1,8 +1,5 @@
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.Queue;
-import java.util.Stack;
+import java.util.*;
+import java.awt.Point;
 
 import bc.*;
 
@@ -11,104 +8,131 @@ import bc.*;
  */
 
 public class Navigation {
-	private static MapLocation[][] prevNodes;
-	private static int[][] distances;
-	static PlanetMap map;
+	private int[][] distances; 
+	private final PlanetMap map;
+  private final Planet planet;
+	private Set<Point> targets;
+
+	private class Tuple<A, B> {
+		public A x;
+		public B y;
+
+		public Tuple(A x, B y) {
+			this.x = x;
+			this.y = y;
+		}
+	}
+
+	private static final Map<Direction, Point> createDirToDispMap() {
+		EnumMap<Direction, Point> map = 
+      new EnumMap<Direction, Point>(Direction.class);
+		map.put(Direction.Northeast, new Point(1, 1));
+		map.put(Direction.East, new Point(1, 0));
+		map.put(Direction.Southeast, new Point(1, -1));
+		map.put(Direction.North, new Point(0, 1));
+		map.put(Direction.Center, new Point(0, 0));
+		map.put(Direction.South, new Point(0, -1));
+		map.put(Direction.Northwest, new Point(-1, 1));
+		map.put(Direction.West, new Point(-1, 0));
+		map.put(Direction.Southwest, new Point(-1, -1));
+		return map;
+	}
+
+	private static final Map<Direction, Point> dirToDisp = createDirToDispMap();
+
+	private static Map<Point, Direction> createDispToDirMap() {
+		HashMap<Point, Direction> map = new HashMap<>();
+		for(Direction dir : Direction.values()) {
+			map.put(dirToDisp.get(dir), dir);
+		}
+		return map;
+	}
+
+	public static final Map<Point, Direction> dispToDir = createDispToDirMap();
+
+	private static int getDispTowards(int start, int end) {
+		if(start < end) {
+			return 1;
+		} else if(start == end) {
+			return 0;
+		}
+		return -1;
+	}
 
 	public Direction directionTowards(MapLocation start, MapLocation end) {
-		if (start.getX() < end.getX() && start.getY() < end.getY()) {
-			return Direction.Northeast;
-		} else if (start.getX() < end.getX() && start.getY() == end.getY()) {
-			return Direction.East;
-		} else if (start.getX() < end.getX() && start.getY() > end.getY()) {
-			return Direction.Southeast;
-		} else if (start.getX() == end.getX() && start.getY() < end.getY()) {
-			return Direction.North;
-		} else if (start.getX() == end.getX() && start.getY() == end.getY()) {
-			return Direction.Center;
-		} else if (start.getX() == end.getX() && start.getY() > end.getY()) {
-			return Direction.South;
-		} else if (start.getX() > end.getX() && start.getY() < end.getY()) {
-			return Direction.Northwest;
-		} else if (start.getX() > end.getX() && start.getY() == end.getY()) {
-			return Direction.West;
-		} else if (start.getX() > end.getX() && start.getY() > end.getY()) {
-			return Direction.Southwest;
-		}
-		return null;
+		int dispX = getDispTowards(start.getX(), end.getX());
+		int dispY = getDispTowards(start.getY(), end.getY());
+		return dispToDir.get(new Point(dispX, dispY));
 	}
 
 	private Direction getDirection(int deltaX, int deltaY) {
-		if (deltaX == 1 && deltaY == 1) {
-			return Direction.Northeast;
-		} else if (deltaX == 1 && deltaY == 0) {
-			return Direction.East;
-		} else if (deltaX == 1 && deltaY == -1) {
-			return Direction.Southeast;
-		} else if (deltaX == 0 && deltaY == 1) {
-			return Direction.North;
-		} else if (deltaX == 0 && deltaY == -1) {
-			return Direction.South;
-		} else if (deltaX == -1 && deltaY == 1) {
-			return Direction.Northwest;
-		} else if (deltaX == -1 && deltaY == -0) {
-			return Direction.West;
-		} else if (deltaX == -1 && deltaY == -1) {
-			return Direction.Southwest;
-		} else {
-			return Direction.Center;
-		}
+		return dispToDir.get(new Point(deltaX, deltaY));
 	}
+	
+	public void recalcDistanceMap() {
+		Queue<MapLocation> queue = new ArrayDeque<>();
+		for(Point target : targets) {
+			distances[target.x][target.y] = 0;
+		}
+		while(!queue.isEmpty()) {
+			MapLocation loc = queue.poll();
+			int curDistance = distances[loc.getX()][loc.getY()];
+			for(Direction dir : Direction.values()) {
+				if(dir == Direction.Center) {
+					continue;
+				}
+				Point disp = dirToDisp.get(dir);
 
-	private static void bfsFromPoint(MapLocation start) {
-		Queue<Tuple<MapLocation, Integer>> points = new ArrayDeque<Tuple<MapLocation, Integer>>();
-		points.add(new Tuple<MapLocation, Integer>(start, 0));
-		prevNodes = new MapLocation[(int) map.getWidth()][(int) map.getHeight()];
-		distances = new int[(int) map.getWidth()][(int) map.getHeight()];
-		while (points.size() > 0) {
-			Tuple<MapLocation, Integer> current = points.remove();
-			for (int deltaX = -1; deltaX <= 1; deltaX++) {
-				for (int deltaY = -1; deltaY <= 1; deltaY++) {
-					MapLocation location = new MapLocation(current.x.getPlanet(), current.x.getX() + deltaX,
-							current.x.getY() + deltaY);
-					if (deltaX == 0 && deltaY == 0) {
-						continue;
-					}
-					if (map.onMap(location) && map.isPassableTerrainAt(location) != 0 && location.getX() > 0
-							&& location.getY() > 0) {
-						if (((distances[location.getX()][location.getY()] == 0)
-								|| distances[location.getX()][location.getY()] > current.y + 1)) {
-
-							points.add(new Tuple<MapLocation, Integer>(location, current.y + 1));
-							distances[location.getX()][location.getY()] = current.y + 1;
-							prevNodes[location.getX()][location.getY()] = current.x;
-						}
-					}
+				int newX = loc.getX() + disp.x;
+				int newY = loc.getY() + disp.y;
+				MapLocation newLocation = new MapLocation(planet, newX, newY);
+				if(map.onMap(newLocation) && distances[newX][newY] > curDistance + 1) {
+					distances[newX][newY] = curDistance + 1;
+					queue.add(newLocation);
 				}
 			}
 		}
 	}
 
-	public Navigation(PlanetMap map) {
-		prevNodes = null;
-		distances = null;
-		this.map = map;
-	}
-
-	public static Deque<MapLocation> getPathToDest(MapLocation start, MapLocation end) {
-		bfsFromPoint(start);
-		Deque<MapLocation> path = new ArrayDeque<MapLocation>();
-		MapLocation current = end;
-		while (current.getX() != start.getX() || current.getY() != start.getY()) {
-			if (prevNodes[current.getX()][current.getY()] == null) {
-				System.out.println("No path found");
-				return null;
-			} else {
-				path.push(current);
-				current = prevNodes[current.getX()][current.getY()];
+	private void initializeDistances(VecUnit units) {
+		for(int i = 0; i < distances.length; i++) {
+			for(int j = 0; j < distances[0].length; j++) {
+				distances[i][j] = Integer.MAX_VALUE;
 			}
 		}
-		System.out.println("Path found");
-		return path;
+    recalcDistanceMap();
 	}
+
+	public Navigation(PlanetMap map, List<Point> targets) {
+		this.map = map;
+    this.planet = map.getPlanet();
+		this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
+		this.targets = new HashSet<>(targets);
+	}
+
+
+	public Direction getNextDirection(MapLocation start) {
+    int minDist = Integer.MAX_VALUE;
+    Direction next = Direction.Center;
+    for(Direction dir : Direction.values()) {
+      Point delta = dirToDisp.get(dir);
+      int newX = start.getX();
+      int newY = start.getY();
+      MapLocation newLoc = new MapLocation(planet, newX, newY);
+      if(map.onMap(newLoc) && distances[newX][newY] < minDist) {
+        next = dir;
+        minDist = distances[newX][newY];
+      }
+    }
+    return next;
+	}
+
+  public void addTarget(MapLocation pos) {
+    targets.add(new Point(pos.getX(), pos.getY()));
+  }
+
+
+  public void removeTarget(MapLocation pos) {
+    targets.remove(new Point(pos.getX(), pos.getY()));
+  }
 }
