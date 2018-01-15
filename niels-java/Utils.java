@@ -4,7 +4,6 @@ import bc.*;
 
 public class Utils {
 
-		
 	public static boolean tryAndBuild(int workerId, UnitType type) {
 		for (Direction direction : Direction.values()) {
 			if (Player.gc.canBlueprint(workerId, type, direction)) {
@@ -44,7 +43,7 @@ public class Utils {
 		}
 		return false;
 	}
-	
+
 	public static void moveRandom(Unit unit) {
 		if (unit.movementHeat() >= 10) {
 			return;
@@ -60,4 +59,25 @@ public class Utils {
 		}
 	}
 
+	public static Direction fleeFrom(Unit ours, Unit foe) {
+		Direction away = bc
+				.bcDirectionOpposite(ours.location().mapLocation().directionTo(foe.location().mapLocation()));
+		if (Player.gc.canMove(ours.id(), away)) {
+			return away;
+		} else {
+			Direction left = bc.bcDirectionRotateLeft(away);
+			Direction right = bc.bcDirectionRotateRight(away);
+			for (int count = 0; count < 4; count++) {
+				if (Player.gc.canMove(ours.id(), left)) {
+					return left;
+				}
+				if (Player.gc.canMove(ours.id(), right)) {
+					return right;
+				}
+				left = bc.bcDirectionRotateLeft(left);
+				right = bc.bcDirectionRotateRight(right);
+			}
+		}
+		return null;
+	}
 }
