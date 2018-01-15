@@ -1,6 +1,6 @@
-import java.util.ArrayList;
-
 import bc.*;
+
+import java.util.ArrayList;
 
 public class Utils {
 
@@ -24,10 +24,10 @@ public class Utils {
 		return false;
 	}
 
-	public static boolean tryAndReplicate(int workerId) {
+	public static boolean tryAndReplicate(Unit worker) {
 		for (Direction direction : Direction.values()) {
-			if (Player.gc.canReplicate(workerId, direction)) {
-				Player.gc.replicate(workerId, direction);
+			if (Player.gc.canReplicate(worker.id(), direction)) {
+				Player.gc.replicate(worker.id(), direction);
 				return true;
 			}
 		}
@@ -36,7 +36,7 @@ public class Utils {
 
 	public static boolean tryAndHarvest(Unit worker) {
 		int workerId = worker.id();
-		if (worker.abilityHeat() < 10) {
+		if (worker.abilityHeat() < Constants.ABILITY_HEAT) {
 			for (Direction direction : Direction.values()) {
 				if (Player.gc.canHarvest(workerId, direction)) {
 					Player.gc.harvest(workerId, direction);
@@ -83,6 +83,28 @@ public class Utils {
 		}
 		return null;
 
+	}
+
+	/**
+	 * Returns the nearest enemy unit that can deal damage and is within the passed in unit's line of sight.
+	 */
+	public static Unit getMostDangerousNearbyEnemy(Unit unit) {
+		VecUnit nearbyEnemies =
+				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(), Player.enemy);
+
+		Unit threat = null;
+		for (int i = 0; i < nearbyEnemies.size(); i++) {
+			Unit foe = nearbyEnemies.get(i);
+			MapLocation unitLocation = unit.location().mapLocation();
+			if ((unitLocation.distanceSquaredTo(foe.location().mapLocation()) < unit.attackRange()
+					&& (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight
+					|| foe.unitType() == UnitType.Ranger))
+					&& (threat == null || unitLocation.distanceSquaredTo(foe.location().mapLocation()) < unitLocation
+					.distanceSquaredTo(threat.location().mapLocation()))) {
+				threat = foe;
+			}
+		}
+		return threat;
 	}
 
 	public static Planet getLocationPlanet(Location loc) {

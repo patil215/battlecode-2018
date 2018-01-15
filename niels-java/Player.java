@@ -93,8 +93,8 @@ public class Player {
 			Unit unit = units.get(index);
 			if (!robotMemory.containsKey(units.get(index).id())) {
 				RobotMemory memory = new RobotMemory();
-				if(Player.workerBuilderCount>=2 && unit.unitType() == UnitType.Worker) {
-					memory.isHarvester = true;
+				if(Player.workerBuilderCount >= 2 && unit.unitType() == UnitType.Worker) {
+					memory.workerRole = RobotMemory.WorkerRole.HARVESTER;
 				}
 				robotMemory.put(unit.id(), memory);
 			}
@@ -139,8 +139,7 @@ public class Player {
 		gc.nextTurn();
 
 		for (int index = 0; index < startingWorkers.size(); index++) {
-			Unit worker = startingWorkers.get(index);
-			Utils.tryAndReplicate(worker.id());
+			Utils.tryAndReplicate(startingWorkers.get(index));
 		}
 
 		gc.nextTurn();
@@ -155,10 +154,13 @@ public class Player {
 			Unit unit = units.get(index);
 			if (unit.unitType() == UnitType.Worker) {
 				workerCount++;
-				if(Utils.getMemory(unit).isHarvester) {
-					Player.workerHarvesterCount++;
-				} else {
-					Player.workerBuilderCount++;
+				switch (Utils.getMemory(unit).workerRole) {
+					case HARVESTER:
+						Player.workerHarvesterCount++;
+						break;
+					case BUILDER:
+						Player.workerBuilderCount++;
+						break;
 				}
 			}
 			if ((unit.unitType() == UnitType.Factory || unit.unitType() == UnitType.Rocket)

@@ -41,6 +41,7 @@ public class Navigation {
 	public static final Map<Point, Direction> dispToDir = createDispToDirMap();
 
 	public void recalcDistanceMap() {
+		long start = System.currentTimeMillis();
 		for (int i = 0; i < distances.length; i++) {
 			for (int j = 0; j < distances[0].length; j++) {
 				distances[i][j] = Integer.MAX_VALUE;
@@ -69,6 +70,8 @@ public class Navigation {
 				}
 			}
 		}
+		long end = System.currentTimeMillis();
+		System.out.println("took " + (end - start) + " milliseconds to calcluate distance map");
 	}
 
 
@@ -80,9 +83,16 @@ public class Navigation {
 		recalcDistanceMap();
 	}
 
+	/**
+	 * Returns a direction to move according to a start location.
+	 *
+	 * Tries all possible directions, returning the best one we can move towards.
+	 *
+	 * If no direction can be moved to (ex. all blocked), returns null;
+	 */
 	public Direction getNextDirection(MapLocation start) {
 		int minDist = Integer.MAX_VALUE;
-		Direction next = Direction.Center;
+		Direction next = null;
 		for (Direction dir : Direction.values()) {
 			Point delta = dirToDisp.get(dir);
 			int newX = start.getX() + delta.x;

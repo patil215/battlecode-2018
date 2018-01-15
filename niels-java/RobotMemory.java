@@ -1,6 +1,9 @@
-import java.util.Deque;
-
-import bc.*;
 public class RobotMemory {
-	public boolean isHarvester;
+
+	public enum WorkerRole {
+		HARVESTER,
+		BUILDER;
+	}
+
+	public WorkerRole workerRole = WorkerRole.BUILDER;
 }

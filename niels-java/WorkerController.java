@@ -3,34 +3,65 @@ import bc.Unit;
 import bc.UnitType;
 
 public class WorkerController {
+
+	private static final int FACTORY_BUILD_KARB_THRESHOLD = 130;
+	private static final int MAX_NUMBER_WORKERS = 5;
+
 	static void moveWorker(Unit unit) {
-		int id = unit.id();
-		boolean built = false;
-		for (Unit print : Player.blueprints) {
-			if (Player.gc.canBuild(id, print.id())) {
-				Player.gc.build(id, print.id());
-				built = true;
-			}
+
+		// TODO maybe prioritize fleeing over building in certain cases
+		boolean buildingBlueprint = tryToBuildBlueprints(unit);
+		if (buildingBlueprint) {
+			return; // Nothing else to do
 		}
-		if (Player.workerCount < 5 && !built) {
-			Utils.tryAndReplicate(id);
-		} 
-		if (!built && !Utils.tryAndHarvest(unit)) {
-			if (Utils.getMemory(unit).isHarvester) {
-				Direction toMove = Player.workerNav.getNextDirection(unit.location().mapLocation());
-				if (toMove != null && Player.gc.canMove(unit.id(), toMove) && unit.movementHeat() < 10) {
+
+		// Try to flee from enemies
+		Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
+		if (nearbyEnemy != null) {
+			Utils.fleeFrom(unit, nearbyEnemy);
+		}
+
+		// Try to replicate
+		if (Player.workerCount < MAX_NUMBER_WORKERS) {
+			Utils.tryAndReplicate(unit);
+		}
+
+		switch (Utils.getMemory(unit).workerRole) {
+			case HARVESTER: {
+				// Move according to Dijkstra map
+				Direction toMove = Player.workerNav.getNextDirection((unit.location().mapLocation()));
+				if (toMove != null && unit.movementHeat() < Constants.MOVEMENT_HEAT) {
 					Player.gc.moveRobot(unit.id(), toMove);
-				} else {
-					Utils.moveRandom(unit);
 				}
-			} else {
-				Utils.moveRandom(unit);
+				break;
 			}
-			if (Player.gc.karbonite() > 50 && !Utils.getMemory(unit).isHarvester) {
-				Utils.tryAndBuild(unit.id(), UnitType.Factory);
+
+			case BUILDER: {
+				Utils.moveRandom(unit);
+				// Try to build factory
+				if (Player.gc.karbonite() > FACTORY_BUILD_KARB_THRESHOLD) {
+					Utils.tryAndBuild(unit.id(), UnitType.Factory);
+				}
+				break;
 			}
 		}
 
+		// Harvest any Karbonite in a square we're on TODO: maybe we want to harvest first
+		Utils.tryAndHarvest(unit);
+
+	}
+
+	/**
+	 * Tries to build a blueprint. Returns true if it finds one and begins building.
+	 */
+	private static boolean tryToBuildBlueprints(Unit unit) {
+		for (Unit blueprint : Player.blueprints) {
+			if (Player.gc.canBuild(unit.id(), blueprint.id())) {
+				Player.gc.build(unit.id(), blueprint.id());
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

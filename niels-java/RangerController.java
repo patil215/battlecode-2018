@@ -1,11 +1,4 @@
-import bc.Direction;
-import bc.Location;
-import bc.MapLocation;
-import bc.Planet;
-import bc.Unit;
-import bc.UnitType;
-import bc.VecUnit;
-import java.awt.Point;
+import bc.*;
 
 public class RangerController {
 
@@ -63,17 +56,9 @@ public class RangerController {
 
 	public static void combatMicro(Unit unit, VecUnit foes) {
 		Unit target = null;
-		Unit threat = null;
+		Unit threat = Utils.getMostDangerousNearbyEnemy(unit);
 		for (int index = 0; index < foes.size(); index++) {
 			Unit foe = foes.get(index);
-			MapLocation unitLocation = unit.location().mapLocation();
-			if ((unitLocation.distanceSquaredTo(foe.location().mapLocation()) < unit.attackRange()
-					&& (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight
-							|| foe.unitType() == UnitType.Ranger))
-					&& (threat == null || unitLocation.distanceSquaredTo(foe.location().mapLocation()) < unitLocation
-							.distanceSquaredTo(threat.location().mapLocation()))) {
-				threat = foe;
-			}
 			if (targetScore(unit, foe) < targetScore(unit, target)) {
 				target = foe;
 			}
