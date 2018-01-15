@@ -11,6 +11,14 @@ import java.util.HashMap;
 public class Player {
 
 	public static GameController gc;
+
+	private enum GameStage {
+		RUSH,
+		EVACUATE;
+	}
+
+	static GameStage gameStage;
+
 	static ArrayList<Unit> blueprints;
 	static Team enemy;
 	static Navigation workerNav;
@@ -48,6 +56,8 @@ public class Player {
 	public static void main(String[] args) {
 		// Connect to the manager, starting the game
 		gc = new GameController();
+		gameStage = GameStage.RUSH;
+		setupResearchQueue();
 
 		robotMemory = new HashMap<Integer, RobotMemory>();
 
@@ -83,6 +93,20 @@ public class Player {
 
 			MoveUnits(units);
 		}
+	}
+
+	private static void setupResearchQueue() {
+		gc.queueResearch(UnitType.Ranger); // Level 1 Ranger (ends at turn 25)
+		gc.queueResearch(UnitType.Worker); // Level 1 Worker (ends at turn 50)
+		gc.queueResearch(UnitType.Worker); // Level 2 Worker (ends at turn 125)
+		gc.queueResearch(UnitType.Worker); // Level 3 Worker (ends at turn 200)
+		gc.queueResearch(UnitType.Worker); // Level 4 Worker (ends at turn 275)
+		gc.queueResearch(UnitType.Rocket); // Level 1 Rocket (ends at turn 375)
+		gc.queueResearch(UnitType.Rocket); // Level 2 Rocket (ends at turn 475)
+		gc.queueResearch(UnitType.Rocket); // Level 3 Rocket (ends at turn 575)
+		gc.queueResearch(UnitType.Ranger); // Level 2 Ranger (ends at turn 675) TODO: adjust ranger to still attack even if it sees boi
+		gc.queueResearch(UnitType.Ranger); // Level 3 Ranger (ends at turn 775) TODO: sniping code
+		// TODO we have more space for research but we don't have any other units...
 	}
 
 	private static void initNewUnitMemories(VecUnit units) {
