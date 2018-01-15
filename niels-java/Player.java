@@ -17,6 +17,8 @@ public class Player {
 	static Navigation workerNav;
 	static Navigation armyNav;
 	static HashMap<Integer, RobotMemory> robotMemory;
+	static int workerHarvesterCount;
+	static int workerBuilderCount;
 
 	private static List<Point> getEnemyUnits(VecUnit initUnits) {
 		List<Point> targets = new ArrayList<>();
@@ -78,15 +80,24 @@ public class Player {
 
 			armyNav.recalcDistanceMap();
 
-			for (int index = 0; index < units.size(); index++) {
-				if (!robotMemory.containsKey(units.get(index).id())) {
-					robotMemory.put(units.get(index).id(), new RobotMemory());
-				}
-			}
+			initNewUnitMemories(units);
 
-			organizeUnits(units);
+			computeCensus(units);
 
 			MoveUnits(units);
+		}
+	}
+
+	private static void initNewUnitMemories(VecUnit units) {
+		for (int index = 0; index < units.size(); index++) {
+			Unit unit = units.get(index);
+			if (!robotMemory.containsKey(units.get(index).id())) {
+				RobotMemory memory = new RobotMemory();
+				if(Player.workerBuilderCount>=2 && unit.unitType() == UnitType.Worker) {
+					memory.isHarvester = true;
+				}
+				robotMemory.put(unit.id(), memory);
+			}
 		}
 	}
 
@@ -115,6 +126,9 @@ public class Player {
 		gc.nextTurn();
 
 		VecUnit startingWorkers = gc.units();
+		
+		Player.initNewUnitMemories(startingWorkers);
+		
 		for (int index = 0; index < startingWorkers.size(); index++) {
 			Unit worker = startingWorkers.get(index);
 			if (Utils.tryAndBuild(worker.id(), UnitType.Factory)) {
@@ -132,13 +146,20 @@ public class Player {
 		gc.nextTurn();
 	}
 
-	private static void organizeUnits(VecUnit units) {
+	private static void computeCensus(VecUnit units) {
 		workerCount = 0;
+		workerHarvesterCount=0;
+		workerBuilderCount=0;
 		ArrayList<Unit> blueprints = new ArrayList<Unit>();
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
 			if (unit.unitType() == UnitType.Worker) {
 				workerCount++;
+				if(Utils.getMemory(unit).isHarvester) {
+					Player.workerHarvesterCount++;
+				} else {
+					Player.workerBuilderCount++;
+				}
 			}
 			if ((unit.unitType() == UnitType.Factory || unit.unitType() == UnitType.Rocket)
 					&& unit.structureIsBuilt() == 0) {

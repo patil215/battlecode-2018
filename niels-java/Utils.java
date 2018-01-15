@@ -34,11 +34,14 @@ public class Utils {
 		return false;
 	}
 
-	public static boolean tryAndHarvest(int workerId) {
-		for (Direction direction : Direction.values()) {
-			if (Player.gc.canHarvest(workerId, direction)) {
-				Player.gc.harvest(workerId, direction);
-				return true;
+	public static boolean tryAndHarvest(Unit worker) {
+		int workerId = worker.id();
+		if (worker.abilityHeat() < 10) {
+			for (Direction direction : Direction.values()) {
+				if (Player.gc.canHarvest(workerId, direction)) {
+					Player.gc.harvest(workerId, direction);
+					return true;
+				}
 			}
 		}
 		return false;
@@ -79,12 +82,13 @@ public class Utils {
 			}
 		}
 		return null;
-	
+
 	}
+
 	public static Planet getLocationPlanet(Location loc) {
 		Planet planet = null;
-		for(Planet p : Planet.values()) {
-			if(loc.isOnPlanet(p)) {
+		for (Planet p : Planet.values()) {
+			if (loc.isOnPlanet(p)) {
 				planet = p;
 			}
 		}
@@ -96,5 +100,9 @@ public class Utils {
 			return Team.Blue;
 		}
 		return Team.Red;
+	}
+
+	public static RobotMemory getMemory(Unit unit) {
+		return Player.robotMemory.get(unit.id());
 	}
 }

@@ -58,8 +58,6 @@ public class RangerController {
 			if (Player.gc.canMove(unit.id(), toMove)) {
 				Player.gc.moveRobot(unit.id(), toMove);
 			}
-		} else if (Player.robotMemory.get(unit.id()).reachedDest) {
-			Utils.moveRandom(unit);
 		}
 	}
 
