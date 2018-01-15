@@ -44,7 +44,6 @@ public class RangerController {
 			Direction toMove = Player.armyNav.getNextDirection(unit.location().mapLocation());
 
 			if (toMove == null) {
-				System.out.println("Trying to move to null location.");
 				return;
 			}
 			
@@ -65,7 +64,6 @@ public class RangerController {
 		}
 		if (targetScore(unit, target) < Long.MAX_VALUE && target != null && Player.gc.canAttack(unit.id(), target.id()) && unit.attackHeat() < 10) {
 			Player.gc.attack(unit.id(), target.id());
-			System.out.println("attack");
 		}
 		if (threat != null) {
 			Direction toMove = Utils.fleeFrom(unit, threat);

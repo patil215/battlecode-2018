@@ -8,16 +8,11 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static bc.UnitType.Worker;
+
 public class Player {
 
 	public static GameController gc;
-
-	private enum GameStage {
-		RUSH,
-		EVACUATE;
-	}
-
-	static GameStage gameStage;
 
 	static ArrayList<Unit> blueprints;
 	static Team enemy;
@@ -56,51 +51,51 @@ public class Player {
 	public static void main(String[] args) {
 		// Connect to the manager, starting the game
 		gc = new GameController();
-		gameStage = GameStage.RUSH;
-		setupResearchQueue();
 
-		robotMemory = new HashMap<Integer, RobotMemory>();
-
+		CensusCounts.resetCounts();
+		robotMemory = new HashMap<>();
 		enemy = Utils.getEnemyTeam();
-
 		PlanetMap map = gc.startingMap(gc.planet());
 		armyNav = new Navigation(map, getEnemyUnits(map.getInitial_units()));
 		workerNav = new Navigation(map, getInitialKarb(map));
 
-		InitialTurns();
+		setupResearchQueue();
+		initialTurns();
 
 		while (true) {
 			VecUnit units = gc.myUnits();
-			VecUnit foes = gc.senseNearbyUnitsByTeam(new MapLocation(gc.planet(), 1, 1), 250, Utils.getEnemyTeam());
 
-			for (Point loc : new HashSet<Point>(armyNav.getTargets())) {
-				MapLocation target = new MapLocation(gc.planet(), loc.x, loc.y);
-				if (gc.canSenseLocation(target)
-						&& (!gc.hasUnitAtLocation(target) || gc.senseUnitAtLocation(target).team() == gc.team())) {
-					armyNav.removeTarget(target);
-				}
-			}
-
-			for (int index = 0; index < foes.size(); index++) {
-				armyNav.addTarget(foes.get(index).location().mapLocation());
-			}
-
-			armyNav.recalcDistanceMap();
-
-			initNewUnitMemories(units);
-
+			updateEnemyTargets();
+			updateUnitStates(units);
 			computeCensus(units);
-
-			MoveUnits(units);
+			moveUnits(units);
 		}
+	}
+
+	private static void updateEnemyTargets() {
+		VecUnit foes = gc.senseNearbyUnitsByTeam(new MapLocation(gc.planet(), 1, 1), 250, Utils.getEnemyTeam());
+
+		for (Point loc : new HashSet<Point>(armyNav.getTargets())) {
+			MapLocation target = new MapLocation(gc.planet(), loc.x, loc.y);
+			if (gc.canSenseLocation(target)
+					&& (!gc.hasUnitAtLocation(target) || gc.senseUnitAtLocation(target).team() == gc.team())) {
+				armyNav.removeTarget(target);
+			}
+		}
+
+		for (int index = 0; index < foes.size(); index++) {
+			armyNav.addTarget(foes.get(index).location().mapLocation());
+		}
+
+		armyNav.recalcDistanceMap();
 	}
 
 	private static void setupResearchQueue() {
 		gc.queueResearch(UnitType.Ranger); // Level 1 Ranger (ends at turn 25)
-		gc.queueResearch(UnitType.Worker); // Level 1 Worker (ends at turn 50)
-		gc.queueResearch(UnitType.Worker); // Level 2 Worker (ends at turn 125)
-		gc.queueResearch(UnitType.Worker); // Level 3 Worker (ends at turn 200)
-		gc.queueResearch(UnitType.Worker); // Level 4 Worker (ends at turn 275)
+		gc.queueResearch(Worker); // Level 1 Worker (ends at turn 50)
+		gc.queueResearch(Worker); // Level 2 Worker (ends at turn 125)
+		gc.queueResearch(Worker); // Level 3 Worker (ends at turn 200)
+		gc.queueResearch(Worker); // Level 4 Worker (ends at turn 275)
 		gc.queueResearch(UnitType.Rocket); // Level 1 Rocket (ends at turn 375)
 		gc.queueResearch(UnitType.Rocket); // Level 2 Rocket (ends at turn 475)
 		gc.queueResearch(UnitType.Rocket); // Level 3 Rocket (ends at turn 575)
@@ -109,20 +104,50 @@ public class Player {
 		// TODO we have more space for research but we don't have any other units...
 	}
 
-	private static void initNewUnitMemories(VecUnit units) {
+	private static void updateUnitStates(VecUnit units) {
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
 			if (!robotMemory.containsKey(units.get(index).id())) {
-				RobotMemory memory = new RobotMemory();
-				if(CensusCounts.workerBuilderCount >= 2 && unit.unitType() == UnitType.Worker) {
-					memory.workerRole = RobotMemory.WorkerRole.HARVESTER;
-				}
-				robotMemory.put(unit.id(), memory);
+				createNewUnitState(unit);
+			} else {
+				updateExistingUnitState(unit);
 			}
 		}
 	}
 
-	private static void MoveUnits(VecUnit units) {
+	private static void createNewUnitState(Unit unit) {
+		RobotMemory memory = new RobotMemory();
+		switch (unit.unitType()) {
+			case Worker: {
+				if (gc.round() <= Constants.START_BUILDING_ROCKETS_ROUND
+						&& CensusCounts.getWorkerModeCount(RobotMemory.WorkerMode.BUILD_FACTORIES) >= 2) {
+						memory.workerMode = RobotMemory.WorkerMode.HARVESTER;
+				} else if (gc.round()> Constants.START_BUILDING_ROCKETS_ROUND) {
+					// TODO modify to make sure we have at least 2-3 factories
+					memory.workerMode = RobotMemory.WorkerMode.BUILD_ROCKETS;
+				}
+				break;
+			}
+			default:
+				break;
+		}
+		robotMemory.put(unit.id(), memory);
+	}
+
+	private static void updateExistingUnitState(Unit unit) {
+		switch (unit.unitType()) {
+			case Worker: {
+				if (gc.round() >= Constants.START_BUILDING_ROCKETS_ROUND
+						&& Utils.getMemory(unit).workerMode == RobotMemory.WorkerMode.BUILD_FACTORIES) {
+					Utils.getMemory(unit).workerMode = RobotMemory.WorkerMode.BUILD_ROCKETS;
+				}
+			}
+			default:
+				break;
+		}
+	}
+
+	private static void moveUnits(VecUnit units) {
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
 			switch (unit.unitType()) {
@@ -143,12 +168,12 @@ public class Player {
 		gc.nextTurn();
 	}
 
-	private static void InitialTurns() {
+	private static void initialTurns() {
 		gc.nextTurn();
 
 		VecUnit startingWorkers = gc.units();
 		
-		Player.initNewUnitMemories(startingWorkers);
+		Player.updateUnitStates(startingWorkers);
 		
 		for (int index = 0; index < startingWorkers.size(); index++) {
 			Unit worker = startingWorkers.get(index);
@@ -167,24 +192,15 @@ public class Player {
 	}
 
 	private static void computeCensus(VecUnit units) {
-		CensusCounts.workerCount = 0;
-		CensusCounts.workerHarvesterCount = 0;
-		CensusCounts.workerBuilderCount = 0;
+		CensusCounts.resetCounts();
 
 		ArrayList<Unit> blueprints = new ArrayList<Unit>();
 
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
-			if (unit.unitType() == UnitType.Worker) {
+			if (unit.unitType() == Worker) {
 				CensusCounts.workerCount++;
-				switch (Utils.getMemory(unit).workerRole) {
-					case HARVESTER:
-						CensusCounts.workerHarvesterCount++;
-						break;
-					case BUILDER:
-						CensusCounts.workerBuilderCount++;
-						break;
-				}
+				CensusCounts.incrementWorkerModeCount(Utils.getMemory(unit).workerMode);
 			}
 			if ((unit.unitType() == UnitType.Factory || unit.unitType() == UnitType.Rocket)
 					&& unit.structureIsBuilt() == 0) {

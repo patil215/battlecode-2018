@@ -4,6 +4,7 @@ import bc.UnitType;
 
 public class WorkerController {
 
+	private static final int ROCKET_BUILD_KARB_THRESHOLD = 100;
 	private static final int FACTORY_BUILD_KARB_THRESHOLD = 130;
 	private static final int MAX_NUMBER_WORKERS = 5;
 
@@ -26,7 +27,7 @@ public class WorkerController {
 			Utils.tryAndReplicate(unit);
 		}
 
-		switch (Utils.getMemory(unit).workerRole) {
+		switch (Utils.getMemory(unit).workerMode) {
 			case HARVESTER: {
 				// Move according to Dijkstra map
 				Direction toMove = Player.workerNav.getNextDirection((unit.location().mapLocation()));
@@ -36,11 +37,22 @@ public class WorkerController {
 				break;
 			}
 
-			case BUILDER: {
+			case BUILD_FACTORIES: {
 				Utils.moveRandom(unit);
 				// Try to build factory
 				if (Player.gc.karbonite() > FACTORY_BUILD_KARB_THRESHOLD) {
 					Utils.tryAndBuild(unit.id(), UnitType.Factory);
+				}
+				break;
+			}
+
+			case BUILD_ROCKETS: {
+				// TODO build rockets near factories
+				Utils.moveRandom(unit);
+				// Try to build rocket
+				if (Player.gc.karbonite() > ROCKET_BUILD_KARB_THRESHOLD) {
+					System.out.println("Building rocket");
+					Utils.tryAndBuild(unit.id(), UnitType.Rocket);
 				}
 				break;
 			}

@@ -71,7 +71,6 @@ public class Navigation {
 			}
 		}
 		long end = System.currentTimeMillis();
-		System.out.println("took " + (end - start) + " milliseconds to calcluate distance map");
 	}
 
 

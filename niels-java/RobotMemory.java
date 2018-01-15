@@ -1,9 +1,10 @@
 public class RobotMemory {
 
-	public enum WorkerRole {
+	public enum WorkerMode {
 		HARVESTER,
-		BUILDER;
+		BUILD_FACTORIES,
+		BUILD_ROCKETS
 	}
 
-	public WorkerRole workerRole = WorkerRole.BUILDER;
+	public WorkerMode workerMode = WorkerMode.BUILD_FACTORIES;
 }
