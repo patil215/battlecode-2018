@@ -41,6 +41,11 @@ public class Navigation {
 	public static final Map<Point, Direction> dispToDir = createDispToDirMap();
 
 	public void recalcDistanceMap() {
+		for (int i = 0; i < distances.length; i++) {
+			for (int j = 0; j < distances[0].length; j++) {
+				distances[i][j] = Integer.MAX_VALUE;
+			}
+		}
 		Queue<MapLocation> queue = new ArrayDeque<>();
 		for (Point target : targets) {
 			distances[target.x][target.y] = 0;
@@ -66,21 +71,13 @@ public class Navigation {
 		}
 	}
 
-	private void initializeDistances() {
-		for (int i = 0; i < distances.length; i++) {
-			for (int j = 0; j < distances[0].length; j++) {
-				distances[i][j] = Integer.MAX_VALUE;
-			}
-		}
-		recalcDistanceMap();
-	}
 
 	public Navigation(PlanetMap map, List<Point> targets) {
 		this.map = map;
 		this.planet = map.getPlanet();
 		this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
 		this.targets = new HashSet<>(targets);
-		initializeDistances();
+		recalcDistanceMap();
 	}
 
 	public Direction getNextDirection(MapLocation start) {
