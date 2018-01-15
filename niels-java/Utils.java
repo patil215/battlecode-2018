@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.awt.Point;
 
 import bc.*;
 
@@ -60,7 +59,7 @@ public class Utils {
 			Player.gc.moveRobot(unit.id(), nextMoves.get((int) (Math.random() * nextMoves.size())));
 		}
 	}
-	
+
 	public static Planet getLocationPlanet(Location loc) {
 		Planet planet = null;
 		for(Planet p : Planet.values()) {
@@ -69,5 +68,12 @@ public class Utils {
 			}
 		}
 		return planet;
+	}
+
+	public static Team getEnemyTeam() {
+		if (Player.gc.team() == Team.Red) {
+			return Team.Blue;
+		}
+		return Team.Red;
 	}
 }

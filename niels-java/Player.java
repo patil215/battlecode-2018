@@ -1,10 +1,12 @@
 
 // import the API.
 // See xxx for the javadocs.
-import java.util.*;
-import java.awt.Point;
 
 import bc.*;
+import java.util.*;
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Player {
 
@@ -50,11 +52,7 @@ public class Player {
 
 		robotMemory = new HashMap<Integer, RobotMemory>();
 
-		if (gc.team() == Team.Red) {
-			enemy = Team.Blue;
-		} else {
-			enemy = Team.Red;
-		}
+		enemy = Utils.getEnemyTeam();
 
 		PlanetMap map = gc.startingMap(gc.planet());
 		armyNav = new Navigation(map, getEnemyUnits(map.getInitial_units()));
