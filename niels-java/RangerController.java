@@ -62,7 +62,7 @@ public class RangerController {
 				target = foe;
 			}
 		}
-		if (targetScore(unit, target) < Long.MAX_VALUE && target != null && Player.gc.canAttack(unit.id(), target.id()) && unit.attackHeat() < 10) {
+		if (target != null && Player.gc.canAttack(unit.id(), target.id()) && unit.attackHeat() < 10) {
 			Player.gc.attack(unit.id(), target.id());
 		}
 		if (threat != null) {
@@ -71,7 +71,9 @@ public class RangerController {
 				Player.gc.moveRobot(unit.id(), toMove);
 			}
 		} else {
-			Utils.moveRandom(unit);
+			if(target == null) {
+				moveRecon(unit);
+			}
 		}
 	}
 }
