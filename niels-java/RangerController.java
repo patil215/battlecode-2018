@@ -32,14 +32,6 @@ public class RangerController {
 	}
 
 	private static void moveRecon(Unit unit) {
-		VecUnit startingUnits = Player.gc.startingMap(Planet.Earth).getInitial_units();
-		Location target = null;
-		for (int index = 0; index < startingUnits.size(); index++) {
-			if (startingUnits.get(index).team() == Player.enemy && (target == null || Math.random() > .5)) {
-				target = startingUnits.get(index).location();
-			}
-		}
-
 		if (unit.movementHeat() < 10) {
 			Direction toMove = Player.armyNav.getNextDirection(unit.location().mapLocation());
 
