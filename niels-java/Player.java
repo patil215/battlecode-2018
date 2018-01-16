@@ -8,7 +8,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static bc.UnitType.Worker;
+import static bc.UnitType.*;
 
 public class Player {
 
@@ -70,6 +70,7 @@ public class Player {
 		gc = new GameController();
 
 		CensusCounts.resetCounts();
+
 		robotMemory = new HashMap<>();
 		enemy = Utils.getEnemyTeam();
 		map = gc.startingMap(gc.planet());
@@ -84,7 +85,7 @@ public class Player {
 
 			updateEnemyTargets();
 			updateUnitStates(units);
-			computeCensus(units);
+			CensusCounts.computeCensus(units);
 			moveUnits(units);
 
 			// Workers will update empty karbonite positions in workerController
@@ -119,7 +120,7 @@ public class Player {
 	}
 
 	private static void setupResearchQueue() {
-		gc.queueResearch(UnitType.Ranger); // Level 1 Ranger (ends at turn 25)
+		gc.queueResearch(Ranger); // Level 1 Ranger (ends at turn 25)
 		gc.queueResearch(Worker); // Level 1 Worker (ends at turn 50)
 		gc.queueResearch(Worker); // Level 2 Worker (ends at turn 125)
 		gc.queueResearch(Worker); // Level 3 Worker (ends at turn 200)
@@ -127,8 +128,8 @@ public class Player {
 		gc.queueResearch(UnitType.Rocket); // Level 1 Rocket (ends at turn 375)
 		gc.queueResearch(UnitType.Rocket); // Level 2 Rocket (ends at turn 475)
 		gc.queueResearch(UnitType.Rocket); // Level 3 Rocket (ends at turn 575)
-		gc.queueResearch(UnitType.Ranger); // Level 2 Ranger (ends at turn 675) TODO: adjust ranger to still attack even if it sees boi
-		gc.queueResearch(UnitType.Ranger); // Level 3 Ranger (ends at turn 775) TODO: sniping code
+		gc.queueResearch(Ranger); // Level 2 Ranger (ends at turn 675) TODO: adjust ranger to still attack even if it sees boi
+		gc.queueResearch(Ranger); // Level 3 Ranger (ends at turn 775) TODO: sniping code
 		// TODO we have more space for research but we don't have any other units...
 	}
 
@@ -148,11 +149,11 @@ public class Player {
 		switch (unit.unitType()) {
 			case Worker: {
 				if (gc.round() <= Constants.START_BUILDING_ROCKETS_ROUND
-						&& CensusCounts.getWorkerModeCount(RobotMemory.WorkerMode.BUILD_FACTORIES) >= 2) {
-						memory.workerMode = RobotMemory.WorkerMode.HARVESTER;
+						&& CensusCounts.getWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES) >= 2) {
+						memory.workerMode = WorkerController.Mode.HARVESTER;
 				} else if (gc.round()> Constants.START_BUILDING_ROCKETS_ROUND) {
 					// TODO modify to make sure we have at least 2-3 factories
-					memory.workerMode = RobotMemory.WorkerMode.BUILD_ROCKETS;
+					memory.workerMode = WorkerController.Mode.BUILD_ROCKETS;
 				}
 				break;
 			}
@@ -165,10 +166,39 @@ public class Player {
 	private static void updateExistingUnitState(Unit unit) {
 		switch (unit.unitType()) {
 			case Worker: {
-				if (gc.round() >= Constants.START_BUILDING_ROCKETS_ROUND
-						&& Utils.getMemory(unit).workerMode == RobotMemory.WorkerMode.BUILD_FACTORIES) {
-					Utils.getMemory(unit).workerMode = RobotMemory.WorkerMode.BUILD_ROCKETS;
+				// Make workers start to build rockets after a certain round
+				if (gc.round() >= Constants.START_BUILDING_ROCKETS_ROUND) {
+					// Only try to make rockets if we have units that need them
+					int numRockets = CensusCounts.getUnitCount(Rocket);
+					int numRangers = CensusCounts.getUnitCount(Ranger);
+					if (numRockets * Constants.MAX_ROCKET_CAPACITY >= numRangers) {
+						// TODO all of these workers might switch back and forth at once - is this what we want?
+						Utils.getMemory(unit).workerMode = WorkerController.Mode.IDLE;
+					} else {
+						Utils.getMemory(unit).workerMode = WorkerController.Mode.BUILD_ROCKETS;
+					}
 				}
+				break;
+			}
+			case Factory: {
+				if (gc.round() >= Constants.START_BUILDING_ROCKETS_ROUND) {
+					// Limit factory production of units such that we can still build a rocket
+					int numberFactoriesProducingUnits =
+							CensusCounts.getFactoryModeCount(FactoryController.Mode.PRODUCE);
+
+					if (gc.karbonite() >
+							(((numberFactoriesProducingUnits + 1) * Constants.RANGER_COST) + Constants.ROCKET_COST)) {
+						Utils.getMemory(unit).factoryMode = FactoryController.Mode.PRODUCE;
+						CensusCounts.decrementFactoryModeCount(FactoryController.Mode.IDLE);
+						CensusCounts.incrementFactoryModeCount(FactoryController.Mode.PRODUCE);
+					} else {
+						Utils.getMemory(unit).factoryMode = FactoryController.Mode.IDLE;
+						CensusCounts.decrementFactoryModeCount(FactoryController.Mode.PRODUCE);
+						CensusCounts.incrementFactoryModeCount(FactoryController.Mode.IDLE);
+					}
+
+				}
+				break;
 			}
 			default:
 				break;
@@ -205,7 +235,7 @@ public class Player {
 		
 		for (int index = 0; index < startingWorkers.size(); index++) {
 			Unit worker = startingWorkers.get(index);
-			if (Utils.tryAndBuild(worker.id(), UnitType.Factory)) {
+			if (Utils.tryAndBuild(worker.id(), Factory)) {
 				break;
 			}
 		}
@@ -217,24 +247,4 @@ public class Player {
 		}
 
 		gc.nextTurn();
-	}
-
-	private static void computeCensus(VecUnit units) {
-		CensusCounts.resetCounts();
-
-		ArrayList<Unit> blueprints = new ArrayList<Unit>();
-
-		for (int index = 0; index < units.size(); index++) {
-			Unit unit = units.get(index);
-			if (unit.unitType() == Worker) {
-				CensusCounts.workerCount++;
-				CensusCounts.incrementWorkerModeCount(Utils.getMemory(unit).workerMode);
-			}
-			if ((unit.unitType() == UnitType.Factory || unit.unitType() == UnitType.Rocket)
-					&& unit.structureIsBuilt() == 0) {
-				blueprints.add(unit);
-			}
-		}
-		Player.blueprints = blueprints;
-	}
-}
+	}}

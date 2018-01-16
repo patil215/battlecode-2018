@@ -1,10 +1,8 @@
+/**
+ * Contains all state per each individual robot.
+ */
 public class RobotMemory {
-
-	public enum WorkerMode {
-		HARVESTER,
-		BUILD_FACTORIES,
-		BUILD_ROCKETS
-	}
-
-	public WorkerMode workerMode = WorkerMode.BUILD_FACTORIES;
+	public WorkerController.Mode workerMode = WorkerController.Mode.BUILD_FACTORIES;
+	public FactoryController.Mode factoryMode = FactoryController.Mode.PRODUCE;
+	public RangerController.Mode rangerMode = RangerController.Mode.FIGHT_ENEMIES;
 }

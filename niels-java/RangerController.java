@@ -2,6 +2,11 @@ import bc.*;
 
 public class RangerController {
 
+	public enum Mode {
+		FIGHT_ENEMIES,
+		RUN_TO_ROCKET;
+	}
+
 	private static long targetScore(Unit unit, Unit target) {
 		if (target == null || !Player.gc.canAttack(unit.id(), target.id())) {
 			return Long.MAX_VALUE;
@@ -54,7 +59,7 @@ public class RangerController {
 				target = foe;
 			}
 		}
-		if (targetScore(unit, target) < Long.MAX_VALUE && target != null && Player.gc.canAttack(unit.id(), target.id()) && unit.attackHeat() < 10) {
+		if (target != null && Player.gc.canAttack(unit.id(), target.id()) && unit.attackHeat() < 10) {
 			Player.gc.attack(unit.id(), target.id());
 		}
 		if (threat != null) {
@@ -63,7 +68,9 @@ public class RangerController {
 				Player.gc.moveRobot(unit.id(), toMove);
 			}
 		} else {
-			Utils.moveRandom(unit);
+			if(target == null) {
+				moveRecon(unit);
+			}
 		}
 	}
 }
