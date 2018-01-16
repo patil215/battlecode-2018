@@ -1,6 +1,4 @@
-import bc.Direction;
-import bc.Unit;
-import bc.UnitType;
+import bc.*;
 
 public class WorkerController {
 
@@ -29,11 +27,16 @@ public class WorkerController {
 
 		switch (Utils.getMemory(unit).workerMode) {
 			case HARVESTER: {
-				// Move according to Dijkstra map
-				Direction toMove = Player.workerNav.getNextDirection((unit.location().mapLocation()));
-				if (toMove != null && unit.movementHeat() < Constants.MOVEMENT_HEAT) {
-					Player.gc.moveRobot(unit.id(), toMove);
+				MapLocation workerLoc = unit.location().mapLocation();
+				long karbAtLoc = Player.gc.karboniteAt(workerLoc);
+				if(karbAtLoc == 0) {
+					Player.workerNav.removeTarget(workerLoc);
+					Direction toMove = Player.workerNav.getNextDirection(workerLoc);
+					if (toMove != null && unit.movementHeat() < Constants.MOVEMENT_HEAT) {
+						Player.gc.moveRobot(unit.id(), toMove);
+					}
 				}
+				// Move according to Dijkstra map
 				break;
 			}
 

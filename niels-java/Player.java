@@ -19,6 +19,7 @@ public class Player {
 	static Navigation workerNav;
 	static Navigation armyNav;
 	static HashMap<Integer, RobotMemory> robotMemory;
+	static PlanetMap map;
 
 	private static List<Point> getEnemyUnits(VecUnit initUnits) {
 		List<Point> targets = new ArrayList<>();
@@ -32,7 +33,7 @@ public class Player {
 		return targets;
 	}
 
-	private static List<Point> getInitialKarb(PlanetMap map) {
+	private static List<Point> getInitialKarb() {
 		Planet planet = map.getPlanet();
 		long maxX = map.getWidth();
 		long maxY = map.getHeight();
@@ -48,6 +49,22 @@ public class Player {
 		return targets;
 	}
 
+	private static List<MapLocation> getUnseenLocs() {
+		Planet planet = map.getPlanet();
+		long maxX = map.getWidth();
+		long maxY = map.getHeight();
+		List<MapLocation> targets = new ArrayList<>();
+		for (int x = 0; x < maxX; x++) {
+			for (int y = 0; y < maxY; y++) {
+				MapLocation loc = new MapLocation(planet, x, y);
+				if (!Player.gc.canSenseLocation(loc)) {
+					targets.add(loc);
+				}
+			}
+		}
+		return targets;
+	}
+
 	public static void main(String[] args) {
 		// Connect to the manager, starting the game
 		gc = new GameController();
@@ -55,9 +72,9 @@ public class Player {
 		CensusCounts.resetCounts();
 		robotMemory = new HashMap<>();
 		enemy = Utils.getEnemyTeam();
-		PlanetMap map = gc.startingMap(gc.planet());
+		map = gc.startingMap(gc.planet());
 		armyNav = new Navigation(map, getEnemyUnits(map.getInitial_units()));
-		workerNav = new Navigation(map, getInitialKarb(map));
+		workerNav = new Navigation(map, getInitialKarb());
 
 		setupResearchQueue();
 		initialTurns();
@@ -69,6 +86,11 @@ public class Player {
 			updateUnitStates(units);
 			computeCensus(units);
 			moveUnits(units);
+
+			// Workers will update empty karbonite positions in workerController
+			workerNav.recalcDistanceMap();
+
+			//armyNav.printDistances();
 		}
 	}
 
@@ -85,6 +107,12 @@ public class Player {
 
 		for (int index = 0; index < foes.size(); index++) {
 			armyNav.addTarget(foes.get(index).location().mapLocation());
+		}
+		
+		if(foes.size() == 0) {
+			for(MapLocation loc : getUnseenLocs()) {
+				armyNav.addTarget(loc);
+			}
 		}
 
 		armyNav.recalcDistanceMap();

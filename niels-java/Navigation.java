@@ -1,7 +1,4 @@
-import bc.Direction;
-import bc.MapLocation;
-import bc.Planet;
-import bc.PlanetMap;
+import bc.*;
 
 import java.awt.*;
 import java.util.*;
@@ -13,6 +10,16 @@ public class Navigation {
 	private final PlanetMap map;
 	private final Planet planet;
 	private Set<Point> targets;
+
+	public void printDistances() {
+		System.out.println(Player.gc.round());
+		for(int i = 0; i < distances.length; i++) {
+			for(int j = 0; j < distances[0].length; j++) {
+				System.out.print(distances[i][j] + " ");
+			}
+			System.out.println();
+		}
+	}
 
 	private static final Map<Direction, Point> createDirToDispMap() {
 		EnumMap<Direction, Point> map = new EnumMap<Direction, Point>(Direction.class);
@@ -52,6 +59,16 @@ public class Navigation {
 			distances[target.x][target.y] = 0;
 			queue.add(new MapLocation(planet, target.x, target.y));
 		}
+		VecUnit units = Player.gc.myUnits();
+		Set<Point> buildings = new HashSet<>();
+		for(int i = 0; i < units.size(); i++) {
+			Unit unit = units.get(i);
+			UnitType type = unit.unitType();
+			if(type == UnitType.Rocket || type == UnitType.Factory) {
+				MapLocation loc = unit.location().mapLocation();
+				buildings.add(new Point(loc.getX(), loc.getY()));
+			}
+		}
 		while (!queue.isEmpty()) {
 			MapLocation loc = queue.poll();
 			int curDistance = distances[loc.getX()][loc.getY()];
@@ -64,7 +81,10 @@ public class Navigation {
 				int newX = loc.getX() + disp.x;
 				int newY = loc.getY() + disp.y;
 				MapLocation newLocation = new MapLocation(planet, newX, newY);
-				if (map.onMap(newLocation) && distances[newX][newY] > curDistance + 1) {
+				if (map.onMap(newLocation) 
+						&& map.isPassableTerrainAt(newLocation) == 1 
+						&& !buildings.contains(new Point(newX, newY))
+						&& distances[newX][newY] > curDistance + 1) {
 					distances[newX][newY] = curDistance + 1;
 					queue.add(newLocation);
 				}
