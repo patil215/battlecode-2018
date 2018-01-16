@@ -2,6 +2,11 @@ import bc.*;
 
 public class RangerController {
 
+	public enum Mode {
+		FIGHT_ENEMIES,
+		RUN_TO_ROCKET;
+	}
+
 	private static long targetScore(Unit unit, Unit target) {
 		if (target == null || !Player.gc.canAttack(unit.id(), target.id())) {
 			return Long.MAX_VALUE;

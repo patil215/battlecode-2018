@@ -2,7 +2,16 @@ import bc.Direction;
 import bc.Unit;
 import bc.UnitType;
 
+import static bc.UnitType.Worker;
+
 public class WorkerController {
+
+	public enum Mode {
+		HARVESTER,
+		BUILD_FACTORIES,
+		BUILD_ROCKETS,
+		IDLE
+	}
 
 	private static final int ROCKET_BUILD_KARB_THRESHOLD = 100;
 	private static final int FACTORY_BUILD_KARB_THRESHOLD = 130;
@@ -23,7 +32,7 @@ public class WorkerController {
 		}
 
 		// Try to replicate
-		if (CensusCounts.workerCount < MAX_NUMBER_WORKERS) {
+		if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS) {
 			Utils.tryAndReplicate(unit);
 		}
 
@@ -54,6 +63,12 @@ public class WorkerController {
 					System.out.println("Building rocket");
 					Utils.tryAndBuild(unit.id(), UnitType.Rocket);
 				}
+				break;
+			}
+
+			case IDLE: {
+				// Move randomly and do nothing else
+				Utils.moveRandom(unit);
 				break;
 			}
 		}
