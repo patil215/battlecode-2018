@@ -38,7 +38,10 @@ public class RangerController {
 
 	private static void moveRecon(Unit unit) {
 		if (unit.movementHeat() < 10) {
-			Direction toMove = Player.armyNav.getNextDirection(unit.location().mapLocation());
+			MapLocation spawnLocation = 
+				Player.robotMemory.get(unit.id()).spawnLocation;
+			Direction toMove = 
+				Player.armyNav.getNextDirection(spawnLocation, unit.location().mapLocation());
 
 			if (toMove == null) {
 				return;

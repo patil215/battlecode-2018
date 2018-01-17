@@ -39,8 +39,11 @@ public class WorkerController {
 				MapLocation workerLoc = unit.location().mapLocation();
 				long karbAtLoc = Player.gc.karboniteAt(workerLoc);
 				if(karbAtLoc == 0) {
+          MapLocation spawnLocation = 
+            Player.robotMemory.get(unit.id()).spawnLocation;
 					Player.workerNav.removeTarget(workerLoc);
-					Direction toMove = Player.workerNav.getNextDirection(workerLoc);
+					Direction toMove = 
+            Player.workerNav.getNextDirection(spawnLocation, workerLoc);
 					if (toMove != null && unit.movementHeat() < Constants.MOVEMENT_HEAT) {
 						Player.gc.moveRobot(unit.id(), toMove);
 					}

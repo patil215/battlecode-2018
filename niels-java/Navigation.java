@@ -89,39 +89,53 @@ public class Navigation {
 					queue.add(newLocation);
 				}
 			}
-		}
-		long end = System.currentTimeMillis();
-	}
+    }
+    long end = System.currentTimeMillis();
+  }
 
 
-	public Navigation(PlanetMap map, List<Point> targets) {
-		this.map = map;
-		this.planet = map.getPlanet();
-		this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
-		this.targets = new HashSet<>(targets);
-		recalcDistanceMap();
-	}
+  public Navigation(PlanetMap map, List<Point> targets) {
+    this.map = map;
+    this.planet = map.getPlanet();
+    this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
+    this.targets = new HashSet<>(targets);
+    recalcDistanceMap();
+  }
 
-	/**
-	 * Returns a direction to move according to a start location.
-	 *
-	 * Tries all possible directions, returning the best one we can move towards.
-	 *
-	 * If no direction can be moved to (ex. all blocked), returns null;
-	 */
-	public Direction getNextDirection(MapLocation start) {
-		int minDist = Integer.MAX_VALUE;
-		Direction next = null;
-		for (Direction dir : Direction.values()) {
-			Point delta = dirToDisp.get(dir);
-			int newX = start.getX() + delta.x;
-			int newY = start.getY() + delta.y;
-			MapLocation newLoc = new MapLocation(planet, newX, newY);
-			if (map.onMap(newLoc) && distances[newX][newY] < minDist
-					&& Player.gc.canMove(Player.gc.senseUnitAtLocation(start).id(), dir)) {
-				next = dir;
-				minDist = distances[newX][newY];
-			}
+  private static int distanceTo(MapLocation a, MapLocation b) {
+    return Math.abs(a.getX() - b.getX()) + Math.abs(a.getY() - b.getY());
+  }
+
+  /**
+   * Returns a direction to move according to a start location.
+   *
+   * Tries all possible directions, returning the best one we can move towards.
+   *
+   * If no direction can be moved to (ex. all blocked), returns null;
+   */
+  public Direction getNextDirection(MapLocation towards, MapLocation start) {
+    int minDist = Integer.MAX_VALUE;
+    Direction next = null;
+    MapLocation nextLoc = null;
+    for (Direction dir : Direction.values()) {
+      Point delta = dirToDisp.get(dir);
+      int newX = start.getX() + delta.x;
+      int newY = start.getY() + delta.y;
+      MapLocation newLoc = new MapLocation(planet, newX, newY);
+      if(Player.gc.canMove(Player.gc.senseUnitAtLocation(start).id(), dir) 
+          && map.onMap(newLoc)) {
+        if(distances[newX][newY] < minDist) {
+          next = dir;
+          minDist = distances[newX][newY];
+          nextLoc = newLoc;
+        } else if (distances[newX][newY] == minDist 
+            && nextLoc != null 
+            && distanceTo(nextLoc, towards) > distanceTo(newLoc, towards)) {
+          next = dir;
+          minDist = distances[newX][newY];
+          nextLoc = newLoc;
+        }
+      }
 		}
 		return next;
 	}

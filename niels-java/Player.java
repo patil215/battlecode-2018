@@ -145,7 +145,15 @@ public class Player {
 	}
 
 	private static void createNewUnitState(Unit unit) {
-		RobotMemory memory = new RobotMemory();
+    Location spawnLoc = unit.location();
+    RobotMemory memory;
+    if(spawnLoc.isInGarrison()) {
+      Unit structure = Player.gc.unit(spawnLoc.structure());
+      memory = 
+        new RobotMemory(structure.location().mapLocation());
+    } else {
+		  memory = new RobotMemory(spawnLoc.mapLocation());
+    }
 		switch (unit.unitType()) {
 			case Worker: {
 				if (gc.round() <= Constants.START_BUILDING_ROCKETS_ROUND
