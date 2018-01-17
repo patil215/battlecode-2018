@@ -8,4 +8,6 @@ public class Constants {
 	public static final int ROCKET_COST = 75;
 
 	public static final int MAX_ROCKET_CAPACITY = 8;
+
+	public static final int ROCKET_HEALTH = 200;
 }

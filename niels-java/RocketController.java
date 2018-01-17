@@ -1,3 +1,5 @@
+import bc.*;
+
 /**
  * General strategy:
  *
@@ -9,5 +11,52 @@
  - Pick an axis, dump some rockets on one side, some on the other side
  */
 public class RocketController {
+	public static void moveRocket(Unit unit) {
 
+		if (unit.structureIsBuilt() == 0) {
+			return;
+		}
+
+		if (unit.structureGarrison().size() < 2) {
+			return;
+		}
+
+		// Launch if about to flood
+		if (Player.gc.round() >= 749) {
+			tryToLaunch(unit);
+			return;
+		}
+
+		// Launch if less than half
+		if (unit.health() < (Constants.ROCKET_HEALTH / 2)) {
+			tryToLaunch(unit);
+			return;
+		}
+
+		// Launch if full
+		if (unit.structureGarrison().size() == Constants.MAX_ROCKET_CAPACITY) {
+			tryToLaunch(unit);
+			return;
+		}
+	}
+
+	private static void tryToLaunch(Unit unit) {
+		MapLocation location = findValidLocation();
+		if (location != null) {
+			Player.gc.launchRocket(unit.id(), location);
+		}
+	}
+
+	private static MapLocation findValidLocation() {
+		PlanetMap map = Player.gc.startingMap(Planet.Mars);
+		for (int i = 0; i < 50; i++) {
+			MapLocation proposedLocation = new MapLocation(Planet.Mars, (int) (Math.random() * map.getWidth()),
+					(int) (Math.random() * map.getHeight()));
+			if (map.onMap(proposedLocation) && Player.gc.isOccupiable(proposedLocation) != 0) {
+				return proposedLocation;
+			}
+		}
+		return null;
+
+	}
 }

@@ -3,8 +3,7 @@ import bc.*;
 public class RangerController {
 
 	public enum Mode {
-		FIGHT_ENEMIES,
-		RUN_TO_ROCKET;
+		FIGHT_ENEMIES
 	}
 
 	private static long targetScore(Unit unit, Unit target) {
@@ -24,8 +23,20 @@ public class RangerController {
 	}
 
 	public static void moveRanger(Unit unit) {
-
 		if (!unit.location().isInGarrison()) {
+
+			// Load up in rocket if we can
+			VecUnit units = Player.gc.myUnits();
+			for (int i = 0; i < units.size(); i++) {
+				Unit potentialRocket = units.get(i);
+				if (potentialRocket.unitType() == UnitType.Rocket && potentialRocket.structureIsBuilt() == 1) {
+					if (Player.gc.canLoad(potentialRocket.id(), unit.id())) {
+						Player.gc.load(potentialRocket.id(), unit.id());
+						return; // We done after loading
+					}
+				}
+			}
+
 			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(),
 					Player.enemy);
 			if (foes.size() > 0) {

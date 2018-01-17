@@ -83,7 +83,7 @@ public class Player {
 		while (true) {
 			VecUnit units = gc.myUnits();
 
-			updateEnemyTargets();
+			updateRangerTargets();
 			updateUnitStates(units);
 			CensusCounts.computeCensus(units);
 			moveUnits(units);
@@ -95,28 +95,50 @@ public class Player {
 		}
 	}
 
-	private static void updateEnemyTargets() {
-		VecUnit foes = gc.senseNearbyUnitsByTeam(new MapLocation(gc.planet(), 1, 1), 250, Utils.getEnemyTeam());
+	private static void updateRangerTargets() {
+		if (gc.round() <= 500) {
+			// Move toward enemies
+			VecUnit foes = gc.senseNearbyUnitsByTeam(new MapLocation(gc.planet(), 1, 1), 250, Utils.getEnemyTeam());
 
-		for (Point loc : new HashSet<Point>(armyNav.getTargets())) {
-			MapLocation target = new MapLocation(gc.planet(), loc.x, loc.y);
-			if (gc.canSenseLocation(target)
-					&& (!gc.hasUnitAtLocation(target) || gc.senseUnitAtLocation(target).team() == gc.team())) {
+			for (Point loc : new HashSet<Point>(armyNav.getTargets())) {
+				MapLocation target = new MapLocation(gc.planet(), loc.x, loc.y);
+				if (gc.canSenseLocation(target)
+						&& (!gc.hasUnitAtLocation(target) || gc.senseUnitAtLocation(target).team() == gc.team())) {
+					armyNav.removeTarget(target);
+				}
+			}
+
+			for (int index = 0; index < foes.size(); index++) {
+				armyNav.addTarget(foes.get(index).location().mapLocation());
+			}
+
+			if(foes.size() == 0) {
+				for(MapLocation loc : getUnseenLocs()) {
+					armyNav.addTarget(loc);
+				}
+			}
+			armyNav.recalcDistanceMap();
+		} else {
+			for (Point loc : new HashSet<>(armyNav.getTargets())) {
+				MapLocation target = new MapLocation(gc.planet(), loc.x, loc.y);
 				armyNav.removeTarget(target);
 			}
-		}
 
-		for (int index = 0; index < foes.size(); index++) {
-			armyNav.addTarget(foes.get(index).location().mapLocation());
-		}
-		
-		if(foes.size() == 0) {
-			for(MapLocation loc : getUnseenLocs()) {
-				armyNav.addTarget(loc);
+			// Move toward rockets
+			VecUnit units = gc.myUnits();
+
+			for (int i = 0; i < units.size(); i++) {
+				Unit unit = units.get(i);
+
+				// Add all rockets that are ready to be loaded up
+				// TODO don't use constant for rocket capacity
+				if (unit.unitType() == Rocket && unit.structureIsBuilt() == 1
+						&& unit.structureGarrison().size() < Constants.MAX_ROCKET_CAPACITY) {
+					armyNav.addTarget(unit.location().mapLocation());
+				}
 			}
+			armyNav.recalcDistanceMap();
 		}
-
-		armyNav.recalcDistanceMap();
 	}
 
 	private static void setupResearchQueue() {
@@ -218,6 +240,9 @@ public class Player {
 			case Ranger:
 				RangerController.moveRanger(unit);
 				break;
+			case Rocket:
+				RocketController.moveRocket(unit);
+				break;
 			default:
 				break;
 			}
@@ -229,7 +254,7 @@ public class Player {
 	private static void initialTurns() {
 		gc.nextTurn();
 
-		VecUnit startingWorkers = gc.units();
+		VecUnit startingWorkers = gc.myUnits();
 		
 		Player.updateUnitStates(startingWorkers);
 		

@@ -1,6 +1,4 @@
-import bc.Unit;
-import bc.UnitType;
-import bc.VecUnit;
+import bc.*;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
