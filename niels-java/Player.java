@@ -174,12 +174,20 @@ public class Player {
 		RobotMemory memory = new RobotMemory();
 		switch (unit.unitType()) {
 			case Worker: {
-				if (gc.round() <= Constants.START_BUILDING_ROCKETS_ROUND
-						&& CensusCounts.getWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES) >= 2) {
+				if (gc.round() <= Constants.START_BUILDING_ROCKETS_ROUND) {
+					int numFactoryBuilders = CensusCounts.getWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES);
+					int numHarvesters = CensusCounts.getWorkerModeCount(WorkerController.Mode.HARVESTER);
+					if (numFactoryBuilders <= numHarvesters) {
+						memory.workerMode = WorkerController.Mode.BUILD_FACTORIES;
+						CensusCounts.incrementWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES);
+					} else {
 						memory.workerMode = WorkerController.Mode.HARVESTER;
+						CensusCounts.incrementWorkerModeCount(WorkerController.Mode.HARVESTER);
+					}
 				} else if (gc.round()> Constants.START_BUILDING_ROCKETS_ROUND) {
 					// TODO modify to make sure we have at least 2-3 factories
 					memory.workerMode = WorkerController.Mode.BUILD_ROCKETS;
+					CensusCounts.incrementWorkerModeCount(WorkerController.Mode.BUILD_ROCKETS);
 				}
 				break;
 			}
