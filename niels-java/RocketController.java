@@ -41,18 +41,18 @@ public class RocketController {
 	}
 
 	private static void tryToLaunch(Unit unit) {
-		MapLocation location = findValidLocation();
+		MapLocation location = findValidLocation(unit);
 		if (location != null) {
 			Player.gc.launchRocket(unit.id(), location);
 		}
 	}
 
-	private static MapLocation findValidLocation() {
+	private static MapLocation findValidLocation(Unit unit) {
 		PlanetMap map = Player.gc.startingMap(Planet.Mars);
 		for (int i = 0; i < 50; i++) {
 			MapLocation proposedLocation = new MapLocation(Planet.Mars, (int) (Math.random() * map.getWidth()),
 					(int) (Math.random() * map.getHeight()));
-			if (map.onMap(proposedLocation) && Player.gc.isOccupiable(proposedLocation) != 0) {
+			if (Player.gc.canLaunchRocket(unit.id(), proposedLocation)) {
 				return proposedLocation;
 			}
 		}
