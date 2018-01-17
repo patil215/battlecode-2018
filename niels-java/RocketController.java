@@ -13,11 +13,15 @@ import bc.*;
 public class RocketController {
 	public static void moveRocket(Unit unit) {
 
-		if (unit.structureIsBuilt() == 0) {
-			return;
+		if (Player.planet == Planet.Earth) {
+			runEarthLogic(unit);
+		} else if (Player.planet == Planet.Mars) {
+			runMarsLogic(unit);
 		}
+	}
 
-		if (unit.structureGarrison().size() < 2) {
+	private static void runEarthLogic(Unit unit) {
+		if (unit.structureIsBuilt() == 0) {
 			return;
 		}
 
@@ -27,7 +31,12 @@ public class RocketController {
 			return;
 		}
 
-		// Launch if less than half
+		// Otherwise only launch if we have at least 2 units
+		if (unit.structureGarrison().size() < 2) {
+			return;
+		}
+
+		// Launch if less than half health
 		if (unit.health() < (Constants.ROCKET_HEALTH / 2)) {
 			tryToLaunch(unit);
 			return;
@@ -38,6 +47,10 @@ public class RocketController {
 			tryToLaunch(unit);
 			return;
 		}
+	}
+
+	private static void runMarsLogic(Unit unit) {
+		while (Utils.tryAndUnload(unit));
 	}
 
 	private static void tryToLaunch(Unit unit) {

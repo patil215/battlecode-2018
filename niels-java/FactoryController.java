@@ -29,12 +29,10 @@ public class FactoryController {
 
 	private static void moveProduce(Unit unit) {
 		if (unit.isFactoryProducing() == 0 && Player.gc.karbonite() >= bc.bcUnitTypeFactoryCost(UnitType.Ranger)) {
-		//&& CensusCounts.getUnitCount(UnitType.Ranger) <= 10 && Player.gc.round() > 375) {
+		//&& CensusCounts.getUnitCount(UnitType.Ranger) <= 10 && Player.gc.round() > 375) { // USED FOR LIMITING, REMEMBER TO TURN OFF
 			Player.gc.produceRobot(unit.id(), UnitType.Ranger);
 		}
-		if (unit.structureGarrison().size() > 0) {
-			Utils.tryAndUnload(unit.id());
-		}
+		Utils.tryAndUnload(unit);
 	}
 
 }

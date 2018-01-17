@@ -14,10 +14,14 @@ public class Utils {
 		return false;
 	}
 
-	public static boolean tryAndUnload(int structId) {
+	public static boolean tryAndUnload(Unit unit) {
+		if (unit.structureGarrison().size() <= 0) {
+			return false;
+		}
+
 		for (Direction direction : Direction.values()) {
-			if (Player.gc.canUnload(structId, direction)) {
-				Player.gc.unload(structId, direction);
+			if (Player.gc.canUnload(unit.id(), direction)) {
+				Player.gc.unload(unit.id(), direction);
 				return true;
 			}
 		}

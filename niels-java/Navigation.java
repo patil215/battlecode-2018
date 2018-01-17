@@ -109,16 +109,17 @@ public class Navigation {
 	 *
 	 * If no direction can be moved to (ex. all blocked), returns null;
 	 */
-	public Direction getNextDirection(MapLocation start) {
+	public Direction getNextDirection(Unit unit) {
 		int minDist = Integer.MAX_VALUE;
 		Direction next = null;
+		MapLocation start = unit.location().mapLocation();
 		for (Direction dir : Direction.values()) {
 			Point delta = dirToDisp.get(dir);
 			int newX = start.getX() + delta.x;
 			int newY = start.getY() + delta.y;
 			MapLocation newLoc = new MapLocation(planet, newX, newY);
 			if (map.onMap(newLoc) && distances[newX][newY] < minDist
-					&& Player.gc.canMove(Player.gc.senseUnitAtLocation(start).id(), dir)) {
+					&& Player.gc.canMove(unit.id(), dir)) {
 				next = dir;
 				minDist = distances[newX][newY];
 			}

@@ -17,7 +17,7 @@ public class RangerController {
 		} else if (target.unitType() == UnitType.Factory) {
 			return target.health() * 2;
 		} else if (target.unitType() == UnitType.Rocket) {
-			return Long.MAX_VALUE;
+			return target.health() * 3;
 		}
 		return target.health();
 	}
@@ -25,16 +25,8 @@ public class RangerController {
 	public static void moveRanger(Unit unit) {
 		if (!unit.location().isInGarrison()) {
 
-			// Load up in rocket if we can
-			VecUnit units = Player.gc.myUnits();
-			for (int i = 0; i < units.size(); i++) {
-				Unit potentialRocket = units.get(i);
-				if (potentialRocket.unitType() == UnitType.Rocket && potentialRocket.structureIsBuilt() == 1) {
-					if (Player.gc.canLoad(potentialRocket.id(), unit.id())) {
-						Player.gc.load(potentialRocket.id(), unit.id());
-						return; // We done after loading
-					}
-				}
+			if (Player.planet == Planet.Earth) {
+				tryToGetIntoRocket(unit);
 			}
 
 			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(),
@@ -47,9 +39,22 @@ public class RangerController {
 		}
 	}
 
+	private static void tryToGetIntoRocket(Unit unit) {
+		VecUnit units = Player.gc.myUnits();
+		for (int i = 0; i < units.size(); i++) {
+			Unit potentialRocket = units.get(i);
+			if (potentialRocket.unitType() == UnitType.Rocket && potentialRocket.structureIsBuilt() == 1) {
+				if (Player.gc.canLoad(potentialRocket.id(), unit.id())) {
+					Player.gc.load(potentialRocket.id(), unit.id());
+					return; // We done after loading
+				}
+			}
+		}
+	}
+
 	private static void moveRecon(Unit unit) {
 		if (unit.movementHeat() < 10) {
-			Direction toMove = Player.armyNav.getNextDirection(unit.location().mapLocation());
+			Direction toMove = Player.armyNav.getNextDirection(unit);
 
 			if (toMove == null) {
 				return;

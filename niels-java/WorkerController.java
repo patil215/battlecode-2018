@@ -40,7 +40,7 @@ public class WorkerController {
 				long karbAtLoc = Player.gc.karboniteAt(workerLoc);
 				if(karbAtLoc == 0) {
 					Player.workerNav.removeTarget(workerLoc);
-					Direction toMove = Player.workerNav.getNextDirection(workerLoc);
+					Direction toMove = Player.workerNav.getNextDirection(unit);
 					if (toMove != null && unit.movementHeat() < Constants.MOVEMENT_HEAT) {
 						Player.gc.moveRobot(unit.id(), toMove);
 					}

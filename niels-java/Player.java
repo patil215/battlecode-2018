@@ -19,6 +19,7 @@ public class Player {
 	static Navigation workerNav;
 	static Navigation armyNav;
 	static HashMap<Integer, RobotMemory> robotMemory;
+	static Planet planet;
 	static PlanetMap map;
 
 	private static List<Point> getEnemyUnits(VecUnit initUnits) {
@@ -71,9 +72,10 @@ public class Player {
 
 		CensusCounts.resetCounts();
 
+		planet = Player.gc.planet();
 		robotMemory = new HashMap<>();
 		enemy = Utils.getEnemyTeam();
-		map = gc.startingMap(gc.planet());
+		map = gc.startingMap(planet);
 		armyNav = new Navigation(map, getEnemyUnits(map.getInitial_units()));
 		workerNav = new Navigation(map, getInitialKarb());
 
@@ -96,7 +98,29 @@ public class Player {
 	}
 
 	private static void updateRangerTargets() {
-		if (gc.round() <= 500) {
+		// Move towards rockets if we need to bail
+		if (Player.planet == Planet.Earth && gc.round() >= 500) {
+			for (Point loc : new HashSet<>(armyNav.getTargets())) {
+				MapLocation target = new MapLocation(gc.planet(), loc.x, loc.y);
+				armyNav.removeTarget(target);
+			}
+
+			// Move toward rockets
+			VecUnit units = gc.myUnits();
+
+			for (int i = 0; i < units.size(); i++) {
+				Unit unit = units.get(i);
+
+				// Add all rockets that are ready to be loaded up
+				// TODO don't use constant for rocket capacity
+				if (unit.unitType() == Rocket && unit.structureIsBuilt() == 1
+						&& unit.structureGarrison().size() < Constants.MAX_ROCKET_CAPACITY) {
+					armyNav.addTarget(unit.location().mapLocation());
+				}
+			}
+			armyNav.recalcDistanceMap();
+		// Move towards enemies
+		} else {
 			// Move toward enemies
 			VecUnit foes = gc.senseNearbyUnitsByTeam(new MapLocation(gc.planet(), 1, 1), 250, Utils.getEnemyTeam());
 
@@ -115,26 +139,6 @@ public class Player {
 			if(foes.size() == 0) {
 				for(MapLocation loc : getUnseenLocs()) {
 					armyNav.addTarget(loc);
-				}
-			}
-			armyNav.recalcDistanceMap();
-		} else {
-			for (Point loc : new HashSet<>(armyNav.getTargets())) {
-				MapLocation target = new MapLocation(gc.planet(), loc.x, loc.y);
-				armyNav.removeTarget(target);
-			}
-
-			// Move toward rockets
-			VecUnit units = gc.myUnits();
-
-			for (int i = 0; i < units.size(); i++) {
-				Unit unit = units.get(i);
-
-				// Add all rockets that are ready to be loaded up
-				// TODO don't use constant for rocket capacity
-				if (unit.unitType() == Rocket && unit.structureIsBuilt() == 1
-						&& unit.structureGarrison().size() < Constants.MAX_ROCKET_CAPACITY) {
-					armyNav.addTarget(unit.location().mapLocation());
 				}
 			}
 			armyNav.recalcDistanceMap();
