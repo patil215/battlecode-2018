@@ -113,7 +113,9 @@ public class Navigation {
 		int minDist = Integer.MAX_VALUE;
 		Direction next = null;
 		MapLocation start = unit.location().mapLocation();
-		for (Direction dir : Direction.values()) {
+		List<Direction> dirs = Arrays.asList(Direction.values());
+		Collections.shuffle(dirs);
+		for (Direction dir : dirs) {
 			Point delta = dirToDisp.get(dir);
 			int newX = start.getX() + delta.x;
 			int newY = start.getY() + delta.y;
