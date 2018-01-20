@@ -99,6 +99,9 @@ public class Player {
 			}
 
 			// armyNav.printDistances();
+
+			// Submit the actions we've done, and wait for our next turn.
+			gc.nextTurn();
 		}
 	}
 
@@ -267,8 +270,6 @@ public class Player {
 				break;
 			}
 		}
-		// Submit the actions we've done, and wait for our next turn.
-		gc.nextTurn();
 	}
 
 	private static void initialTurns() {
