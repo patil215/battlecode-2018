@@ -6,22 +6,6 @@ public class RangerController {
 		FIGHT_ENEMIES
 	}
 
-	private static long targetScore(Unit unit, Unit target) {
-		if (target == null || !Player.gc.canAttack(unit.id(), target.id())) {
-			return Long.MAX_VALUE;
-		}
-		if (target.unitType() == UnitType.Worker) {
-			return target.health() * 3;
-		} else if (target.unitType() == UnitType.Healer) {
-			return target.health() / 2;
-		} else if (target.unitType() == UnitType.Factory) {
-			return target.health() * 2;
-		} else if (target.unitType() == UnitType.Rocket) {
-			return target.health() * 3;
-		}
-		return target.health();
-	}
-
 	public static void moveRanger(Unit unit) {
 		if (!unit.location().isInGarrison()) {
 
@@ -71,12 +55,12 @@ public class RangerController {
 		Unit threat = Utils.getMostDangerousNearbyEnemy(unit);
 		for (int index = 0; index < foes.size(); index++) {
 			Unit foe = foes.get(index);
-			if (targetScore(unit, foe) < targetScore(unit, target)) {
+			if (CombatUtils.targetScoreRanger(unit, foe) < CombatUtils.targetScoreRanger(unit, target)) {
 				target = foe;
 			}
 		}
 		if (target != null && Player.gc.canAttack(unit.id(), target.id()) && unit.attackHeat() < 10) {
-			Player.gc.attack(unit.id(), target.id());
+			CombatUtils.attack(unit, target);
 		}
 		if (threat != null) {
 			Direction toMove = Utils.fleeFrom(unit, threat);

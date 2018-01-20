@@ -67,6 +67,11 @@ public class Player {
 		return targets;
 	}
 
+	public static void finishTurn() {
+		CombatUtils.cleanupAtEndOfTurn();
+		gc.nextTurn();
+	}
+
 	public static void main(String[] args) {
 		// Connect to the manager, starting the game
 		gc = new GameController();
@@ -101,7 +106,7 @@ public class Player {
 			// armyNav.printDistances();
 
 			// Submit the actions we've done, and wait for our next turn.
-			gc.nextTurn();
+			finishTurn();
 		}
 	}
 
@@ -273,7 +278,7 @@ public class Player {
 	}
 
 	private static void initialTurns() {
-		gc.nextTurn();
+		finishTurn();
 
 		VecUnit startingWorkers = gc.myUnits();
 
@@ -286,12 +291,12 @@ public class Player {
 			}
 		}
 
-		gc.nextTurn();
+		finishTurn();
 
 		for (int index = 0; index < startingWorkers.size(); index++) {
 			Utils.tryAndReplicate(startingWorkers.get(index));
 		}
 
-		gc.nextTurn();
+		finishTurn();
 	}
 }
