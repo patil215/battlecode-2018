@@ -40,12 +40,37 @@ public class Utils {
 
 	public static boolean tryAndHarvest(Unit worker) {
 		int workerId = worker.id();
-		if (worker.abilityHeat() < Constants.ABILITY_HEAT) {
+		if (worker.abilityHeat() < Constants.MAX_ABILITY_HEAT) {
 			for (Direction direction : Direction.values()) {
 				if (Player.gc.canHarvest(workerId, direction)) {
 					Player.gc.harvest(workerId, direction);
 					return true;
 				}
+			}
+		}
+		return false;
+	}
+
+	public static boolean tryAndGetIntoRocket(Unit unit) {
+		VecUnit units = Player.gc.myUnits();
+		for (int i = 0; i < units.size(); i++) {
+			Unit potentialRocket = units.get(i);
+			if (potentialRocket.unitType() == UnitType.Rocket && potentialRocket.structureIsBuilt() == 1) {
+				if (Player.gc.canLoad(potentialRocket.id(), unit.id())) {
+					Player.gc.load(potentialRocket.id(), unit.id());
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static boolean moveAccordingToDjikstraMap(Unit unit, Navigation map) {
+		if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
+			Direction toMove = Player.armyNav.getNextDirection(unit);
+			if (toMove != null && Player.gc.canMove(unit.id(), toMove)) {
+				Player.gc.moveRobot(unit.id(), toMove);
+				return true;
 			}
 		}
 		return false;

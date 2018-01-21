@@ -69,6 +69,13 @@ public class Player {
 
 	public static void finishTurn() {
 		CombatUtils.cleanupAtEndOfTurn();
+
+		// Fix their stupid memory leak error
+		if (gc.round() > 0 && gc.round() % 25 == 0) {
+			System.runFinalization();
+			System.gc();
+		}
+
 		gc.nextTurn();
 	}
 
@@ -89,24 +96,32 @@ public class Player {
 		initialTurns();
 
 		while (true) {
-			VecUnit units = gc.myUnits();
+			try {
+				if (gc.getTimeLeftMs() > 100) {
+					VecUnit units = gc.myUnits();
 
-			if (gc.round() % 3 == 0) {
-				updateRangerTargets();
+					if (gc.round() % 3 == 0) {
+						updateRangerTargets();
+					}
+					updateUnitStates(units);
+					CensusCounts.computeCensus(units);
+					moveUnits(units);
+
+					// Workers will update empty karbonite positions in workerController
+					if (gc.round() % 3 == 0) {
+						workerNav.recalcDistanceMap();
+					}
+
+					// armyNav.printDistances();
+
+					// Submit the actions we've done, and wait for our next turn.
+					finishTurn();
+				} else {
+					System.out.println("Out of time. Waiting for passive regen...");
+				}
+			} catch(Exception e) {
+				e.printStackTrace();
 			}
-			updateUnitStates(units);
-			CensusCounts.computeCensus(units);
-			moveUnits(units);
-
-			// Workers will update empty karbonite positions in workerController
-			if (gc.round() % 3 == 0) {
-				workerNav.recalcDistanceMap();
-			}
-
-			// armyNav.printDistances();
-
-			// Submit the actions we've done, and wait for our next turn.
-			finishTurn();
 		}
 	}
 
@@ -282,19 +297,21 @@ public class Player {
 
 		VecUnit startingWorkers = gc.myUnits();
 
+		for (int index = 0; index < startingWorkers.size(); index++) {
+			Utils.tryAndReplicate(startingWorkers.get(index));
+		}
+
+		startingWorkers = gc.myUnits();
 		Player.updateUnitStates(startingWorkers);
 
+		finishTurn();
+
+		startingWorkers = gc.myUnits();
 		for (int index = 0; index < startingWorkers.size(); index++) {
 			Unit worker = startingWorkers.get(index);
 			if (Utils.tryAndBuild(worker.id(), Factory)) {
 				break;
 			}
-		}
-
-		finishTurn();
-
-		for (int index = 0; index < startingWorkers.size(); index++) {
-			Utils.tryAndReplicate(startingWorkers.get(index));
 		}
 
 		finishTurn();

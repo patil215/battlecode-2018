@@ -10,7 +10,7 @@ public class RangerController {
 		if (!unit.location().isInGarrison()) {
 
 			if (Player.planet == Planet.Earth) {
-				tryToGetIntoRocket(unit);
+				Utils.tryAndGetIntoRocket(unit);
 			}
 
 			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(),
@@ -23,31 +23,8 @@ public class RangerController {
 		}
 	}
 
-	private static void tryToGetIntoRocket(Unit unit) {
-		VecUnit units = Player.gc.myUnits();
-		for (int i = 0; i < units.size(); i++) {
-			Unit potentialRocket = units.get(i);
-			if (potentialRocket.unitType() == UnitType.Rocket && potentialRocket.structureIsBuilt() == 1) {
-				if (Player.gc.canLoad(potentialRocket.id(), unit.id())) {
-					Player.gc.load(potentialRocket.id(), unit.id());
-					return; // We done after loading
-				}
-			}
-		}
-	}
-
 	private static void moveRecon(Unit unit) {
-		if (unit.movementHeat() < 10) {
-			Direction toMove = Player.armyNav.getNextDirection(unit);
-
-			if (toMove == null) {
-				return;
-			}
-			
-			if (Player.gc.canMove(unit.id(), toMove)) {
-				Player.gc.moveRobot(unit.id(), toMove);
-			}
-		}
+		Utils.moveAccordingToDjikstraMap(unit, Player.armyNav);
 	}
 
 	public static void combatMicro(Unit unit, VecUnit foes) {
@@ -59,7 +36,8 @@ public class RangerController {
 				target = foe;
 			}
 		}
-		if (target != null && Player.gc.canAttack(unit.id(), target.id()) && unit.attackHeat() < 10) {
+		if (target != null && Player.gc.canAttack(unit.id(), target.id())
+				&& unit.attackHeat() < Constants.MAX_ATTACK_HEAT) {
 			CombatUtils.attack(unit, target);
 		}
 		if (threat != null) {
