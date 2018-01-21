@@ -70,7 +70,7 @@ public class Utils {
 
 	public static boolean moveAccordingToDjikstraMap(Unit unit, Navigation map) {
 		if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
-			Direction toMove = Player.armyNav.getNextDirection(unit);
+			Direction toMove = map.getNextDirection(unit);
 			if (toMove != null && Player.gc.canMove(unit.id(), toMove)) {
 				Player.gc.moveRobot(unit.id(), toMove);
 				return true;

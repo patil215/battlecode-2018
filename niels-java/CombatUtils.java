@@ -12,6 +12,20 @@ public class CombatUtils {
 	 */
 	private static HashMap<Unit, Long> markedEnemyHealth = new HashMap<>();
 
+	static Navigation microNav;
+
+	public static void initAtStartOfTurn() {
+		// Commented because we aren't using knights
+		/*
+		VecUnit foes = Player.gc.senseNearbyUnitsByTeam(new MapLocation(Player.gc.planet(), 1,1), Long.MAX_VALUE, Player.enemy);
+		Set<Point> useless = new HashSet<>();
+		for (int i = 0; i < foes.size(); i++) {
+			MapLocation location = foes.get(i).location().mapLocation();
+			useless.add(new Point(location.getX(), location.getY()));
+		}
+		microNav = new Navigation(Player.map, useless, 10);*/
+	}
+
 	public static void cleanupAtEndOfTurn() {
 		markedEnemyHealth = new HashMap<>();
 	}
@@ -24,7 +38,7 @@ public class CombatUtils {
 		return target.health();
 	}
 
-	public static long targetScoreRanger(Unit attacker, Unit target) {
+	public static long targetScore(Unit attacker, Unit target) {
 		if (target == null || !Player.gc.canAttack(attacker.id(), target.id())) {
 			return Long.MAX_VALUE;
 		}

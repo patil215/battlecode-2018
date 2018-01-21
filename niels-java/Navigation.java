@@ -97,16 +97,16 @@ public class Navigation {
 	}
 
 
-	public Navigation(PlanetMap map, List<Point> targets, int maxDistance) {
+	public Navigation(PlanetMap map, Set<Point> targets, int maxDistance) {
 		this.map = map;
 		this.planet = map.getPlanet();
 		this.maxDistance = maxDistance;
 		this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
-		this.targets = new HashSet<>(targets);
+		this.targets = targets;
 		recalcDistanceMap();
 	}
 
-	public Navigation(PlanetMap map, List<Point> targets) {
+	public Navigation(PlanetMap map, Set<Point> targets) {
 		this(map, targets, Integer.MAX_VALUE);
 	}
 

@@ -23,8 +23,8 @@ public class Player {
 	static PlanetMap map;
 	static boolean seenEnemies = true;
 
-	private static List<Point> getEnemyUnits(VecUnit initUnits) {
-		List<Point> targets = new ArrayList<>();
+	private static Set<Point> getEnemyUnits(VecUnit initUnits) {
+		Set<Point> targets = new HashSet<>();
 		for (int i = 0; i < initUnits.size(); i++) {
 			Unit unit = initUnits.get(i);
 			if (unit.team() == enemy) {
@@ -35,11 +35,11 @@ public class Player {
 		return targets;
 	}
 
-	private static List<Point> getInitialKarb() {
+	private static Set<Point> getInitialKarb() {
 		Planet planet = map.getPlanet();
 		long maxX = map.getWidth();
 		long maxY = map.getHeight();
-		List<Point> targets = new ArrayList<>();
+		Set<Point> targets = new HashSet<>();
 		for (int x = 0; x < maxX; x++) {
 			for (int y = 0; y < maxY; y++) {
 				MapLocation loc = new MapLocation(planet, x, y);
@@ -65,6 +65,10 @@ public class Player {
 			}
 		}
 		return targets;
+	}
+
+	public static void beginTurn() {
+		CombatUtils.initAtStartOfTurn();
 	}
 
 	public static void finishTurn() {
@@ -98,6 +102,7 @@ public class Player {
 		while (true) {
 			try {
 				if (gc.getTimeLeftMs() > 100) {
+					beginTurn();
 					VecUnit units = gc.myUnits();
 
 					if (gc.round() % 3 == 0) {
@@ -286,6 +291,8 @@ public class Player {
 			case Rocket:
 				RocketController.moveRocket(unit);
 				break;
+			case Knight:
+				KnightController.moveKnight(unit);
 			default:
 				break;
 			}
@@ -294,6 +301,8 @@ public class Player {
 
 	private static void initialTurns() {
 		finishTurn();
+
+		beginTurn();
 
 		VecUnit startingWorkers = gc.myUnits();
 
@@ -305,6 +314,8 @@ public class Player {
 		Player.updateUnitStates(startingWorkers);
 
 		finishTurn();
+
+		beginTurn();
 
 		startingWorkers = gc.myUnits();
 		for (int index = 0; index < startingWorkers.size(); index++) {

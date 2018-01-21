@@ -32,7 +32,7 @@ public class RangerController {
 		Unit threat = Utils.getMostDangerousNearbyEnemy(unit);
 		for (int index = 0; index < foes.size(); index++) {
 			Unit foe = foes.get(index);
-			if (CombatUtils.targetScoreRanger(unit, foe) < CombatUtils.targetScoreRanger(unit, target)) {
+			if (CombatUtils.targetScore(unit, foe) < CombatUtils.targetScore(unit, target)) {
 				target = foe;
 			}
 		}
@@ -42,7 +42,8 @@ public class RangerController {
 		}
 		if (threat != null) {
 			Direction toMove = Utils.fleeFrom(unit, threat);
-			if (toMove != null && unit.movementHeat() < 10 && Player.gc.canMove(unit.id(), toMove)) {
+			if (toMove != null && unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT
+					&& Player.gc.canMove(unit.id(), toMove)) {
 				Player.gc.moveRobot(unit.id(), toMove);
 			}
 		} else {
