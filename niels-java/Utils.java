@@ -5,6 +5,8 @@ import java.util.ArrayList;
 public class Utils {
 
 	public static boolean tryAndBuild(int workerId, UnitType type) {
+		// TODO: find direction maximizing workers then maximizing free 
+		// area around it
 		for (Direction direction : Direction.values()) {
 			if (Player.gc.canBlueprint(workerId, type, direction)) {
 				Player.gc.blueprint(workerId, type, direction);
@@ -29,6 +31,7 @@ public class Utils {
 	}
 
 	public static boolean tryAndReplicate(Unit worker) {
+		// TODO: replicate in direction adjacent to factory
 		for (Direction direction : Direction.values()) {
 			if (Player.gc.canReplicate(worker.id(), direction)) {
 				Player.gc.replicate(worker.id(), direction);

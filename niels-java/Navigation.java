@@ -10,6 +10,7 @@ public class Navigation {
 	private final PlanetMap map;
 	private final Planet planet;
 	private Set<Point> targets;
+	private int maxDistance;
 
 	public void printDistances() {
 		System.out.println(Player.gc.round());
@@ -64,6 +65,7 @@ public class Navigation {
 		for(int i = 0; i < units.size(); i++) {
 			Unit unit = units.get(i);
 			UnitType type = unit.unitType();
+			// TODO: go through factories
 			if(type == UnitType.Rocket || type == UnitType.Factory) {
 				MapLocation loc = unit.location().mapLocation();
 				buildings.add(new Point(loc.getX(), loc.getY()));
@@ -84,7 +86,8 @@ public class Navigation {
 				if (map.onMap(newLocation) 
 						&& map.isPassableTerrainAt(newLocation) == 1 
 						&& !buildings.contains(new Point(newX, newY))
-						&& distances[newX][newY] > curDistance + 1) {
+						&& distances[newX][newY] > curDistance + 1
+						&& curDistance + 1 < maxDistance) {
 					distances[newX][newY] = curDistance + 1;
 					queue.add(newLocation);
 				}
@@ -94,12 +97,17 @@ public class Navigation {
 	}
 
 
-	public Navigation(PlanetMap map, List<Point> targets) {
+	public Navigation(PlanetMap map, List<Point> targets, int maxDistance) {
 		this.map = map;
 		this.planet = map.getPlanet();
+		this.maxDistance = maxDistance;
 		this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
 		this.targets = new HashSet<>(targets);
 		recalcDistanceMap();
+	}
+
+	public Navigation(PlanetMap map, List<Point> targets) {
+		this(map, targets, Integer.MAX_VALUE);
 	}
 
 	/**
@@ -107,7 +115,8 @@ public class Navigation {
 	 *
 	 * Tries all possible directions, returning the best one we can move towards.
 	 *
-	 * If no direction can be moved to (ex. all blocked), returns null;
+	 * Null is returned if all adjacent squares are 'too far' (over threshold)
+	 * or impossible to reach
 	 */
 	public Direction getNextDirection(Unit unit) {
 		int minDist = Integer.MAX_VALUE;
