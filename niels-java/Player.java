@@ -123,6 +123,7 @@ public class Player {
 		friendlyTeam = gc.team();
 		enemyTeam = Utils.getEnemyTeam();
 		getUnits();
+		initArmyMap();
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
 		robotMemory = new HashMap<>();
@@ -214,18 +215,17 @@ public class Player {
 	}
 
 	private static void setupResearchQueue() {
-		gc.queueResearch(Ranger); // Level 1 Ranger (ends at turn 25)
-		gc.queueResearch(Worker); // Level 1 Worker (ends at turn 50)
-		gc.queueResearch(Worker); // Level 2 Worker (ends at turn 125)
-		gc.queueResearch(Worker); // Level 3 Worker (ends at turn 200)
-		gc.queueResearch(Worker); // Level 4 Worker (ends at turn 275)
-		gc.queueResearch(UnitType.Rocket); // Level 1 Rocket (ends at turn 375)
-		gc.queueResearch(UnitType.Rocket); // Level 2 Rocket (ends at turn 475)
-		gc.queueResearch(UnitType.Rocket); // Level 3 Rocket (ends at turn 575)
-		gc.queueResearch(Ranger); // Level 2 Ranger (ends at turn 675) TODO: adjust ranger to still attack even if
-									// it sees boi
-		gc.queueResearch(Ranger); // Level 3 Ranger (ends at turn 775) TODO: sniping code
-		// TODO we have more space for research but we don't have any other units...
+		gc.queueResearch(Worker); // Level 1 Worker (ends at turn 25)
+		gc.queueResearch(Worker); // Level 2 Worker (ends at turn 100)
+		gc.queueResearch(Ranger); // Level 1 Ranger (ends at turn 175)
+		gc.queueResearch(Worker); // Level 3 Worker (ends at turn 275)
+		gc.queueResearch(Healer); // Level 1 Healer (ends at turn 225)
+		gc.queueResearch(Healer); // Level 2 Healer (ends at turn 325)
+		gc.queueResearch(Rocket); // Level 1 Rocket (ends at turn 375)
+		gc.queueResearch(Rocket); // Level 2 Rocket (ends at turn 475)
+		gc.queueResearch(Rocket); // Level 3 Rocket (ends at turn 575)
+		gc.queueResearch(Ranger); // Level 2 Ranger (ends at turn 675)
+		gc.queueResearch(Healer); // Level 3 Healer (ends at turn 775)
 	}
 
 	private static void updateUnitStates(ArrayList<Unit> units) {
@@ -337,8 +337,6 @@ public class Player {
 
 	private static void initialTurns() {
 		
-		initArmyMap();
-		
 		finishTurn();
 
 		// Turn
@@ -361,21 +359,25 @@ public class Player {
 	}
 
 	private static void initArmyMap() {
-		VecUnit units = Player.gc.myUnits();
-		Set<Point> rallyPoints = new HashSet<>();
-		for(int index = 0; index < units.size(); index++) {
-			MapLocation current = units.get(index).location().mapLocation();
-			Direction[] directions = Direction.values();
-			for(int count = 0; count < 10; count++) {
-				Direction toTry = directions[(int) (directions.length * Math.random())];
-				MapLocation next = current.add(toTry);
-				if (map.onMap(next) 
-						&& map.isPassableTerrainAt(next)!=0) {
-					current = next;
+		if(Constants.CLUMP_THRESHOLD>0) {
+			VecUnit units = Player.gc.myUnits();
+			Set<Point> rallyPoints = new HashSet<>();
+			for (int index = 0; index < units.size(); index++) {
+				MapLocation current = units.get(index).location().mapLocation();
+				Direction[] directions = Direction.values();
+				for (int count = 0; count < 10; count++) {
+					Direction toTry = directions[(int) (directions.length * Math.random())];
+					MapLocation next = current.add(toTry);
+					if (map.onMap(next)
+							&& map.isPassableTerrainAt(next) != 0) {
+						current = next;
+					}
 				}
+				rallyPoints.add(new Point(current.getX(), current.getY()));
 			}
-			rallyPoints.add(new Point(current.getX(), current.getY()));
+			armyNav = new Navigation(map, rallyPoints);
+		} else {
+			armyNav = new Navigation(map, getInitialEnemyUnitLocations());
 		}
-		armyNav = new Navigation(map, rallyPoints);
 	}
 }

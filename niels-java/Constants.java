@@ -12,7 +12,7 @@ public class Constants {
 
 	public static final int ROCKET_HEALTH = 200;
 	
-	public static final int CLUMP_THRESHOLD = 100;
+	public static final int CLUMP_THRESHOLD = -1;
 
 	public static final int BUILDER_NAV_SIZE = 5;
 
