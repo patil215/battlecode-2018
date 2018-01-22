@@ -164,6 +164,7 @@ public class Player {
 				finishTurn();
 			} catch(Exception e) {
 				e.printStackTrace();
+				gc.nextTurn();
 			}
 		}
 	}
