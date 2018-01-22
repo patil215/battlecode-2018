@@ -309,7 +309,7 @@ public class Player {
 		startingWorkers = gc.myUnits();
 		for (int index = 0; index < startingWorkers.size(); index++) {
 			Unit worker = startingWorkers.get(index);
-			if (Utils.tryAndBuild(worker.id(), Factory)) {
+			if (Utils.tryAndBuild(worker, Factory)) {
 				break;
 			}
 		}

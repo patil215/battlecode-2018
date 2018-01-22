@@ -1,19 +1,91 @@
 import bc.*;
 
-import java.util.ArrayList;
+import java.util.*;
+import java.util.function.*;
 
 public class Utils {
-
-	public static boolean tryAndBuild(int workerId, UnitType type) {
-		// TODO: find direction maximizing workers then maximizing free 
-		// area around it
-		for (Direction direction : Direction.values()) {
-			if (Player.gc.canBlueprint(workerId, type, direction)) {
-				Player.gc.blueprint(workerId, type, direction);
-				return true;
+	static int countSurrounding(MapLocation loc, 
+			Function<MapLocation, Boolean> f) {
+		int count = 0;
+		for (Direction dir : Direction.values()) {
+			if(dir == Direction.Center) continue;
+			MapLocation newLoc = loc.add(dir);
+			if(Player.map.onMap(newLoc) && f.apply(newLoc)) { 
+				count++; 
 			}
 		}
-		return false;
+		return count;
+	}
+
+	static int countNearbyWorkers(MapLocation loc) {
+		VecUnit workers = 
+			Player.gc.senseNearbyUnitsByType(loc, 1L, UnitType.Worker);
+		int numOurTeam = 0;
+		for(int i = 0; i < workers.size(); i++) {
+			if(workers.get(i).team() != Player.enemy) {
+				numOurTeam++;
+			}
+		}
+		return numOurTeam;
+	}
+
+	static int countNearbyConstruction(MapLocation loc) {
+		VecUnit units = 
+			Player.gc.senseNearbyUnitsByType(loc, 1L, UnitType.Factory);
+		int numOurTeam = 0;
+		for(int i = 0; i < units.size(); i++) {
+			Unit factory = units.get(i);
+			if(factory.team() != Player.enemy && factory.structureIsBuilt() == 0) {
+				numOurTeam++;
+			}
+		}
+		return numOurTeam;
+	}
+
+	public static int countEmptySquaresSurrounding(MapLocation cur) {
+		return countSurrounding(cur, loc -> 
+				Player.map.onMap(loc)
+				&& Player.map.isPassableTerrainAt(loc) == 1 
+				&& !Player.gc.hasUnitAtLocation(loc));
+	}
+
+	public static boolean tryAndBuild(Unit worker, UnitType type) {
+		int workerId = worker.id();
+		MapLocation loc = worker.location().mapLocation();
+		int bestCount = -1;
+		List<MapLocation> bestNextPositions = new ArrayList<>();
+		// find the positions around that the worker that maximize the number
+		// of workers surrounding it
+		for (Direction direction : Direction.values()) {
+			MapLocation newLoc = loc.add(direction);
+			if(Player.gc.canBlueprint(workerId, type, direction)) { 
+				int numSurroundingWorkers = countNearbyWorkers(newLoc);
+				if(numSurroundingWorkers > bestCount) {
+					bestNextPositions.clear();
+					bestNextPositions.add(newLoc);
+					bestCount = numSurroundingWorkers;
+				} else if(numSurroundingWorkers == bestCount) {
+					bestNextPositions.add(newLoc);
+				}
+			}
+		}
+		int bestEmptySquareCount = -1;
+		MapLocation bestLoc = null;
+		// of those, pick the one that has the most free spaces around it
+		for (MapLocation possibleBest : bestNextPositions) {
+			int emptySquares = countEmptySquaresSurrounding(possibleBest); 
+			if(emptySquares > bestEmptySquareCount) {
+				bestLoc = possibleBest;
+				bestEmptySquareCount = emptySquares;
+			}
+		}
+		if(bestLoc == null) {
+			return false;
+		} else {
+			Direction dir = loc.directionTo(bestLoc);
+			Player.gc.blueprint(workerId, type, dir);
+			return true;
+		}
 	}
 
 	public static boolean tryAndUnload(Unit unit) {
@@ -31,14 +103,28 @@ public class Utils {
 	}
 
 	public static boolean tryAndReplicate(Unit worker) {
-		// TODO: replicate in direction adjacent to factory
-		for (Direction direction : Direction.values()) {
-			if (Player.gc.canReplicate(worker.id(), direction)) {
-				Player.gc.replicate(worker.id(), direction);
-				return true;
+		int bestCount = -1;
+		Direction bestDir = null;
+		MapLocation loc = worker.location().mapLocation();
+		int workerId = worker.id();
+		// pick the direction that maximizes the number of blueprints around it
+		for (Direction dir : Direction.values()) {
+			if (dir == Direction.Center) continue;
+			if(Player.gc.canReplicate(workerId, dir)) { 
+				MapLocation newLoc = loc.add(dir);
+				int numFactories = countNearbyConstruction(newLoc); 
+				if(numFactories > bestCount) {
+					bestCount = numFactories;
+					bestDir = dir;
+				}
 			}
 		}
-		return false;
+		if(bestDir == null) {
+			return false;
+		} else {
+			Player.gc.replicate(worker.id(), bestDir);
+			return true;
+		}
 	}
 
 	public static boolean tryAndHarvest(Unit worker) {

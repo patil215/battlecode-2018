@@ -53,7 +53,7 @@ public class WorkerController {
 				Utils.moveRandom(unit);
 				// Try to build factory
 				if (Player.gc.karbonite() > FACTORY_BUILD_KARB_THRESHOLD) {
-					Utils.tryAndBuild(unit.id(), UnitType.Factory);
+					Utils.tryAndBuild(unit, UnitType.Factory);
 				}
 				break;
 			}
@@ -64,7 +64,7 @@ public class WorkerController {
 				// Try to build rocket
 				if (Player.gc.karbonite() > ROCKET_BUILD_KARB_THRESHOLD) {
 					System.out.println("Building rocket");
-					Utils.tryAndBuild(unit.id(), UnitType.Rocket);
+					Utils.tryAndBuild(unit, UnitType.Rocket);
 				}
 				break;
 			}
