@@ -14,7 +14,7 @@ public class RangerController {
 			}
 
 			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(),
-					Player.enemy);
+					Player.enemyTeam);
 			if (foes.size() > 0) {
 				combatMicro(unit, foes);
 			} else {

@@ -23,7 +23,7 @@ public class KnightController {
 		}
 
 		VecUnit foes =
-				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(), Player.enemy);
+				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(), Player.enemyTeam);
 		if (foes.size() > 0) {
 			combatMicro(unit);
 		} else {
@@ -47,7 +47,7 @@ public class KnightController {
 
 		// Attack
 		VecUnit targets =
-				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.attackRange(), Player.enemy);
+				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.attackRange(), Player.enemyTeam);
 		Unit target = null;
 		for (int index = 0; index < targets.size(); index++) {
 			if (CombatUtils.targetScore(unit, targets.get(index)) > CombatUtils.targetScore(unit, target)) {

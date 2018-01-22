@@ -55,9 +55,8 @@ public class Utils {
 	}
 
 	public static boolean tryAndGetIntoRocket(Unit unit) {
-		VecUnit units = Player.gc.myUnits();
-		for (int i = 0; i < units.size(); i++) {
-			Unit potentialRocket = units.get(i);
+		for (int i = 0; i < Player.friendlyUnits.size(); i++) {
+			Unit potentialRocket = Player.friendlyUnits.get(i);
 			if (potentialRocket.unitType() == UnitType.Rocket && potentialRocket.structureIsBuilt() == 1) {
 				if (Player.gc.canLoad(potentialRocket.id(), unit.id())) {
 					Player.gc.load(potentialRocket.id(), unit.id());
@@ -118,11 +117,11 @@ public class Utils {
 	}
 
 	/**
-	 * Returns the nearest enemy unit that can deal damage and is within the passed in unit's line of sight.
+	 * Returns the nearest enemyTeam unit that can deal damage and is within the passed in unit's line of sight.
 	 */
 	public static Unit getMostDangerousNearbyEnemy(Unit unit) {
 		VecUnit nearbyEnemies =
-				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(), Player.enemy);
+				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(), Player.enemyTeam);
 
 		Unit threat = null;
 		for (int i = 0; i < nearbyEnemies.size(); i++) {

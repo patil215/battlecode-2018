@@ -1,7 +1,3 @@
-
-// import the API.
-// See xxx for the javadocs.
-
 import bc.*;
 import java.util.*;
 import java.awt.Point;
@@ -12,22 +8,29 @@ import static bc.UnitType.*;
 
 public class Player {
 
-	public static GameController gc;
+	// Initialized once per game
+	static GameController gc;
+	static Team enemyTeam;
+	static Planet planet;
+	static PlanetMap map;
+
+	// Initialized/updated once per turn
+	static ArrayList<Unit> friendlyUnits;
+	static ArrayList<Unit> enemyUnits;
+	static ArrayList<Unit> allUnits;
 
 	static ArrayList<Unit> blueprints;
-	static Team enemy;
 	static Navigation workerNav;
 	static Navigation armyNav;
 	static HashMap<Integer, RobotMemory> robotMemory;
-	static Planet planet;
-	static PlanetMap map;
 	static boolean seenEnemies = true;
 
-	private static Set<Point> getEnemyUnits(VecUnit initUnits) {
+	private static Set<Point> getInitialEnemyUnitLocations() {
+		VecUnit initialUnits = map.getInitial_units();
 		Set<Point> targets = new HashSet<>();
-		for (int i = 0; i < initUnits.size(); i++) {
-			Unit unit = initUnits.get(i);
-			if (unit.team() == enemy) {
+		for (int i = 0; i < initialUnits.size(); i++) {
+			Unit unit = initialUnits.get(i);
+			if (unit.team() == enemyTeam) {
 				MapLocation unitLoc = unit.location().mapLocation();
 				targets.add(new Point(unitLoc.getX(), unitLoc.getY()));
 			}
@@ -35,8 +38,7 @@ public class Player {
 		return targets;
 	}
 
-	private static Set<Point> getInitialKarb() {
-		Planet planet = map.getPlanet();
+	private static Set<Point> getInitialKarboniteLocations() {
 		long maxX = map.getWidth();
 		long maxY = map.getHeight();
 		Set<Point> targets = new HashSet<>();
@@ -51,8 +53,7 @@ public class Player {
 		return targets;
 	}
 
-	private static List<MapLocation> getUnseenLocs() {
-		Planet planet = map.getPlanet();
+	private static List<MapLocation> getUnseenLocations() {
 		long maxX = map.getWidth();
 		long maxY = map.getHeight();
 		List<MapLocation> targets = new ArrayList<>();
@@ -67,63 +68,83 @@ public class Player {
 		return targets;
 	}
 
+	private static void getUnits() {
+		allUnits = new ArrayList<>();
+		friendlyUnits = new ArrayList<>();
+		enemyUnits = new ArrayList<>();
+		VecUnit units = gc.units();
+		for (int i = 0; i < units.size(); i++) {
+			Unit unit = units.get(i);
+			allUnits.add(unit);
+			if (unit.team() == enemyTeam) {
+				enemyUnits.add(unit);
+			} else {
+				friendlyUnits.add(unit);
+			}
+		}
+	}
+
 	public static void beginTurn() {
 		CombatUtils.initAtStartOfTurn();
+		getUnits();
 	}
 
 	public static void finishTurn() {
 		CombatUtils.cleanupAtEndOfTurn();
 
 		// Fix their stupid memory leak error
-		if (gc.round() > 0 && gc.round() % 25 == 0) {
+		if (gc.round() > 0 && gc.round() % 10 == 0) {
+			long start = System.currentTimeMillis();
 			System.runFinalization();
 			System.gc();
+			long end = System.currentTimeMillis();
+			System.out.println("Took " + (end - start) + " seconds.");
 		}
 
 		gc.nextTurn();
 	}
 
-	public static void main(String[] args) {
-		// Connect to the manager, starting the game
+	private static void initializeVariables() {
 		gc = new GameController();
-
-		CensusCounts.resetCounts();
-
 		planet = Player.gc.planet();
-		robotMemory = new HashMap<>();
-		enemy = Utils.getEnemyTeam();
 		map = gc.startingMap(planet);
-		armyNav = new Navigation(map, getEnemyUnits(map.getInitial_units()));
-		workerNav = new Navigation(map, getInitialKarb());
+		enemyTeam = Utils.getEnemyTeam();
+		getUnits();
+		armyNav = new Navigation(map, getInitialEnemyUnitLocations());
+		workerNav = new Navigation(map, getInitialKarboniteLocations());
+		robotMemory = new HashMap<>();
+		CensusCounts.resetCounts();
+	}
 
+	public static void main(String[] args) {
+		initializeVariables();
 		setupResearchQueue();
 		initialTurns();
 
 		while (true) {
 			try {
-				if (gc.getTimeLeftMs() > 100) {
-					beginTurn();
-					VecUnit units = gc.myUnits();
-
-					if (gc.round() % 3 == 0) {
-						updateRangerTargets();
-					}
-					updateUnitStates(units);
-					CensusCounts.computeCensus(units);
-					moveUnits(units);
-
-					// Workers will update empty karbonite positions in workerController
-					if (gc.round() % 3 == 0) {
-						workerNav.recalcDistanceMap();
-					}
-
-					// armyNav.printDistances();
-
-					// Submit the actions we've done, and wait for our next turn.
-					finishTurn();
-				} else {
+				if (gc.getTimeLeftMs() <= 100) {
 					System.out.println("Out of time. Waiting for passive regen...");
+					finishTurn();
+					continue;
 				}
+
+				beginTurn();
+
+				if (gc.round() % 3 == 0) {
+					updateRangerTargets();
+				}
+				updateUnitStates(friendlyUnits);
+				CensusCounts.computeCensus(friendlyUnits);
+				moveUnits(friendlyUnits);
+
+				// Workers will update empty karbonite positions in workerController
+				if (gc.round() % 3 == 0) {
+					workerNav.recalculateDistanceMap();
+				}
+
+				// Submit the actions we've done, and wait for our next turn.
+				finishTurn();
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
@@ -139,10 +160,8 @@ public class Player {
 			}
 
 			// Move toward rockets
-			VecUnit units = gc.myUnits();
-
-			for (int i = 0; i < units.size(); i++) {
-				Unit unit = units.get(i);
+			for (int i = 0; i < friendlyUnits.size(); i++) {
+				Unit unit = friendlyUnits.get(i);
 
 				// Add all rockets that are ready to be loaded up
 				// TODO don't use constant for rocket capacity
@@ -151,7 +170,7 @@ public class Player {
 					armyNav.addTarget(unit.location().mapLocation());
 				}
 			}
-			armyNav.recalcDistanceMap();
+			armyNav.recalculateDistanceMap();
 			// Move towards enemies
 		} else {
 			// Move toward enemies
@@ -170,13 +189,13 @@ public class Player {
 			}
 			if (Player.seenEnemies && foes.size() == 0) {
 				Player.seenEnemies = false;
-				for (MapLocation loc : getUnseenLocs()) {
+				for (MapLocation loc : getUnseenLocations()) {
 					armyNav.addTarget(loc);
 				}
 			} else if (foes.size() > 0) {
 				Player.seenEnemies = true;
 			}
-			armyNav.recalcDistanceMap();
+			armyNav.recalculateDistanceMap();
 		}
 	}
 
@@ -195,7 +214,7 @@ public class Player {
 		// TODO we have more space for research but we don't have any other units...
 	}
 
-	private static void updateUnitStates(VecUnit units) {
+	private static void updateUnitStates(ArrayList<Unit> units) {
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
 			if (!robotMemory.containsKey(units.get(index).id())) {
@@ -275,7 +294,7 @@ public class Player {
 		}
 	}
 
-	private static void moveUnits(VecUnit units) {
+	private static void moveUnits(ArrayList<Unit> units) {
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
 			switch (unit.unitType()) {
@@ -304,22 +323,18 @@ public class Player {
 
 		beginTurn();
 
-		VecUnit startingWorkers = gc.myUnits();
-
-		for (int index = 0; index < startingWorkers.size(); index++) {
-			Utils.tryAndReplicate(startingWorkers.get(index));
+		for (int index = 0; index < friendlyUnits.size(); index++) {
+			Utils.tryAndReplicate(friendlyUnits.get(index));
 		}
 
-		startingWorkers = gc.myUnits();
-		Player.updateUnitStates(startingWorkers);
+		updateUnitStates(friendlyUnits);
 
 		finishTurn();
 
 		beginTurn();
 
-		startingWorkers = gc.myUnits();
-		for (int index = 0; index < startingWorkers.size(); index++) {
-			Unit worker = startingWorkers.get(index);
+		for (int index = 0; index < friendlyUnits.size(); index++) {
+			Unit worker = friendlyUnits.get(index);
 			if (Utils.tryAndBuild(worker.id(), Factory)) {
 				break;
 			}

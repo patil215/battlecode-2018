@@ -14,7 +14,7 @@ public class CensusCounts {
 	private static Map<FactoryController.Mode, Integer> factoryModeCounts = new EnumMap<>(FactoryController.Mode.class);
 	private static Map<RangerController.Mode, Integer> rangerModeCounts  = new EnumMap<>(RangerController.Mode.class);
 
-	public static void computeCensus(VecUnit units) {
+	public static void computeCensus(ArrayList<Unit> units) {
 		resetCounts();
 
 		ArrayList<Unit> blueprints = new ArrayList<Unit>();

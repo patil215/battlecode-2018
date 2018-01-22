@@ -48,7 +48,7 @@ public class Navigation {
 
 	public static final Map<Point, Direction> dispToDir = createDispToDirMap();
 
-	public void recalcDistanceMap() {
+	public void recalculateDistanceMap() {
 		long start = System.currentTimeMillis();
 		for (int i = 0; i < distances.length; i++) {
 			for (int j = 0; j < distances[0].length; j++) {
@@ -60,10 +60,9 @@ public class Navigation {
 			distances[target.x][target.y] = 0;
 			queue.add(new MapLocation(planet, target.x, target.y));
 		}
-		VecUnit units = Player.gc.myUnits();
 		Set<Point> buildings = new HashSet<>();
-		for(int i = 0; i < units.size(); i++) {
-			Unit unit = units.get(i);
+		for(int i = 0; i < Player.friendlyUnits.size(); i++) {
+			Unit unit = Player.friendlyUnits.get(i);
 			UnitType type = unit.unitType();
 			// TODO: go through factories
 			if(type == UnitType.Rocket || type == UnitType.Factory) {
@@ -103,7 +102,7 @@ public class Navigation {
 		this.maxDistance = maxDistance;
 		this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
 		this.targets = targets;
-		recalcDistanceMap();
+		recalculateDistanceMap();
 	}
 
 	public Navigation(PlanetMap map, Set<Point> targets) {
