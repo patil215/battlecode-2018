@@ -358,8 +358,10 @@ public class Player {
 			Direction[] directions = Direction.values();
 			for(int count = 0; count < 10; count++) {
 				Direction toTry = directions[(int) (directions.length * Math.random())];
-				if (map.isPassableTerrainAt(current.add(toTry))!=0) {
-					current = current.add(toTry);
+				MapLocation next = current.add(toTry);
+				if (map.onMap(next) 
+						&& map.isPassableTerrainAt(next)!=0) {
+					current = next;
 				}
 			}
 			rallyPoints.add(new Point(current.getX(), current.getY()));

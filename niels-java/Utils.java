@@ -22,7 +22,7 @@ public class Utils {
 			Player.gc.senseNearbyUnitsByType(loc, 1L, UnitType.Worker);
 		int numOurTeam = 0;
 		for(int i = 0; i < workers.size(); i++) {
-			if(workers.get(i).team() != Player.enemy) {
+			if(workers.get(i).team() == Player.friendlyTeam) {
 				numOurTeam++;
 			}
 		}
@@ -35,7 +35,8 @@ public class Utils {
 		int numOurTeam = 0;
 		for(int i = 0; i < units.size(); i++) {
 			Unit factory = units.get(i);
-			if(factory.team() != Player.enemy && factory.structureIsBuilt() == 0) {
+			if(factory.team() == Player.friendlyTeam
+					&& factory.structureIsBuilt() == 0) {
 				numOurTeam++;
 			}
 		}
