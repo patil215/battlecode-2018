@@ -28,7 +28,9 @@ public class FactoryController {
 	}
 
 	private static void moveProduce(Unit unit) {
-		if (unit.isFactoryProducing() == 0 && Player.gc.karbonite() >= bc.bcUnitTypeFactoryCost(UnitType.Ranger)) {
+		if (CensusCounts.getUnitCount(UnitType.Worker) <= 1 && unit.isFactoryProducing() == 0 && Player.gc.karbonite() >= bc.bcUnitTypeFactoryCost(UnitType.Worker)) {
+			Player.gc.produceRobot(unit.id(), UnitType.Worker);
+		} else if (unit.isFactoryProducing() == 0 && Player.gc.karbonite() >= bc.bcUnitTypeFactoryCost(UnitType.Ranger)) {
 		//&& CensusCounts.getUnitCount(UnitType.Ranger) <= 10 && Player.gc.round() > 375) { // USED FOR LIMITING, REMEMBER TO TURN OFF
 			Player.gc.produceRobot(unit.id(), UnitType.Ranger);
 		}

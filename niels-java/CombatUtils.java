@@ -1,7 +1,12 @@
+import java.awt.Point;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+import bc.MapLocation;
 import bc.Unit;
 import bc.UnitType;
-
-import java.util.HashMap;
+import bc.VecUnit;
 
 public class CombatUtils {
 	/**
@@ -23,7 +28,8 @@ public class CombatUtils {
 			MapLocation location = foes.get(i).location().mapLocation();
 			useless.add(new Point(location.getX(), location.getY()));
 		}
-		microNav = new Navigation(Player.map, useless, 10);*/
+		microNav = new Navigation(Player.map, useless, 10);
+		*/
 	}
 
 	public static void cleanupAtEndOfTurn() {

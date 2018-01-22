@@ -118,7 +118,6 @@ public class Player {
 		friendlyTeam = gc.team();
 		enemyTeam = Utils.getEnemyTeam();
 		getUnits();
-		armyNav = new Navigation(map, getInitialEnemyUnitLocations());
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
 		robotMemory = new HashMap<>();
 		CensusCounts.resetCounts();
@@ -135,17 +134,20 @@ public class Player {
 					System.out.println("Out of time. Waiting for passive regen...");
 					finishTurn();
 					continue;
-				}
-
+				}				
+				
 				beginTurn();
 
-				if (gc.round() % 3 == 0) {
+				if (gc.round() % 3 == 0 && gc.round() > Constants.CLUMP_THRESHOLD) {
 					updateRangerTargets();
+				} else if (gc.round() == Constants.CLUMP_THRESHOLD) {
+					armyNav = new Navigation(map, getInitialEnemyUnitLocations());
 				}
+				
 				updateUnitStates(friendlyUnits);
 				CensusCounts.computeCensus(friendlyUnits);
 				moveUnits(friendlyUnits);
-
+				
 				// Workers will update empty karbonite positions in workerController
 				if (gc.round() % 3 == 0) {
 					workerNav.recalculateDistanceMap();
@@ -324,6 +326,9 @@ public class Player {
 	}
 
 	private static void initialTurns() {
+		
+		initArmyMap();
+		
 		finishTurn();
 
 		// Turn
@@ -343,5 +348,22 @@ public class Player {
 			}
 		}
 		finishTurn();
+	}
+
+	private static void initArmyMap() {
+		VecUnit units = Player.gc.myUnits();
+		Set<Point> rallyPoints = new HashSet<>();
+		for(int index = 0; index < units.size(); index++) {
+			MapLocation current = units.get(index).location().mapLocation();
+			Direction[] directions = Direction.values();
+			for(int count = 0; count < 10; count++) {
+				Direction toTry = directions[(int) (directions.length * Math.random())];
+				if (map.isPassableTerrainAt(current.add(toTry))!=0) {
+					current = current.add(toTry);
+				}
+			}
+			rallyPoints.add(new Point(current.getX(), current.getY()));
+		}
+		armyNav = new Navigation(map, rallyPoints);
 	}
 }

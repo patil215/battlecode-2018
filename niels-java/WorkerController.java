@@ -5,40 +5,37 @@ import static bc.UnitType.Worker;
 public class WorkerController {
 
 	public enum Mode {
-		HARVESTER,
-		BUILD_FACTORIES,
-		BUILD_ROCKETS,
-		IDLE
+		HARVESTER, BUILD_FACTORIES, BUILD_ROCKETS, IDLE
 	}
 
-	private static final int ROCKET_BUILD_KARB_THRESHOLD = 100;
+	private static final int ROCKET_BUILD_KARB_THRESHOLD = 80;
 	private static final int FACTORY_BUILD_KARB_THRESHOLD = 130;
 	private static final int MAX_NUMBER_WORKERS = 5;
 
 	static void moveWorker(Unit unit) {
+		if (!unit.location().isInGarrison()) {
+			// TODO maybe prioritize fleeing over building in certain cases
+			boolean buildingBlueprint = tryToBuildBlueprints(unit);
+			if (buildingBlueprint) {
+				return; // Nothing else to do
+			}
 
-		// TODO maybe prioritize fleeing over building in certain cases
-		boolean buildingBlueprint = tryToBuildBlueprints(unit);
-		if (buildingBlueprint) {
-			return; // Nothing else to do
-		}
+			// Try to flee from enemies
+			Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
+			if (nearbyEnemy != null) {
+				Utils.fleeFrom(unit, nearbyEnemy);
+			}
 
-		// Try to flee from enemies
-		Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
-		if (nearbyEnemy != null) {
-			Utils.fleeFrom(unit, nearbyEnemy);
-		}
+			// Try to replicate
+			if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS) {
+				Utils.tryAndReplicate(unit);
+			}
 
-		// Try to replicate
-		if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS) {
-			Utils.tryAndReplicate(unit);
-		}
-
-		switch (Utils.getMemory(unit).workerMode) {
+			switch (Utils.getMemory(unit).workerMode) {
 			case HARVESTER: {
 				MapLocation workerLoc = unit.location().mapLocation();
 				long karbAtLoc = Player.gc.karboniteAt(workerLoc);
-				if(karbAtLoc == 0) {
+				if (karbAtLoc == 0) {
 					Player.workerNav.removeTarget(workerLoc);
 					Direction toMove = Player.workerNav.getNextDirection(unit);
 					if (toMove != null && unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
@@ -74,10 +71,12 @@ public class WorkerController {
 				Utils.moveRandom(unit);
 				break;
 			}
-		}
+			}
 
-		// Harvest any Karbonite in a square we're on TODO: maybe we want to harvest first
-		Utils.tryAndHarvest(unit);
+			// Harvest any Karbonite in a square we're on TODO: maybe we want to harvest
+			// first
+			Utils.tryAndHarvest(unit);
+		}
 
 	}
 

@@ -127,6 +127,9 @@ public class Navigation {
 		List<Direction> dirs = Arrays.asList(Direction.values());
 		Collections.shuffle(dirs);
 		for (Direction dir : dirs) {
+			if (dir == Direction.Center) {
+				continue;
+			}
 			Point delta = dirToDisp.get(dir);
 			int newX = start.getX() + delta.x;
 			int newY = start.getY() + delta.y;
@@ -134,7 +137,7 @@ public class Navigation {
 			if (newX > -1 && newY > -1
 					&& newX < distances.length
 					&& newY < distances[newX].length
-					&& distances[newX][newY] < minDist
+					&& distances[newX][newY] <= minDist
 					&& map.onMap(newLoc) && Player.gc.canMove(unit.id(), dir)) {
 				next = dir;
 				minDist = distances[newX][newY];

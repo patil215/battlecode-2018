@@ -49,7 +49,7 @@ public class RangerController {
 				Player.gc.moveRobot(unit.id(), toMove);
 			}
 		} else {
-			if(target == null) {
+			if (target == null) {
 				moveRecon(unit);
 			}
 		}

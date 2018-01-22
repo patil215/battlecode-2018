@@ -44,6 +44,9 @@ public class KnightController {
 			moveRecon(unit);
 		}
 
+		if (unit.attackHeat() >= Constants.MAX_ATTACK_HEAT) {
+			return;
+		}
 		// Attack
 		VecUnit targets =
 				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.attackRange(), Player.enemyTeam);
