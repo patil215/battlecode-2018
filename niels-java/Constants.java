@@ -13,4 +13,9 @@ public class Constants {
 	public static final int ROCKET_HEALTH = 200;
 	
 	public static final int CLUMP_THRESHOLD = 100;
+
+	public static final int BUILDER_NAV_SIZE = 5;
+
+	public static final int MAX_FACTORY_HEALTH = 300;
+	public static final int MAX_ROCKET_HEALTH = 200;
 }

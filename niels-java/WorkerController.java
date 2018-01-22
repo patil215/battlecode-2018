@@ -9,13 +9,13 @@ public class WorkerController {
 	}
 
 	private static final int ROCKET_BUILD_KARB_THRESHOLD = 80;
-	private static final int FACTORY_BUILD_KARB_THRESHOLD = 130;
+	private static final int FACTORY_BUILD_KARB_THRESHOLD = 100;
 	private static final int MAX_NUMBER_WORKERS = 5;
 
 	static void moveWorker(Unit unit) {
 		if (!unit.location().isInGarrison()) {
 			// TODO maybe prioritize fleeing over building in certain cases
-			boolean buildingBlueprint = tryToBuildBlueprints(unit);
+			boolean buildingBlueprint = BuildUtils.tryToBuildBlueprints(unit);
 			if (buildingBlueprint) {
 				return; // Nothing else to do
 			}
@@ -47,7 +47,7 @@ public class WorkerController {
 			}
 
 			case BUILD_FACTORIES: {
-				Utils.moveRandom(unit);
+				movePossiblyUsingBuilderMap(unit);
 				// Try to build factory
 				if (Player.gc.karbonite() > FACTORY_BUILD_KARB_THRESHOLD) {
 					Utils.tryAndBuild(unit, UnitType.Factory);
@@ -56,8 +56,7 @@ public class WorkerController {
 			}
 
 			case BUILD_ROCKETS: {
-				// TODO build rockets near factories
-				Utils.moveRandom(unit);
+				movePossiblyUsingBuilderMap(unit);
 				// Try to build rocket
 				if (Player.gc.karbonite() > ROCKET_BUILD_KARB_THRESHOLD) {
 					System.out.println("Building rocket");
@@ -80,17 +79,14 @@ public class WorkerController {
 
 	}
 
-	/**
-	 * Tries to build a blueprint. Returns true if it finds one and begins building.
-	 */
-	private static boolean tryToBuildBlueprints(Unit unit) {
-		for (Unit blueprint : Player.blueprints) {
-			if (Player.gc.canBuild(unit.id(), blueprint.id())) {
-				Player.gc.build(unit.id(), blueprint.id());
-				return true;
+	private static void movePossiblyUsingBuilderMap(Unit unit) {
+		Direction direction = Player.builderNav.getNextDirection(unit);
+		if (direction != null) {
+			if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
+				Player.gc.moveRobot(unit.id(), direction);
 			}
+		} else {
+			Utils.moveRandom(unit);
 		}
-		return false;
 	}
-
 }

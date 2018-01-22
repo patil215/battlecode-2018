@@ -27,8 +27,12 @@ public class Player {
 	static ArrayList<Unit> allUnits;
 
 	static ArrayList<Unit> blueprints;
+
+	// Dijkstra maps
 	static Navigation workerNav;
 	static Navigation armyNav;
+	static Navigation builderNav;
+
 	static HashMap<Integer, RobotMemory> robotMemory;
 	static boolean seenEnemies = true;
 
@@ -98,6 +102,7 @@ public class Player {
 
 	private static void finishTurn() {
 		CombatUtils.cleanupAtEndOfTurn();
+		BuildUtils.cleanupAtEndOfTurn();
 
 		// Fix their stupid memory leak error
 		if (gc.round() > 0 && gc.round() % 10 == 0) {
@@ -119,6 +124,7 @@ public class Player {
 		enemyTeam = Utils.getEnemyTeam();
 		getUnits();
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
+		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
 		robotMemory = new HashMap<>();
 		CensusCounts.resetCounts();
 	}

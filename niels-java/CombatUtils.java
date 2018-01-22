@@ -1,12 +1,7 @@
-import java.awt.Point;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-
-import bc.MapLocation;
 import bc.Unit;
 import bc.UnitType;
-import bc.VecUnit;
+
+import java.util.HashMap;
 
 public class CombatUtils {
 	/**

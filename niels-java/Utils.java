@@ -84,9 +84,15 @@ public class Utils {
 			return false;
 		} else {
 			Direction dir = loc.directionTo(bestLoc);
-			Player.gc.blueprint(workerId, type, dir);
+			addBlueprint(worker, type, dir);
 			return true;
 		}
+	}
+
+	private static void addBlueprint(Unit worker, UnitType type, Direction dir) {
+		Player.gc.blueprint(worker.id(), type, dir);
+		Player.builderNav.addTarget(worker.location().mapLocation().add(dir));
+		Player.builderNav.recalculateDistanceMap();
 	}
 
 	public static boolean tryAndUnload(Unit unit) {
@@ -243,7 +249,7 @@ public class Utils {
 	}
 
 	public static boolean tryAndHeal(Unit self, Unit target) {
-		if (Player.gc.canHeal(self.id(), target.id())) {
+		if (Player.gc.canHeal(self.id(), target.id()) && self.attackHeat() < Constants.MAX_ATTACK_HEAT) {
 			Player.gc.heal(self.id(), target.id());
 			return true;
 		}
