@@ -38,8 +38,7 @@ public class KnightController {
 	public static void combatMicro(Unit unit) {
 		// Move
 		Direction toMove = CombatUtils.microNav.getNextDirection(unit);
-		if (toMove != null && Player.gc.canMove(unit.id(), toMove)
-				&& unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
+		if (toMove != null && unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
 			Player.gc.moveRobot(unit.id(), toMove);
 		} else {
 			moveRecon(unit);

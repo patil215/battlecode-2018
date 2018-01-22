@@ -70,7 +70,7 @@ public class Utils {
 	public static boolean moveAccordingToDjikstraMap(Unit unit, Navigation map) {
 		if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
 			Direction toMove = map.getNextDirection(unit);
-			if (toMove != null && Player.gc.canMove(unit.id(), toMove)) {
+			if (toMove != null) {
 				Player.gc.moveRobot(unit.id(), toMove);
 				return true;
 			}
@@ -93,6 +93,9 @@ public class Utils {
 		}
 	}
 
+	/**
+	 * Returns null if can't move in any direction.
+	 */
 	public static Direction fleeFrom(Unit ours, Unit foe) {
 		Direction away = bc
 				.bcDirectionOpposite(ours.location().mapLocation().directionTo(foe.location().mapLocation()));
@@ -149,7 +152,7 @@ public class Utils {
 	}
 
 	public static Team getEnemyTeam() {
-		if (Player.gc.team() == Team.Red) {
+		if (Player.friendlyTeam == Team.Red) {
 			return Team.Blue;
 		}
 		return Team.Red;

@@ -115,7 +115,7 @@ public class Navigation {
 	 * Tries all possible directions, returning the best one we can move towards.
 	 *
 	 * Null is returned if all adjacent squares are 'too far' (over threshold)
-	 * or impossible to reach
+	 * or impossible to reach (canMove returns false).
 	 */
 	public Direction getNextDirection(Unit unit) {
 		int minDist = Integer.MAX_VALUE;
@@ -128,8 +128,7 @@ public class Navigation {
 			int newX = start.getX() + delta.x;
 			int newY = start.getY() + delta.y;
 			MapLocation newLoc = new MapLocation(planet, newX, newY);
-			if (map.onMap(newLoc) && distances[newX][newY] < minDist
-					&& Player.gc.canMove(unit.id(), dir)) {
+			if (map.onMap(newLoc) && distances[newX][newY] < minDist && Player.gc.canMove(unit.id(), dir)) {
 				next = dir;
 				minDist = distances[newX][newY];
 			}

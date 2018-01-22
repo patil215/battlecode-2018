@@ -38,6 +38,9 @@ public class CombatUtils {
 		return target.health();
 	}
 
+	/**
+	 * Returns a score for a target. If the target is not attackable, returns Long.MAX_VALUE.
+	 */
 	public static long targetScore(Unit attacker, Unit target) {
 		if (target == null || !Player.gc.canAttack(attacker.id(), target.id())) {
 			return Long.MAX_VALUE;

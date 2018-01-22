@@ -36,14 +36,12 @@ public class RangerController {
 				target = foe;
 			}
 		}
-		if (target != null && Player.gc.canAttack(unit.id(), target.id())
-				&& unit.attackHeat() < Constants.MAX_ATTACK_HEAT) {
+		if (target != null && unit.attackHeat() < Constants.MAX_ATTACK_HEAT) {
 			CombatUtils.attack(unit, target);
 		}
 		if (threat != null) {
 			Direction toMove = Utils.fleeFrom(unit, threat);
-			if (toMove != null && unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT
-					&& Player.gc.canMove(unit.id(), toMove)) {
+			if (toMove != null && unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
 				Player.gc.moveRobot(unit.id(), toMove);
 			}
 		} else {

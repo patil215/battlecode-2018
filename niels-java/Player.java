@@ -11,10 +11,17 @@ public class Player {
 	// Initialized once per game
 	static GameController gc;
 	static Team enemyTeam;
+	static Team friendlyTeam;
 	static Planet planet;
 	static PlanetMap map;
 
 	// Initialized/updated once per turn
+	/**
+	 * These variables are used to minimize calls to gc.units() and gc.myUnits(). Note that this can mean they are
+	 * slightly out of date if we spawn a unit on a particular turn (since gc.units() would return that new unit
+	 * immediately. However, this shouldn't make much of a difference because units have an initial cooldown, so they
+	 * wouldn't be doing anything anyways.
+	 */
 	static ArrayList<Unit> friendlyUnits;
 	static ArrayList<Unit> enemyUnits;
 	static ArrayList<Unit> allUnits;
@@ -85,8 +92,8 @@ public class Player {
 	}
 
 	public static void beginTurn() {
-		CombatUtils.initAtStartOfTurn();
 		getUnits();
+		CombatUtils.initAtStartOfTurn();
 	}
 
 	public static void finishTurn() {
@@ -108,6 +115,7 @@ public class Player {
 		gc = new GameController();
 		planet = Player.gc.planet();
 		map = gc.startingMap(planet);
+		friendlyTeam = gc.team();
 		enemyTeam = Utils.getEnemyTeam();
 		getUnits();
 		armyNav = new Navigation(map, getInitialEnemyUnitLocations());
@@ -153,9 +161,9 @@ public class Player {
 
 	private static void updateRangerTargets() {
 		// Move towards rockets if we need to bail
-		if (Player.planet == Planet.Earth && gc.round() >= 500) {
+		if (planet == Planet.Earth && gc.round() >= 500) {
 			for (Point loc : new HashSet<>(armyNav.getTargets())) {
-				MapLocation target = new MapLocation(gc.planet(), loc.x, loc.y);
+				MapLocation target = new MapLocation(planet, loc.x, loc.y);
 				armyNav.removeTarget(target);
 			}
 
@@ -174,12 +182,12 @@ public class Player {
 			// Move towards enemies
 		} else {
 			// Move toward enemies
-			VecUnit foes = gc.senseNearbyUnitsByTeam(new MapLocation(gc.planet(), 1, 1), 250, Utils.getEnemyTeam());
+			VecUnit foes = gc.senseNearbyUnitsByTeam(new MapLocation(planet, 1, 1), 250, Utils.getEnemyTeam());
 
-			for (Point loc : new HashSet<Point>(armyNav.getTargets())) {
-				MapLocation target = new MapLocation(gc.planet(), loc.x, loc.y);
+			for (Point loc : new HashSet<>(armyNav.getTargets())) {
+				MapLocation target = new MapLocation(planet, loc.x, loc.y);
 				if (gc.canSenseLocation(target)
-						&& (!gc.hasUnitAtLocation(target) || gc.senseUnitAtLocation(target).team() == gc.team())) {
+						&& (!gc.hasUnitAtLocation(target) || gc.senseUnitAtLocation(target).team() == friendlyTeam)) {
 					armyNav.removeTarget(target);
 				}
 			}
