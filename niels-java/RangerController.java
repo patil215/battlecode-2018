@@ -28,12 +28,16 @@ public class RangerController {
 	}
 
 	public static void combatMicro(Unit unit, VecUnit foes) {
-		Unit target = null;
 		Unit threat = Utils.getMostDangerousNearbyEnemy(unit);
+
+		Unit target = null;
+		long bestTargetScore = Long.MAX_VALUE;
 		for (int index = 0; index < foes.size(); index++) {
 			Unit foe = foes.get(index);
-			if (CombatUtils.targetScore(unit, foe) < CombatUtils.targetScore(unit, target)) {
+			long newScore = CombatUtils.targetScore(unit, foe);
+			if (newScore < bestTargetScore) {
 				target = foe;
+				bestTargetScore = newScore;
 			}
 		}
 		if (target != null && unit.attackHeat() < Constants.MAX_ATTACK_HEAT) {

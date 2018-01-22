@@ -91,12 +91,12 @@ public class Player {
 		}
 	}
 
-	public static void beginTurn() {
+	private static void beginTurn() {
 		getUnits();
 		CombatUtils.initAtStartOfTurn();
 	}
 
-	public static void finishTurn() {
+	private static void finishTurn() {
 		CombatUtils.cleanupAtEndOfTurn();
 
 		// Fix their stupid memory leak error
@@ -168,9 +168,7 @@ public class Player {
 			}
 
 			// Move toward rockets
-			for (int i = 0; i < friendlyUnits.size(); i++) {
-				Unit unit = friendlyUnits.get(i);
-
+			for (Unit unit : friendlyUnits) {
 				// Add all rockets that are ready to be loaded up
 				// TODO don't use constant for rocket capacity
 				if (unit.unitType() == Rocket && unit.structureIsBuilt() == 1
@@ -223,9 +221,8 @@ public class Player {
 	}
 
 	private static void updateUnitStates(ArrayList<Unit> units) {
-		for (int index = 0; index < units.size(); index++) {
-			Unit unit = units.get(index);
-			if (!robotMemory.containsKey(units.get(index).id())) {
+		for (Unit unit : units) {
+			if (!robotMemory.containsKey(unit.id())) {
 				createNewUnitState(unit);
 			} else {
 				updateExistingUnitState(unit);
@@ -329,25 +326,22 @@ public class Player {
 	private static void initialTurns() {
 		finishTurn();
 
+		// Turn
 		beginTurn();
-
 		for (int index = 0; index < friendlyUnits.size(); index++) {
 			Utils.tryAndReplicate(friendlyUnits.get(index));
 		}
-
 		updateUnitStates(friendlyUnits);
-
 		finishTurn();
 
+		// Turn
 		beginTurn();
-
 		for (int index = 0; index < friendlyUnits.size(); index++) {
 			Unit worker = friendlyUnits.get(index);
 			if (Utils.tryAndBuild(worker.id(), Factory)) {
 				break;
 			}
 		}
-
 		finishTurn();
 	}
 }

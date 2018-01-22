@@ -82,11 +82,14 @@ public class Navigation {
 				int newX = loc.getX() + disp.x;
 				int newY = loc.getY() + disp.y;
 				MapLocation newLocation = new MapLocation(planet, newX, newY);
-				if (map.onMap(newLocation) 
-						&& map.isPassableTerrainAt(newLocation) == 1 
-						&& !buildings.contains(new Point(newX, newY))
+				if ((newX > -1 && newY > -1)
+						&& newX < distances.length
+						&& newY < distances[newX].length
 						&& distances[newX][newY] > curDistance + 1
-						&& curDistance + 1 < maxDistance) {
+						&& !buildings.contains(new Point(newX, newY))
+						&& curDistance + 1 < maxDistance
+						&& map.onMap(newLocation)
+						&& map.isPassableTerrainAt(newLocation) == 1) {
 					distances[newX][newY] = curDistance + 1;
 					queue.add(newLocation);
 				}
@@ -128,7 +131,11 @@ public class Navigation {
 			int newX = start.getX() + delta.x;
 			int newY = start.getY() + delta.y;
 			MapLocation newLoc = new MapLocation(planet, newX, newY);
-			if (map.onMap(newLoc) && distances[newX][newY] < minDist && Player.gc.canMove(unit.id(), dir)) {
+			if (newX > -1 && newY > -1
+					&& newX < distances.length
+					&& newY < distances[newX].length
+					&& distances[newX][newY] < minDist
+					&& map.onMap(newLoc) && Player.gc.canMove(unit.id(), dir)) {
 				next = dir;
 				minDist = distances[newX][newY];
 			}

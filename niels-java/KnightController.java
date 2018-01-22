@@ -13,11 +13,11 @@ public class KnightController {
 		}
 	}
 
-	public static void runInGarrison(Unit unit) {
+	private static void runInGarrison(Unit unit) {
 		// Pass
 	}
 
-	public static void run(Unit unit) {
+	private static void run(Unit unit) {
 		if (Player.planet == Planet.Earth) {
 			Utils.tryAndGetIntoRocket(unit);
 		}
@@ -31,11 +31,11 @@ public class KnightController {
 		}
 	}
 
-	public static void moveRecon(Unit unit) {
+	private static void moveRecon(Unit unit) {
 		Utils.moveAccordingToDjikstraMap(unit, Player.armyNav);
 	}
 
-	public static void combatMicro(Unit unit) {
+	private static void combatMicro(Unit unit) {
 		// Move
 		Direction toMove = CombatUtils.microNav.getNextDirection(unit);
 		if (toMove != null && unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
@@ -48,13 +48,17 @@ public class KnightController {
 		VecUnit targets =
 				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.attackRange(), Player.enemyTeam);
 		Unit target = null;
+		long bestTargetScore = Long.MAX_VALUE;
 		for (int index = 0; index < targets.size(); index++) {
-			if (CombatUtils.targetScore(unit, targets.get(index)) > CombatUtils.targetScore(unit, target)) {
-				target = targets.get(index);
+			Unit foe = targets.get(index);
+			long newScore = CombatUtils.targetScore(unit, foe);
+			if (newScore < bestTargetScore) {
+				target = foe;
+				bestTargetScore = newScore;
 			}
 		}
 		if (target != null) {
-			Player.gc.attack(unit.id(), target.id());
+			CombatUtils.attack(unit, target);
 		}
 	}
 }

@@ -127,28 +127,21 @@ public class Utils {
 				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(), Player.enemyTeam);
 
 		Unit threat = null;
+		long bestThreatDistance = Long.MAX_VALUE;
 		for (int i = 0; i < nearbyEnemies.size(); i++) {
 			Unit foe = nearbyEnemies.get(i);
 			MapLocation unitLocation = unit.location().mapLocation();
-			if ((unitLocation.distanceSquaredTo(foe.location().mapLocation()) < unit.attackRange()
-					&& (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight
-					|| foe.unitType() == UnitType.Ranger))
-					&& (threat == null || unitLocation.distanceSquaredTo(foe.location().mapLocation()) < unitLocation
-					.distanceSquaredTo(threat.location().mapLocation()))) {
-				threat = foe;
+
+			if (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight || foe.unitType() == UnitType.Ranger) {
+				long newThreatDistance = unitLocation.distanceSquaredTo(foe.location().mapLocation());
+				if (threat == null || newThreatDistance < bestThreatDistance) {
+					if (newThreatDistance < unit.attackRange()) {
+						threat = foe;
+					}
+				}
 			}
 		}
 		return threat;
-	}
-
-	public static Planet getLocationPlanet(Location loc) {
-		Planet planet = null;
-		for (Planet p : Planet.values()) {
-			if (loc.isOnPlanet(p)) {
-				planet = p;
-			}
-		}
-		return planet;
 	}
 
 	public static Team getEnemyTeam() {
