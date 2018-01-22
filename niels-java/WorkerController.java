@@ -10,11 +10,17 @@ public class WorkerController {
 
 	private static final int ROCKET_BUILD_KARB_THRESHOLD = 80;
 	private static final int FACTORY_BUILD_KARB_THRESHOLD = 100;
-	private static final int MAX_NUMBER_WORKERS = 5;
+	private static final int MAX_NUMBER_WORKERS = 6;
 
 	static void moveWorker(Unit unit) {
 		if (!unit.location().isInGarrison()) {
 			// TODO maybe prioritize fleeing over building in certain cases
+
+			// Try to replicate
+			if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS) {
+				Utils.tryAndReplicate(unit);
+			}
+
 			boolean buildingBlueprint = BuildUtils.tryToBuildBlueprints(unit);
 			if (buildingBlueprint) {
 				return; // Nothing else to do
@@ -24,11 +30,6 @@ public class WorkerController {
 			Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
 			if (nearbyEnemy != null) {
 				Utils.fleeFrom(unit, nearbyEnemy);
-			}
-
-			// Try to replicate
-			if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS) {
-				Utils.tryAndReplicate(unit);
 			}
 
 			switch (Utils.getMemory(unit).workerMode) {
@@ -49,9 +50,12 @@ public class WorkerController {
 			case BUILD_FACTORIES: {
 				movePossiblyUsingBuilderMap(unit);
 				// Try to build factory
-				if (Player.gc.karbonite() > FACTORY_BUILD_KARB_THRESHOLD) {
-					Utils.tryAndBuild(unit, UnitType.Factory);
+				if (Player.gc.karbonite() > FACTORY_BUILD_KARB_THRESHOLD && !Player.hasMadeBluePrintThisTurn
+						&& Player.blueprints.size() == 0) {
+					Player.hasMadeBluePrintThisTurn = Utils.tryAndBuild(unit, UnitType.Factory);
 				}
+				System.out.println(Player.gc.round() + ": Player has built blueprint this turn: " + Player.hasMadeBluePrintThisTurn
+						+ " Blueprints: " + Player.blueprints);
 				break;
 			}
 

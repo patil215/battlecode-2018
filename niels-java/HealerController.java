@@ -24,12 +24,12 @@ public class HealerController {
 		VecUnit nearbyFriendlies = Player.gc.senseNearbyUnitsByTeam(self.location().mapLocation(),
 				self.attackRange(), Player.friendlyTeam);
 
-		long bestScore = Long.MAX_VALUE;
+		long bestScore = 0;
 		Unit target = null;
 		for (int i = 0; i < nearbyFriendlies.size(); i++) {
 			Unit unit = nearbyFriendlies.get(i);
 			long newScore = healTargetScore(unit);
-			if (newScore < bestScore) {
+			if (newScore > bestScore) {
 				target = unit;
 				bestScore = newScore;
 			}
@@ -45,7 +45,7 @@ public class HealerController {
 			return Long.MAX_VALUE;
 		}
 
-		return unit.health();
+		return unit.maxHealth() - unit.health();
 	}
 
 	private static void moveRecon(Unit unit) {
