@@ -32,7 +32,11 @@ public class FactoryController {
 			Player.gc.produceRobot(unit.id(), UnitType.Worker);
 		} else if (unit.isFactoryProducing() == 0 && Player.gc.karbonite() >= bc.bcUnitTypeFactoryCost(UnitType.Ranger)) {
 		//&& CensusCounts.getUnitCount(UnitType.Ranger) <= 10 && Player.gc.round() > 375) { // USED FOR LIMITING, REMEMBER TO TURN OFF
-			Player.gc.produceRobot(unit.id(), UnitType.Ranger);
+			if (Math.random() < 0.2 && CensusCounts.getUnitCount(UnitType.Ranger) >= 4) {
+				Player.gc.produceRobot(unit.id(), UnitType.Healer);
+			} else {
+				Player.gc.produceRobot(unit.id(), UnitType.Ranger);
+			}
 		}
 		Utils.tryAndUnload(unit);
 	}

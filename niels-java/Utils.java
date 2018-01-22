@@ -154,4 +154,12 @@ public class Utils {
 	public static RobotMemory getMemory(Unit unit) {
 		return Player.robotMemory.get(unit.id());
 	}
+
+	public static boolean tryAndHeal(Unit self, Unit target) {
+		if (Player.gc.canHeal(self.id(), target.id())) {
+			Player.gc.heal(self.id(), target.id());
+			return true;
+		}
+		return false;
+	}
 }

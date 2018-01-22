@@ -305,20 +305,24 @@ public class Player {
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
 			switch (unit.unitType()) {
-			case Worker:
-				WorkerController.moveWorker(unit);
-				break;
-			case Factory:
-				FactoryController.moveFactory(unit);
-				break;
-			case Ranger:
-				RangerController.moveRanger(unit);
-				break;
-			case Rocket:
-				RocketController.moveRocket(unit);
-				break;
-			case Knight:
-				KnightController.moveKnight(unit);
+				case Worker:
+					WorkerController.moveWorker(unit);
+					break;
+				case Factory:
+					FactoryController.moveFactory(unit);
+					break;
+				case Ranger:
+					RangerController.moveRanger(unit);
+					break;
+				case Rocket:
+					RocketController.moveRocket(unit);
+					break;
+				case Knight:
+					KnightController.moveKnight(unit);
+					break;
+				case Healer:
+					HealerController.moveHealer(unit);
+					break;
 			default:
 				break;
 			}
@@ -358,7 +362,7 @@ public class Player {
 			Direction[] directions = Direction.values();
 			for(int count = 0; count < 10; count++) {
 				Direction toTry = directions[(int) (directions.length * Math.random())];
-				if (map.isPassableTerrainAt(current.add(toTry))!=0) {
+				if (map.onMap(current.add(toTry)) && map.isPassableTerrainAt(current.add(toTry))!=0) {
 					current = current.add(toTry);
 				}
 			}

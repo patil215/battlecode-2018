@@ -27,7 +27,7 @@ public class RangerController {
 		Utils.moveAccordingToDjikstraMap(unit, Player.armyNav);
 	}
 
-	public static void combatMicro(Unit unit, VecUnit foes) {
+	private static void combatMicro(Unit unit, VecUnit foes) {
 		Unit threat = Utils.getMostDangerousNearbyEnemy(unit);
 
 		Unit target = null;
