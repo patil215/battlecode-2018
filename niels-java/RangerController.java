@@ -14,7 +14,7 @@ public class RangerController {
 			}
 
 			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(),
-					Player.enemy);
+					Player.enemyTeam);
 			if (foes.size() > 0) {
 				combatMicro(unit, foes);
 			} else {
@@ -28,25 +28,28 @@ public class RangerController {
 	}
 
 	public static void combatMicro(Unit unit, VecUnit foes) {
-		Unit target = null;
 		Unit threat = Utils.getMostDangerousNearbyEnemy(unit);
+
+		Unit target = null;
+		long bestTargetScore = Long.MAX_VALUE;
 		for (int index = 0; index < foes.size(); index++) {
 			Unit foe = foes.get(index);
-			if (CombatUtils.targetScoreRanger(unit, foe) < CombatUtils.targetScoreRanger(unit, target)) {
+			long newScore = CombatUtils.targetScore(unit, foe);
+			if (newScore < bestTargetScore) {
 				target = foe;
+				bestTargetScore = newScore;
 			}
 		}
-		if (target != null && Player.gc.canAttack(unit.id(), target.id())
-				&& unit.attackHeat() < Constants.MAX_ATTACK_HEAT) {
+		if (target != null && unit.attackHeat() < Constants.MAX_ATTACK_HEAT) {
 			CombatUtils.attack(unit, target);
 		}
 		if (threat != null) {
 			Direction toMove = Utils.fleeFrom(unit, threat);
-			if (toMove != null && unit.movementHeat() < 10 && Player.gc.canMove(unit.id(), toMove)) {
+			if (toMove != null && unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
 				Player.gc.moveRobot(unit.id(), toMove);
 			}
 		} else {
-			if(target == null) {
+			if (target == null) {
 				moveRecon(unit);
 			}
 		}

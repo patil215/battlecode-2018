@@ -8,13 +8,12 @@ import static bc.UnitType.Rocket;
 
 public class CensusCounts {
 
-	static Map<UnitType, Integer> unitCounts = new EnumMap<>(UnitType.class);
-
+	private static Map<UnitType, Integer> unitCounts = new EnumMap<>(UnitType.class);
 	private static Map<WorkerController.Mode, Integer> workerModeCounts = new EnumMap<>(WorkerController.Mode.class);
 	private static Map<FactoryController.Mode, Integer> factoryModeCounts = new EnumMap<>(FactoryController.Mode.class);
 	private static Map<RangerController.Mode, Integer> rangerModeCounts  = new EnumMap<>(RangerController.Mode.class);
 
-	public static void computeCensus(VecUnit units) {
+	public static void computeCensus(ArrayList<Unit> units) {
 		resetCounts();
 
 		ArrayList<Unit> blueprints = new ArrayList<Unit>();

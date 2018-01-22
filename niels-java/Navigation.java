@@ -48,7 +48,7 @@ public class Navigation {
 
 	public static final Map<Point, Direction> dispToDir = createDispToDirMap();
 
-	public void recalcDistanceMap() {
+	public void recalculateDistanceMap() {
 		long start = System.currentTimeMillis();
 		for (int i = 0; i < distances.length; i++) {
 			for (int j = 0; j < distances[0].length; j++) {
@@ -60,10 +60,9 @@ public class Navigation {
 			distances[target.x][target.y] = 0;
 			queue.add(new MapLocation(planet, target.x, target.y));
 		}
-		VecUnit units = Player.gc.myUnits();
 		Set<Point> buildings = new HashSet<>();
-		for(int i = 0; i < units.size(); i++) {
-			Unit unit = units.get(i);
+		for(int i = 0; i < Player.friendlyUnits.size(); i++) {
+			Unit unit = Player.friendlyUnits.get(i);
 			UnitType type = unit.unitType();
 			// TODO: go through factories
 			if(type == UnitType.Rocket || type == UnitType.Factory) {
@@ -83,11 +82,14 @@ public class Navigation {
 				int newX = loc.getX() + disp.x;
 				int newY = loc.getY() + disp.y;
 				MapLocation newLocation = new MapLocation(planet, newX, newY);
-				if (map.onMap(newLocation) 
-						&& map.isPassableTerrainAt(newLocation) == 1 
-						&& !buildings.contains(new Point(newX, newY))
+				if ((newX > -1 && newY > -1)
+						&& newX < distances.length
+						&& newY < distances[newX].length
 						&& distances[newX][newY] > curDistance + 1
-						&& curDistance + 1 < maxDistance) {
+						&& !buildings.contains(new Point(newX, newY))
+						&& curDistance + 1 < maxDistance
+						&& map.onMap(newLocation)
+						&& map.isPassableTerrainAt(newLocation) == 1) {
 					distances[newX][newY] = curDistance + 1;
 					queue.add(newLocation);
 				}
@@ -97,16 +99,16 @@ public class Navigation {
 	}
 
 
-	public Navigation(PlanetMap map, List<Point> targets, int maxDistance) {
+	public Navigation(PlanetMap map, Set<Point> targets, int maxDistance) {
 		this.map = map;
 		this.planet = map.getPlanet();
 		this.maxDistance = maxDistance;
 		this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
-		this.targets = new HashSet<>(targets);
-		recalcDistanceMap();
+		this.targets = targets;
+		recalculateDistanceMap();
 	}
 
-	public Navigation(PlanetMap map, List<Point> targets) {
+	public Navigation(PlanetMap map, Set<Point> targets) {
 		this(map, targets, Integer.MAX_VALUE);
 	}
 
@@ -116,7 +118,7 @@ public class Navigation {
 	 * Tries all possible directions, returning the best one we can move towards.
 	 *
 	 * Null is returned if all adjacent squares are 'too far' (over threshold)
-	 * or impossible to reach
+	 * or impossible to reach (canMove returns false).
 	 */
 	public Direction getNextDirection(Unit unit) {
 		int minDist = Integer.MAX_VALUE;
@@ -125,12 +127,18 @@ public class Navigation {
 		List<Direction> dirs = Arrays.asList(Direction.values());
 		Collections.shuffle(dirs);
 		for (Direction dir : dirs) {
+			if (dir == Direction.Center) {
+				continue;
+			}
 			Point delta = dirToDisp.get(dir);
 			int newX = start.getX() + delta.x;
 			int newY = start.getY() + delta.y;
 			MapLocation newLoc = new MapLocation(planet, newX, newY);
-			if (map.onMap(newLoc) && distances[newX][newY] < minDist
-					&& Player.gc.canMove(unit.id(), dir)) {
+			if (newX > -1 && newY > -1
+					&& newX < distances.length
+					&& newY < distances[newX].length
+					&& distances[newX][newY] <= minDist
+					&& map.onMap(newLoc) && Player.gc.canMove(unit.id(), dir)) {
 				next = dir;
 				minDist = distances[newX][newY];
 			}

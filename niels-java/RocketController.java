@@ -62,7 +62,7 @@ public class RocketController {
 
 	private static MapLocation findValidLocation(Unit unit) {
 		PlanetMap map = Player.gc.startingMap(Planet.Mars);
-		for (int i = 0; i < 50; i++) {
+		for (int i = 0; i < 20; i++) {
 			MapLocation proposedLocation = new MapLocation(Planet.Mars, (int) (Math.random() * map.getWidth()),
 					(int) (Math.random() * map.getHeight()));
 			if (Player.gc.canLaunchRocket(unit.id(), proposedLocation)) {

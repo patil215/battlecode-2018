@@ -141,9 +141,8 @@ public class Utils {
 	}
 
 	public static boolean tryAndGetIntoRocket(Unit unit) {
-		VecUnit units = Player.gc.myUnits();
-		for (int i = 0; i < units.size(); i++) {
-			Unit potentialRocket = units.get(i);
+		for (int i = 0; i < Player.friendlyUnits.size(); i++) {
+			Unit potentialRocket = Player.friendlyUnits.get(i);
 			if (potentialRocket.unitType() == UnitType.Rocket && potentialRocket.structureIsBuilt() == 1) {
 				if (Player.gc.canLoad(potentialRocket.id(), unit.id())) {
 					Player.gc.load(potentialRocket.id(), unit.id());
@@ -156,8 +155,8 @@ public class Utils {
 
 	public static boolean moveAccordingToDjikstraMap(Unit unit, Navigation map) {
 		if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
-			Direction toMove = Player.armyNav.getNextDirection(unit);
-			if (toMove != null && Player.gc.canMove(unit.id(), toMove)) {
+			Direction toMove = map.getNextDirection(unit);
+			if (toMove != null) {
 				Player.gc.moveRobot(unit.id(), toMove);
 				return true;
 			}
@@ -180,6 +179,9 @@ public class Utils {
 		}
 	}
 
+	/**
+	 * Returns null if can't move in any direction.
+	 */
 	public static Direction fleeFrom(Unit ours, Unit foe) {
 		Direction away = bc
 				.bcDirectionOpposite(ours.location().mapLocation().directionTo(foe.location().mapLocation()));
@@ -204,39 +206,32 @@ public class Utils {
 	}
 
 	/**
-	 * Returns the nearest enemy unit that can deal damage and is within the passed in unit's line of sight.
+	 * Returns the nearest enemyTeam unit that can deal damage and is within the passed in unit's line of sight.
 	 */
 	public static Unit getMostDangerousNearbyEnemy(Unit unit) {
 		VecUnit nearbyEnemies =
-				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(), Player.enemy);
+				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(), Player.enemyTeam);
 
 		Unit threat = null;
+		long bestThreatDistance = Long.MAX_VALUE;
 		for (int i = 0; i < nearbyEnemies.size(); i++) {
 			Unit foe = nearbyEnemies.get(i);
 			MapLocation unitLocation = unit.location().mapLocation();
-			if ((unitLocation.distanceSquaredTo(foe.location().mapLocation()) < unit.attackRange()
-					&& (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight
-					|| foe.unitType() == UnitType.Ranger))
-					&& (threat == null || unitLocation.distanceSquaredTo(foe.location().mapLocation()) < unitLocation
-					.distanceSquaredTo(threat.location().mapLocation()))) {
-				threat = foe;
+
+			if (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight || foe.unitType() == UnitType.Ranger) {
+				long newThreatDistance = unitLocation.distanceSquaredTo(foe.location().mapLocation());
+				if (threat == null || newThreatDistance < bestThreatDistance) {
+					if (newThreatDistance < unit.attackRange()) {
+						threat = foe;
+					}
+				}
 			}
 		}
 		return threat;
 	}
 
-	public static Planet getLocationPlanet(Location loc) {
-		Planet planet = null;
-		for (Planet p : Planet.values()) {
-			if (loc.isOnPlanet(p)) {
-				planet = p;
-			}
-		}
-		return planet;
-	}
-
 	public static Team getEnemyTeam() {
-		if (Player.gc.team() == Team.Red) {
+		if (Player.friendlyTeam == Team.Red) {
 			return Team.Blue;
 		}
 		return Team.Red;
