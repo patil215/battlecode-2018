@@ -305,20 +305,24 @@ public class Player {
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
 			switch (unit.unitType()) {
-			case Worker:
-				WorkerController.moveWorker(unit);
-				break;
-			case Factory:
-				FactoryController.moveFactory(unit);
-				break;
-			case Ranger:
-				RangerController.moveRanger(unit);
-				break;
-			case Rocket:
-				RocketController.moveRocket(unit);
-				break;
-			case Knight:
-				KnightController.moveKnight(unit);
+				case Worker:
+					WorkerController.moveWorker(unit);
+					break;
+				case Factory:
+					FactoryController.moveFactory(unit);
+					break;
+				case Ranger:
+					RangerController.moveRanger(unit);
+					break;
+				case Rocket:
+					RocketController.moveRocket(unit);
+					break;
+				case Knight:
+					KnightController.moveKnight(unit);
+					break;
+				case Healer:
+					HealerController.moveHealer(unit);
+					break;
 			default:
 				break;
 			}
