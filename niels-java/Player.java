@@ -39,6 +39,7 @@ public class Player {
 
 	static HashMap<Integer, RobotMemory> robotMemory;
 	static boolean seenEnemies = true;
+	private static int stuckCounter;
 
 	private static Set<Point> getInitialEnemyUnitLocations() {
 		VecUnit initialUnits = map.getInitial_units();
@@ -117,22 +118,23 @@ public class Player {
 	}
 
 	private static int getValueFromUnitType(UnitType type) {
-		// Lower is firster. Basically determines the order (by type) that units should execute
+		// Lower is firster. Basically determines the order (by type) that units should
+		// execute
 		switch (type) {
-			case Knight:
-				return 0;
-			case Ranger:
-				return 1;
-			case Worker:
-				return 2;
-			case Healer:
-				return 3;
-			case Factory:
-				return 4;
-			case Rocket:
-				return 4;
-			default:
-				return Integer.MAX_VALUE;
+		case Knight:
+			return 0;
+		case Ranger:
+			return 1;
+		case Worker:
+			return 2;
+		case Healer:
+			return 3;
+		case Factory:
+			return 4;
+		case Rocket:
+			return 4;
+		default:
+			return Integer.MAX_VALUE;
 
 		}
 	}
@@ -153,7 +155,8 @@ public class Player {
 		}
 
 		if (sort) {
-			// Sort friendly units so that they're processed in a way that coordinates the armies better
+			// Sort friendly units so that they're processed in a way that coordinates the
+			// armies better
 			Collections.sort(friendlyUnits, (a, b) -> {
 				// Sorts in ascending order, so lower values should be better
 				if (a.unitType() != b.unitType()) {
@@ -170,18 +173,18 @@ public class Player {
 					}
 
 					switch (a.unitType()) {
-						case Ranger: // Fall through
-						case Knight: // Fall through
-						case Healer: {
-							int aDijValue = Player.armyNav.getDijkstraMapValue(a.location().mapLocation());
-							int bDijValue = Player.armyNav.getDijkstraMapValue(b.location().mapLocation());
-							return Integer.compare(aDijValue, bDijValue); // Lower is better
-						}
-						case Worker: {
-							int aDijValue = Player.workerNav.getDijkstraMapValue(a.location().mapLocation());
-							int bDijValue = Player.workerNav.getDijkstraMapValue(b.location().mapLocation());
-							return Integer.compare(aDijValue, bDijValue);
-						}
+					case Ranger: // Fall through
+					case Knight: // Fall through
+					case Healer: {
+						int aDijValue = Player.armyNav.getDijkstraMapValue(a.location().mapLocation());
+						int bDijValue = Player.armyNav.getDijkstraMapValue(b.location().mapLocation());
+						return Integer.compare(aDijValue, bDijValue); // Lower is better
+					}
+					case Worker: {
+						int aDijValue = Player.workerNav.getDijkstraMapValue(a.location().mapLocation());
+						int bDijValue = Player.workerNav.getDijkstraMapValue(b.location().mapLocation());
+						return Integer.compare(aDijValue, bDijValue);
+					}
 					}
 				}
 				return 0;
@@ -197,10 +200,15 @@ public class Player {
 
 	private static void finishTurn() {
 		// TODO: Find better criteria for this
-		if (gc.planet() == Planet.Earth && gc.round() > 100 && Utils.stuck() && Math.random() < .1
-				&& Player.friendlyUnits.size() > 0) {
+		if (Utils.stuck()) {
+			stuckCounter++;
+		} else {
+			stuckCounter = 0;
+		}
+		if (stuckCounter > 10 && gc.round() > 100) {
 			gc.disintegrateUnit(Player.friendlyUnits.get((int) (Math.random() * friendlyUnits.size())).id());
 			System.out.println("Unit killed because nothing could move");
+			stuckCounter = 0;
 		}
 
 		CombatUtils.cleanupAtEndOfTurn();
@@ -331,7 +339,8 @@ public class Player {
 		gc.queueResearch(Rocket); // Rocket 1 complete round 300
 		gc.queueResearch(Rocket); // Rocket 2 complete round 400
 		gc.queueResearch(Rocket); // Rocket 3 complete round 500
-		// Remember to update the Utils.getMaxRocketCapacity if Rocket III timing is changed
+		// Remember to update the Utils.getMaxRocketCapacity if Rocket III timing is
+		// changed
 		gc.queueResearch(Ranger); // Ranger 2 complete round 600
 		gc.queueResearch(Worker); // Worker 1 complete round 625
 		gc.queueResearch(Worker); // Worker 2 complete round 700
@@ -428,28 +437,32 @@ public class Player {
 	private static void moveUnits(ArrayList<Unit> units) {
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
-			switch (unit.unitType()) {
-			case Worker:
-				WorkerController.moveWorker(unit);
-				break;
-			case Factory:
-				FactoryController.moveFactory(unit);
-				break;
-			case Ranger:
-				RangerController.moveRanger(unit);
-				break;
-			case Rocket:
-				RocketController.moveRocket(unit);
-				break;
-			case Knight:
-				KnightController.moveKnight(unit);
-				break;
-			case Healer:
-				HealerController.moveHealer(unit);
-				break;
-			default:
-				break;
-			}
+			moveUnit(unit);
+		}
+	}
+
+	public static void moveUnit(Unit unit) {
+		switch (unit.unitType()) {
+		case Worker:
+			WorkerController.moveWorker(unit);
+			break;
+		case Factory:
+			FactoryController.moveFactory(unit);
+			break;
+		case Ranger:
+			RangerController.moveRanger(unit);
+			break;
+		case Rocket:
+			RocketController.moveRocket(unit);
+			break;
+		case Knight:
+			KnightController.moveKnight(unit);
+			break;
+		case Healer:
+			HealerController.moveHealer(unit);
+			break;
+		default:
+			break;
 		}
 	}
 

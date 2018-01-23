@@ -22,8 +22,8 @@ public class Utils {
 	}
 
 	static int countNearbyWorkers(MapLocation loc) {
-		VecUnit workers = Player.gc.senseNearbyUnitsByType(loc, 
-				DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS, UnitType.Worker);
+		VecUnit workers = Player.gc.senseNearbyUnitsByType(loc, DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS,
+				UnitType.Worker);
 		int numOurTeam = 0;
 		for (int i = 0; i < workers.size(); i++) {
 			if (workers.get(i).team() == Player.friendlyTeam) {
@@ -34,13 +34,11 @@ public class Utils {
 	}
 
 	static int countNearbyConstruction(MapLocation loc) {
-		VecUnit units = Player.gc.senseNearbyUnitsByType(loc, 
-				DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS, UnitType.Factory);
+		VecUnit units = Player.gc.senseNearbyUnitsByType(loc, DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS, UnitType.Factory);
 		int numOurTeam = 0;
 		for (int i = 0; i < units.size(); i++) {
 			Unit factory = units.get(i);
-			if (factory.team() == Player.friendlyTeam 
-					&& !BuildUtils.isBuilt(factory)) {
+			if (factory.team() == Player.friendlyTeam && !BuildUtils.isBuilt(factory)) {
 				numOurTeam++;
 			}
 		}
@@ -185,9 +183,7 @@ public class Utils {
 				Player.gc.moveRobot(unit.id(), toMove);
 				return true;
 			} else {
-				if (Utils.tryAndGetIntoFactory(unit)) {
-					Utils.tryAndGetIntoRocket(unit);
-				}
+				Utils.tryAndGetIntoFactory(unit);
 			}
 		}
 		return false;

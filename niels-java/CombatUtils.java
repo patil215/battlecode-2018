@@ -53,9 +53,9 @@ public class CombatUtils {
 		}
 
 		if (target.unitType() == UnitType.Worker) {
-			return targetHealth * 3;
+			return targetHealth * 2;
 		} else if (target.unitType() == UnitType.Healer) {
-			return targetHealth / 2;
+			return targetHealth;
 		} else if (target.unitType() == UnitType.Factory) {
 			return targetHealth * 2;
 		} else if (target.unitType() == UnitType.Rocket) {
