@@ -160,7 +160,7 @@ public class Utils {
 		return false;
 	}
 
-	public static boolean moveAccordingToDjikstraMap(Unit unit, Navigation map) {
+	public static boolean moveAccordingToDijkstraMap(Unit unit, Navigation map) {
 		if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
 			Direction toMove = map.getNextDirection(unit);
 			if (toMove != null) {

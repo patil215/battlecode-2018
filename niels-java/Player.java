@@ -1,10 +1,10 @@
-import bc.*;
-import java.util.*;
-import java.awt.Point;
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import static bc.UnitType.*;
+
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+
+import bc.*;
 
 public class Player {
 
@@ -79,7 +79,28 @@ public class Player {
 		return targets;
 	}
 
-	private static void getUnits() {
+	private static int getValueFromUnitType(UnitType type) {
+		// Higher is better. Basically determines the order (by type) that units should execute
+		switch (type) {
+			case Knight:
+				return 9;
+			case Ranger:
+				return 8;
+			case Worker:
+				return 7;
+			case Healer:
+				return 6;
+			case Factory:
+				return 5;
+			case Rocket:
+				return 5;
+			default:
+				return 0;
+
+		}
+	}
+
+	private static void getUnits(boolean sort) {
 		allUnits = new ArrayList<>();
 		friendlyUnits = new ArrayList<>();
 		enemyUnits = new ArrayList<>();
@@ -93,10 +114,46 @@ public class Player {
 				friendlyUnits.add(unit);
 			}
 		}
+
+		if (sort) {
+			// Sort friendly units so that they're processed in a way that coordinates the armies better
+			Collections.sort(friendlyUnits, (a, b) -> {
+				// Sorts in ascending order, so lower values should be better
+				if (a.unitType() != b.unitType()) {
+					int aTypeValue = getValueFromUnitType(a.unitType());
+					int bTypeValue = getValueFromUnitType(b.unitType());
+					return -Integer.compare(aTypeValue, bTypeValue);
+				} else {
+					if (a.location().isInGarrison() && b.location().isInGarrison()) {
+						return 0;
+					} else if (a.location().isInGarrison()) {
+						return -1;
+					} else if (b.location().isInGarrison()) {
+						return 1;
+					}
+
+					switch (a.unitType()) {
+						case Ranger: // Fall through
+						case Knight: // Fall through
+						case Healer: {
+							int aDijValue = Player.armyNav.getDijkstraMapValue(a.location().mapLocation());
+							int bDijValue = Player.armyNav.getDijkstraMapValue(b.location().mapLocation());
+							return Integer.compare(aDijValue, bDijValue); // Lower is better
+						}
+						case Worker: {
+							int aDijValue = Player.workerNav.getDijkstraMapValue(a.location().mapLocation());
+							int bDijValue = Player.workerNav.getDijkstraMapValue(b.location().mapLocation());
+							return Integer.compare(aDijValue, bDijValue);
+						}
+					}
+				}
+				return 0;
+			});
+		}
 	}
 
 	private static void beginTurn() {
-		getUnits();
+		getUnits(true);
 		CombatUtils.initAtStartOfTurn();
 	}
 
@@ -122,7 +179,7 @@ public class Player {
 		map = gc.startingMap(planet);
 		friendlyTeam = gc.team();
 		enemyTeam = Utils.getEnemyTeam();
-		getUnits();
+		getUnits(false);
 		initArmyMap();
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);

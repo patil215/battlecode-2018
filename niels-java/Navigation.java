@@ -146,6 +146,15 @@ public class Navigation {
 		return next;
 	}
 
+	public int getDijkstraMapValue(MapLocation location) {
+		int x = location.getX();
+		int y = location.getY();
+		if (x >= -1 && y >= -1 && x < distances.length && y < distances[x].length) {
+			return distances[x][y];
+		}
+		return Integer.MIN_VALUE; // TODO this is probably bad
+	}
+
 	public void addTarget(MapLocation pos) {
 		targets.add(new Point(pos.getX(), pos.getY()));
 	}

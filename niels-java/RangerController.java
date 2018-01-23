@@ -24,7 +24,7 @@ public class RangerController {
 	}
 
 	private static void moveRecon(Unit unit) {
-		Utils.moveAccordingToDjikstraMap(unit, Player.armyNav);
+		Utils.moveAccordingToDijkstraMap(unit, Player.armyNav);
 	}
 
 	private static void combatMicro(Unit unit, VecUnit foes) {

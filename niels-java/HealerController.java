@@ -49,7 +49,7 @@ public class HealerController {
 	}
 
 	private static void moveRecon(Unit unit) {
-		Utils.moveAccordingToDjikstraMap(unit, Player.armyNav); // TODO ideally this would be army, not army's target
+		Utils.moveAccordingToDijkstraMap(unit, Player.armyNav); // TODO ideally this would be army, not army's target
 	}
 
 	private static void fleeFromEnemy(Unit unit) {
