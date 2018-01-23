@@ -4,25 +4,24 @@ import java.util.*;
 import java.util.function.*;
 
 public class Utils {
-	static int countSurrounding(MapLocation loc, 
-			Function<MapLocation, Boolean> f) {
+	static int countSurrounding(MapLocation loc, Function<MapLocation, Boolean> f) {
 		int count = 0;
 		for (Direction dir : Direction.values()) {
-			if(dir == Direction.Center) continue;
+			if (dir == Direction.Center)
+				continue;
 			MapLocation newLoc = loc.add(dir);
-			if(Player.map.onMap(newLoc) && f.apply(newLoc)) { 
-				count++; 
+			if (Player.map.onMap(newLoc) && f.apply(newLoc)) {
+				count++;
 			}
 		}
 		return count;
 	}
 
 	static int countNearbyWorkers(MapLocation loc) {
-		VecUnit workers = 
-			Player.gc.senseNearbyUnitsByType(loc, 1L, UnitType.Worker);
+		VecUnit workers = Player.gc.senseNearbyUnitsByType(loc, 1L, UnitType.Worker);
 		int numOurTeam = 0;
-		for(int i = 0; i < workers.size(); i++) {
-			if(workers.get(i).team() == Player.friendlyTeam) {
+		for (int i = 0; i < workers.size(); i++) {
+			if (workers.get(i).team() == Player.friendlyTeam) {
 				numOurTeam++;
 			}
 		}
@@ -30,13 +29,11 @@ public class Utils {
 	}
 
 	static int countNearbyConstruction(MapLocation loc) {
-		VecUnit units = 
-			Player.gc.senseNearbyUnitsByType(loc, 1L, UnitType.Factory);
+		VecUnit units = Player.gc.senseNearbyUnitsByType(loc, 1L, UnitType.Factory);
 		int numOurTeam = 0;
-		for(int i = 0; i < units.size(); i++) {
+		for (int i = 0; i < units.size(); i++) {
 			Unit factory = units.get(i);
-			if(factory.team() == Player.friendlyTeam
-					&& factory.structureIsBuilt() == 0) {
+			if (factory.team() == Player.friendlyTeam && factory.structureIsBuilt() == 0) {
 				numOurTeam++;
 			}
 		}
@@ -44,9 +41,7 @@ public class Utils {
 	}
 
 	public static int countEmptySquaresSurrounding(MapLocation cur) {
-		return countSurrounding(cur, loc -> 
-				Player.map.onMap(loc)
-				&& Player.map.isPassableTerrainAt(loc) == 1 
+		return countSurrounding(cur, loc -> Player.map.onMap(loc) && Player.map.isPassableTerrainAt(loc) == 1
 				&& !Player.gc.hasUnitAtLocation(loc));
 	}
 
@@ -59,13 +54,13 @@ public class Utils {
 		// of workers surrounding it
 		for (Direction direction : Direction.values()) {
 			MapLocation newLoc = loc.add(direction);
-			if(Player.gc.canBlueprint(workerId, type, direction)) { 
+			if (Player.gc.canBlueprint(workerId, type, direction)) {
 				int numSurroundingWorkers = countNearbyWorkers(newLoc);
-				if(numSurroundingWorkers > bestCount) {
+				if (numSurroundingWorkers > bestCount) {
 					bestNextPositions.clear();
 					bestNextPositions.add(newLoc);
 					bestCount = numSurroundingWorkers;
-				} else if(numSurroundingWorkers == bestCount) {
+				} else if (numSurroundingWorkers == bestCount) {
 					bestNextPositions.add(newLoc);
 				}
 			}
@@ -74,13 +69,13 @@ public class Utils {
 		MapLocation bestLoc = null;
 		// of those, pick the one that has the most free spaces around it
 		for (MapLocation possibleBest : bestNextPositions) {
-			int emptySquares = countEmptySquaresSurrounding(possibleBest); 
-			if(emptySquares > bestEmptySquareCount) {
+			int emptySquares = countEmptySquaresSurrounding(possibleBest);
+			if (emptySquares > bestEmptySquareCount) {
 				bestLoc = possibleBest;
 				bestEmptySquareCount = emptySquares;
 			}
 		}
-		if(bestLoc == null) {
+		if (bestLoc == null) {
 			return false;
 		} else {
 			Direction dir = loc.directionTo(bestLoc);
@@ -116,17 +111,18 @@ public class Utils {
 		int workerId = worker.id();
 		// pick the direction that maximizes the number of blueprints around it
 		for (Direction dir : Direction.values()) {
-			if (dir == Direction.Center) continue;
-			if(Player.gc.canReplicate(workerId, dir)) { 
+			if (dir == Direction.Center)
+				continue;
+			if (Player.gc.canReplicate(workerId, dir)) {
 				MapLocation newLoc = loc.add(dir);
-				int numFactories = countNearbyConstruction(newLoc); 
-				if(numFactories > bestCount) {
+				int numFactories = countNearbyConstruction(newLoc);
+				if (numFactories > bestCount) {
 					bestCount = numFactories;
 					bestDir = dir;
 				}
 			}
 		}
-		if(bestDir == null) {
+		if (bestDir == null) {
 			return false;
 		} else {
 			Player.gc.replicate(worker.id(), bestDir);
@@ -136,14 +132,13 @@ public class Utils {
 
 	public static boolean tryAndHarvest(Unit worker) {
 		int workerId = worker.id();
-		if (worker.abilityHeat() < Constants.MAX_ABILITY_HEAT) {
-			for (Direction direction : Direction.values()) {
-				if (Player.gc.canHarvest(workerId, direction)) {
-					Player.gc.harvest(workerId, direction);
-					return true;
-				}
+		for (Direction direction : Direction.values()) {
+			if (Player.gc.canHarvest(workerId, direction)) {
+				Player.gc.harvest(workerId, direction);
+				return true;
 			}
 		}
+
 		return false;
 	}
 
@@ -213,11 +208,12 @@ public class Utils {
 	}
 
 	/**
-	 * Returns the nearest enemyTeam unit that can deal damage and is within the passed in unit's line of sight.
+	 * Returns the nearest enemyTeam unit that can deal damage and is within the
+	 * passed in unit's line of sight.
 	 */
 	public static Unit getMostDangerousNearbyEnemy(Unit unit) {
-		VecUnit nearbyEnemies =
-				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(), Player.enemyTeam);
+		VecUnit nearbyEnemies = Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(),
+				Player.enemyTeam);
 
 		Unit threat = null;
 		long bestThreatDistance = Long.MAX_VALUE;
@@ -225,7 +221,8 @@ public class Utils {
 			Unit foe = nearbyEnemies.get(i);
 			MapLocation unitLocation = unit.location().mapLocation();
 
-			if (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight || foe.unitType() == UnitType.Ranger) {
+			if (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight
+					|| foe.unitType() == UnitType.Ranger) {
 				long newThreatDistance = unitLocation.distanceSquaredTo(foe.location().mapLocation());
 				if (threat == null || newThreatDistance < bestThreatDistance) {
 					if (newThreatDistance < unit.attackRange()) {

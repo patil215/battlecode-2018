@@ -10,7 +10,7 @@ public class HealerController {
 
 			tryToHeal(self);
 
-			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(self.location().mapLocation(), self.visionRange(),
+			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(self.location().mapLocation(), Constants.HEALER_FLEE_RADIUS,
 					Player.enemyTeam);
 			if (foes.size() > 0) {
 				fleeFromEnemy(self);
@@ -24,12 +24,12 @@ public class HealerController {
 		VecUnit nearbyFriendlies = Player.gc.senseNearbyUnitsByTeam(self.location().mapLocation(),
 				self.attackRange(), Player.friendlyTeam);
 
-		long bestScore = Long.MAX_VALUE;
+		long bestScore = 0;
 		Unit target = null;
 		for (int i = 0; i < nearbyFriendlies.size(); i++) {
 			Unit unit = nearbyFriendlies.get(i);
 			long newScore = healTargetScore(unit);
-			if (newScore < bestScore) {
+			if (newScore > bestScore) {
 				target = unit;
 				bestScore = newScore;
 			}
@@ -42,10 +42,10 @@ public class HealerController {
 
 	private static long healTargetScore(Unit unit) {
 		if (unit == null || unit.unitType() == UnitType.Factory || unit.unitType() == UnitType.Rocket) {
-			return Long.MAX_VALUE;
+			return 0;
 		}
 
-		return unit.health();
+		return unit.maxHealth() - unit.health();
 	}
 
 	private static void moveRecon(Unit unit) {

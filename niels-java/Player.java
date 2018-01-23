@@ -14,6 +14,7 @@ public class Player {
 	static Team friendlyTeam;
 	static Planet planet;
 	static PlanetMap map;
+	static boolean hasMadeBluePrintThisTurn;
 
 	// Initialized/updated once per turn
 	/**
@@ -80,22 +81,22 @@ public class Player {
 	}
 
 	private static int getValueFromUnitType(UnitType type) {
-		// Higher is better. Basically determines the order (by type) that units should execute
+		// Lower is firster. Basically determines the order (by type) that units should execute
 		switch (type) {
 			case Knight:
-				return 9;
-			case Ranger:
-				return 8;
-			case Worker:
-				return 7;
-			case Healer:
-				return 6;
-			case Factory:
-				return 5;
-			case Rocket:
-				return 5;
-			default:
 				return 0;
+			case Ranger:
+				return 1;
+			case Worker:
+				return 2;
+			case Healer:
+				return 3;
+			case Factory:
+				return 4;
+			case Rocket:
+				return 4;
+			default:
+				return Integer.MAX_VALUE;
 
 		}
 	}
@@ -122,7 +123,7 @@ public class Player {
 				if (a.unitType() != b.unitType()) {
 					int aTypeValue = getValueFromUnitType(a.unitType());
 					int bTypeValue = getValueFromUnitType(b.unitType());
-					return -Integer.compare(aTypeValue, bTypeValue);
+					return Integer.compare(aTypeValue, bTypeValue);
 				} else {
 					if (a.location().isInGarrison() && b.location().isInGarrison()) {
 						return 0;
@@ -153,6 +154,7 @@ public class Player {
 	}
 
 	private static void beginTurn() {
+		Player.hasMadeBluePrintThisTurn = false;
 		getUnits(true);
 		CombatUtils.initAtStartOfTurn();
 	}
@@ -167,7 +169,6 @@ public class Player {
 			System.runFinalization();
 			System.gc();
 			long end = System.currentTimeMillis();
-			System.out.println("Took " + (end - start) + " seconds.");
 		}
 
 		gc.nextTurn();
@@ -273,17 +274,15 @@ public class Player {
 	}
 
 	private static void setupResearchQueue() {
-		gc.queueResearch(Worker); // Level 1 Worker (ends at turn 25)
-		gc.queueResearch(Worker); // Level 2 Worker (ends at turn 100)
-		gc.queueResearch(Ranger); // Level 1 Ranger (ends at turn 175)
-		gc.queueResearch(Worker); // Level 3 Worker (ends at turn 275)
-		gc.queueResearch(Healer); // Level 1 Healer (ends at turn 225)
-		gc.queueResearch(Healer); // Level 2 Healer (ends at turn 325)
-		gc.queueResearch(Rocket); // Level 1 Rocket (ends at turn 375)
-		gc.queueResearch(Rocket); // Level 2 Rocket (ends at turn 475)
-		gc.queueResearch(Rocket); // Level 3 Rocket (ends at turn 575)
-		gc.queueResearch(Ranger); // Level 2 Ranger (ends at turn 675)
-		gc.queueResearch(Healer); // Level 3 Healer (ends at turn 775)
+		gc.queueResearch(Ranger); // Ranger 1 complete round 50
+		gc.queueResearch(Healer); // Healer 1 complete round 75
+		gc.queueResearch(Healer); // Healer 2 complete round 175
+		gc.queueResearch(Healer); // Healer 3 complete round 275
+		gc.queueResearch(Rocket); // Rocket 1 complete round 325
+		gc.queueResearch(Rocket); // Rocket 2 complete round 425
+		gc.queueResearch(Rocket); // Rocket 3 complete round 525
+		gc.queueResearch(Ranger); // Ranger 2 complete round 626
+		gc.queueResearch(Worker);
 	}
 
 	private static void updateUnitStates(ArrayList<Unit> units) {
@@ -303,7 +302,7 @@ public class Player {
 			if (gc.round() <= Constants.START_BUILDING_ROCKETS_ROUND) {
 				int numFactoryBuilders = CensusCounts.getWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES);
 				int numHarvesters = CensusCounts.getWorkerModeCount(WorkerController.Mode.HARVESTER);
-				if (numFactoryBuilders <= numHarvesters) {
+				if (numFactoryBuilders < numHarvesters) {
 					memory.workerMode = WorkerController.Mode.BUILD_FACTORIES;
 					CensusCounts.incrementWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES);
 				} else {
@@ -417,7 +416,7 @@ public class Player {
 	}
 
 	private static void initArmyMap() {
-		if(Constants.CLUMP_THRESHOLD>0) {
+		if (Constants.CLUMP_THRESHOLD > 0) {
 			VecUnit units = Player.gc.myUnits();
 			Set<Point> rallyPoints = new HashSet<>();
 			for (int index = 0; index < units.size(); index++) {
@@ -426,8 +425,7 @@ public class Player {
 				for (int count = 0; count < 10; count++) {
 					Direction toTry = directions[(int) (directions.length * Math.random())];
 					MapLocation next = current.add(toTry);
-					if (map.onMap(next)
-							&& map.isPassableTerrainAt(next) != 0) {
+					if (map.onMap(next) && map.isPassableTerrainAt(next) != 0) {
 						current = next;
 					}
 				}
