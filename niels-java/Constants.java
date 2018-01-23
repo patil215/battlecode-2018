@@ -8,7 +8,8 @@ public class Constants {
 	public static final int RANGER_COST = 20;
 	public static final int ROCKET_COST = 75;
 
-	public static final int MAX_ROCKET_CAPACITY = 8;
+	public static final int DEFAULT_ROCKET_CAPACITY = 8;
+	public static final int UPGRADED_ROCKET_CAPACITY = 12;
 
 	public static final int ROCKET_HEALTH = 200;
 	

@@ -259,4 +259,12 @@ public class Utils {
 		}
 		return false;
 	}
+
+	public static int getMaxRocketCapacity() {
+		if (Player.gc.round() >= 500) {
+			return Constants.UPGRADED_ROCKET_CAPACITY;
+		} else {
+			return Constants.DEFAULT_ROCKET_CAPACITY;
+		}
+	}
 }

@@ -283,7 +283,7 @@ public class Player {
 				// Add all rockets that are ready to be loaded up
 				// TODO don't use constant for rocket capacity
 				if (unit.unitType() == Rocket && unit.structureIsBuilt() == 1
-						&& unit.structureGarrison().size() < Constants.MAX_ROCKET_CAPACITY) {
+						&& unit.structureGarrison().size() < unit.structureMaxCapacity()) {
 					armyNav.addTarget(unit.location().mapLocation());
 				}
 			}
@@ -317,15 +317,18 @@ public class Player {
 	}
 
 	private static void setupResearchQueue() {
-		gc.queueResearch(Ranger); // Ranger 1 complete round 50
-		gc.queueResearch(Healer); // Healer 1 complete round 75
-		gc.queueResearch(Healer); // Healer 2 complete round 175
-		gc.queueResearch(Healer); // Healer 3 complete round 275
-		gc.queueResearch(Rocket); // Rocket 1 complete round 325
-		gc.queueResearch(Rocket); // Rocket 2 complete round 425
-		gc.queueResearch(Rocket); // Rocket 3 complete round 525
-		gc.queueResearch(Ranger); // Ranger 2 complete round 626
-		gc.queueResearch(Worker);
+		gc.queueResearch(Ranger); // Ranger 1 complete round 25
+		gc.queueResearch(Healer); // Healer 1 complete round 50
+		gc.queueResearch(Healer); // Healer 2 complete round 150
+		gc.queueResearch(Healer); // Healer 3 complete round 250
+		gc.queueResearch(Rocket); // Rocket 1 complete round 300
+		gc.queueResearch(Rocket); // Rocket 2 complete round 400
+		gc.queueResearch(Rocket); // Rocket 3 complete round 500
+		// Remember to update the Utils.getMaxRocketCapacity if Rocket III timing is changed
+		gc.queueResearch(Ranger); // Ranger 2 complete round 600
+		gc.queueResearch(Worker); // Worker 1 complete round 625
+		gc.queueResearch(Worker); // Worker 2 complete round 700
+		gc.queueResearch(Ranger); // Ranger 3 complete round 900 (this is useless but might throw other team off)
 	}
 
 	private static void updateUnitStates(ArrayList<Unit> units) {
@@ -377,7 +380,7 @@ public class Player {
 				// Only try to make rockets if we have units that need them
 				int numRockets = CensusCounts.getUnitCount(Rocket);
 				int numRangers = CensusCounts.getUnitCount(Ranger);
-				if (numRockets * Constants.MAX_ROCKET_CAPACITY >= numRangers) {
+				if (numRockets * Utils.getMaxRocketCapacity() >= numRangers) {
 					// TODO all of these workers might switch back and forth at once - is this what
 					// we want?
 					Utils.getMemory(unit).workerMode = WorkerController.Mode.IDLE;

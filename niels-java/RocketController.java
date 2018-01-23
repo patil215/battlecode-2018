@@ -43,7 +43,7 @@ public class RocketController {
 		}
 
 		// Launch if full
-		if (unit.structureGarrison().size() == Constants.MAX_ROCKET_CAPACITY) {
+		if (unit.structureGarrison().size() == unit.structureMaxCapacity()) {
 			tryToLaunch(unit);
 			return;
 		}
