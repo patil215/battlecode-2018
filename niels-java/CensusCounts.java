@@ -66,7 +66,7 @@ public class CensusCounts {
 		}
 	}
 
-	private static void incrementUnitCount(UnitType type) {
+	public static void incrementUnitCount(UnitType type) {
 		if (!unitCounts.containsKey(type)) {
 			unitCounts.put(type, 1);
 		}
