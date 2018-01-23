@@ -10,7 +10,7 @@ public class WorkerController {
 
 	private static final int ROCKET_BUILD_KARB_THRESHOLD = 80;
 	private static final int FACTORY_BUILD_KARB_THRESHOLD = 100;
-	private static final int MAX_NUMBER_WORKERS = 6;
+	public static int MAX_NUMBER_WORKERS;
 
 	static void moveWorker(Unit unit) {
 		if (!unit.location().isInGarrison()) {
@@ -50,8 +50,9 @@ public class WorkerController {
 			case BUILD_FACTORIES: {
 				movePossiblyUsingBuilderMap(unit);
 				// Try to build factory
-				if (Player.gc.karbonite() > FACTORY_BUILD_KARB_THRESHOLD && !Player.hasMadeBluePrintThisTurn
-						&& Player.blueprints.size() == 0) {
+				if (Player.gc.karbonite() > FACTORY_BUILD_KARB_THRESHOLD
+						&& ((!Player.hasMadeBluePrintThisTurn && Player.blueprints.size() == 0)
+								|| Player.greedyEconMode)) {
 					Player.hasMadeBluePrintThisTurn = Utils.tryAndBuild(unit, UnitType.Factory);
 				}
 				break;

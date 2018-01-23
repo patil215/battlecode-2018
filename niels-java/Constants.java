@@ -19,5 +19,7 @@ public class Constants {
 	public static final int MAX_FACTORY_HEALTH = 300;
 	public static final int MAX_ROCKET_HEALTH = 200;
 	
-	public static final int HEALER_FLEE_RADIUS = 70;
+	public static final int HEALER_FLEE_RADIUS = 90;
+	
+	public static final int REACHABLE_KARBONITE_THREASHOLD = 120;
 }

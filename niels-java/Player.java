@@ -15,13 +15,16 @@ public class Player {
 	static Planet planet;
 	static PlanetMap map;
 	static boolean hasMadeBluePrintThisTurn;
+	static long reachableKarbonite;
+	static boolean greedyEconMode;
 
 	// Initialized/updated once per turn
 	/**
-	 * These variables are used to minimize calls to gc.units() and gc.myUnits(). Note that this can mean they are
-	 * slightly out of date if we spawn a unit on a particular turn (since gc.units() would return that new unit
-	 * immediately. However, this shouldn't make much of a difference because units have an initial cooldown, so they
-	 * wouldn't be doing anything anyways.
+	 * These variables are used to minimize calls to gc.units() and gc.myUnits().
+	 * Note that this can mean they are slightly out of date if we spawn a unit on a
+	 * particular turn (since gc.units() would return that new unit immediately.
+	 * However, this shouldn't make much of a difference because units have an
+	 * initial cooldown, so they wouldn't be doing anything anyways.
 	 */
 	static ArrayList<Unit> friendlyUnits;
 	static ArrayList<Unit> enemyUnits;
@@ -50,15 +53,48 @@ public class Player {
 		return targets;
 	}
 
+	private static Set<Point> getInitialAllyUnitLocations() {
+		VecUnit initialUnits = map.getInitial_units();
+		Set<Point> targets = new HashSet<>();
+		for (int i = 0; i < initialUnits.size(); i++) {
+			Unit unit = initialUnits.get(i);
+			if (unit.team() == friendlyTeam) {
+				MapLocation unitLoc = unit.location().mapLocation();
+				targets.add(new Point(unitLoc.getX(), unitLoc.getY()));
+			}
+		}
+		return targets;
+	}
+
+	/*
+	 * Note: call this to also compute the karbonite that is safe to grab
+	 */
 	private static Set<Point> getInitialKarboniteLocations() {
 		long maxX = map.getWidth();
 		long maxY = map.getHeight();
 		Set<Point> targets = new HashSet<>();
+		Set<Point> foeSpawns = getInitialEnemyUnitLocations();
+		Set<Point> spawns = getInitialAllyUnitLocations();
+		reachableKarbonite = 0;
 		for (int x = 0; x < maxX; x++) {
 			for (int y = 0; y < maxY; y++) {
 				MapLocation loc = new MapLocation(planet, x, y);
-				if (map.initialKarboniteAt(loc) > 0) {
+				long karbonite = map.initialKarboniteAt(loc);
+				if (karbonite > 0) {
 					targets.add(new Point(x, y));
+					long minFoeDistance = Long.MAX_VALUE;
+					for (Point foeSpawn : foeSpawns) {
+						MapLocation spawnLoc = new MapLocation(gc.planet(), foeSpawn.x, foeSpawn.y);
+						minFoeDistance = Math.min(minFoeDistance, spawnLoc.distanceSquaredTo(loc));
+					}
+					long minAllyDistance = Long.MAX_VALUE;
+					for (Point allySpawn : spawns) {
+						MapLocation spawnLoc = new MapLocation(gc.planet(), allySpawn.x, allySpawn.y);
+						minAllyDistance = Math.min(minFoeDistance, spawnLoc.distanceSquaredTo(loc));
+					}
+					if (minAllyDistance * 3 < minFoeDistance * 2) {
+						reachableKarbonite += karbonite;
+					}
 				}
 			}
 		}
@@ -186,6 +222,13 @@ public class Player {
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
 		robotMemory = new HashMap<>();
 		CensusCounts.resetCounts();
+		System.out.println("Reachable Karbonite is: " + Player.reachableKarbonite);
+		greedyEconMode = Player.reachableKarbonite >= Constants.REACHABLE_KARBONITE_THREASHOLD;
+		if (greedyEconMode) {
+			WorkerController.MAX_NUMBER_WORKERS = 12;
+		} else {
+			WorkerController.MAX_NUMBER_WORKERS = 6;
+		}
 	}
 
 	public static void main(String[] args) {
@@ -199,8 +242,8 @@ public class Player {
 					System.out.println("Out of time. Waiting for passive regen...");
 					finishTurn();
 					continue;
-				}				
-				
+				}
+
 				beginTurn();
 
 				if (gc.round() % 3 == 0 && gc.round() > Constants.CLUMP_THRESHOLD) {
@@ -208,11 +251,11 @@ public class Player {
 				} else if (gc.round() == Constants.CLUMP_THRESHOLD) {
 					armyNav = new Navigation(map, getInitialEnemyUnitLocations());
 				}
-				
+
 				updateUnitStates(friendlyUnits);
 				CensusCounts.computeCensus(friendlyUnits);
 				moveUnits(friendlyUnits);
-				
+
 				// Workers will update empty karbonite positions in workerController
 				if (gc.round() % 3 == 0) {
 					workerNav.recalculateDistanceMap();
@@ -220,7 +263,7 @@ public class Player {
 
 				// Submit the actions we've done, and wait for our next turn.
 				finishTurn();
-			} catch(Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 				gc.nextTurn();
 			}
@@ -368,24 +411,24 @@ public class Player {
 		for (int index = 0; index < units.size(); index++) {
 			Unit unit = units.get(index);
 			switch (unit.unitType()) {
-				case Worker:
-					WorkerController.moveWorker(unit);
-					break;
-				case Factory:
-					FactoryController.moveFactory(unit);
-					break;
-				case Ranger:
-					RangerController.moveRanger(unit);
-					break;
-				case Rocket:
-					RocketController.moveRocket(unit);
-					break;
-				case Knight:
-					KnightController.moveKnight(unit);
-					break;
-				case Healer:
-					HealerController.moveHealer(unit);
-					break;
+			case Worker:
+				WorkerController.moveWorker(unit);
+				break;
+			case Factory:
+				FactoryController.moveFactory(unit);
+				break;
+			case Ranger:
+				RangerController.moveRanger(unit);
+				break;
+			case Rocket:
+				RocketController.moveRocket(unit);
+				break;
+			case Knight:
+				KnightController.moveKnight(unit);
+				break;
+			case Healer:
+				HealerController.moveHealer(unit);
+				break;
 			default:
 				break;
 			}
@@ -393,7 +436,7 @@ public class Player {
 	}
 
 	private static void initialTurns() {
-		
+
 		finishTurn();
 
 		// Turn
