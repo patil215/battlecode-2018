@@ -90,9 +90,9 @@ public class Player {
 					long minAllyDistance = Long.MAX_VALUE;
 					for (Point allySpawn : spawns) {
 						MapLocation spawnLoc = new MapLocation(gc.planet(), allySpawn.x, allySpawn.y);
-						minAllyDistance = Math.min(minFoeDistance, spawnLoc.distanceSquaredTo(loc));
+						minAllyDistance = Math.min(minAllyDistance, spawnLoc.distanceSquaredTo(loc));
 					}
-					if (minAllyDistance * 3 < minFoeDistance * 2) {
+					if (minAllyDistance * 9 < minFoeDistance * 4) {
 						reachableKarbonite += karbonite;
 					}
 				}
@@ -196,6 +196,13 @@ public class Player {
 	}
 
 	private static void finishTurn() {
+		// TODO: Find better criteria for this
+		if (gc.planet() == Planet.Earth && gc.round() > 100 && Utils.stuck() && Math.random() < .1
+				&& Player.friendlyUnits.size() > 0) {
+			gc.disintegrateUnit(Player.friendlyUnits.get((int) (Math.random() * friendlyUnits.size())).id());
+			System.out.println("Unit killed because nothing could move");
+		}
+
 		CombatUtils.cleanupAtEndOfTurn();
 		BuildUtils.cleanupAtEndOfTurn();
 

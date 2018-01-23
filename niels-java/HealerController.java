@@ -8,9 +8,9 @@ public class HealerController {
 				Utils.tryAndGetIntoRocket(self);
 			}
 
-			tryToHeal(self);
+			tryToHealAndOvercharge(self);
 
-			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(self.location().mapLocation(), Constants.HEALER_FLEE_RADIUS,
+			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(self.location().mapLocation(), Constants.FLEE_RADIUS,
 					Player.enemyTeam);
 			if (foes.size() > 0) {
 				fleeFromEnemy(self);
@@ -20,9 +20,9 @@ public class HealerController {
 		}
 	}
 
-	private static void tryToHeal(Unit self) {
-		VecUnit nearbyFriendlies = Player.gc.senseNearbyUnitsByTeam(self.location().mapLocation(),
-				self.attackRange(), Player.friendlyTeam);
+	private static void tryToHealAndOvercharge(Unit self) {
+		VecUnit nearbyFriendlies = Player.gc.senseNearbyUnitsByTeam(self.location().mapLocation(), self.attackRange(),
+				Player.friendlyTeam);
 
 		long bestScore = 0;
 		Unit target = null;
@@ -37,6 +37,11 @@ public class HealerController {
 
 		if (target != null) {
 			Utils.tryAndHeal(self, target);
+			if (Player.gc.canOvercharge(self.id(), target.id()) && self.abilityHeat()<10) {
+				Player.gc.overcharge(self.id(), target.id());
+				Player.moveUnit(Player.gc.unit(target.id()));
+				System.out.println("overchared");
+			}
 		}
 	}
 

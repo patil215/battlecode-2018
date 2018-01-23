@@ -30,14 +30,16 @@ public class RocketController {
 			tryToLaunch(unit);
 			return;
 		}
-
-		// Otherwise only launch if we have at least 2 units
-		if (unit.structureGarrison().size() < 2) {
+		
+		// We won't launch an empty rocket till the last turn
+		if(unit.structureGarrison().size()==0) {
 			return;
 		}
 
-		// Launch if less than half health
-		if (unit.health() < (Constants.ROCKET_HEALTH / 2)) {
+		// Launch if less than full health or if there is a nearby foe
+		if (unit.health() < unit.maxHealth() || Player.gc
+				.senseNearbyUnitsByTeam(unit.location().mapLocation(), Constants.FLEE_RADIUS, Player.enemyTeam)
+				.size() > 0) {
 			tryToLaunch(unit);
 			return;
 		}

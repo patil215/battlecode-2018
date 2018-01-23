@@ -102,7 +102,10 @@ public class Utils {
 			return false;
 		}
 
-		for (Direction direction : Direction.values()) {
+		List<Direction> dirs = Arrays.asList(Direction.values());
+		Collections.shuffle(dirs);
+
+		for (Direction direction : dirs) {
 			if (Player.gc.canUnload(unit.id(), direction)) {
 				Player.gc.unload(unit.id(), direction);
 				return true;
@@ -162,15 +165,43 @@ public class Utils {
 		return false;
 	}
 
+	public static boolean tryAndGetIntoFactory(Unit unit) {
+		for (int i = 0; i < Player.friendlyUnits.size(); i++) {
+			Unit potentialFactory = Player.friendlyUnits.get(i);
+			if (potentialFactory.unitType() == UnitType.Factory && potentialFactory.structureIsBuilt() == 1) {
+				if (Player.gc.canLoad(potentialFactory.id(), unit.id())) {
+					Player.gc.load(potentialFactory.id(), unit.id());
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	public static boolean moveAccordingToDijkstraMap(Unit unit, Navigation map) {
 		if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
 			Direction toMove = map.getNextDirection(unit);
 			if (toMove != null) {
 				Player.gc.moveRobot(unit.id(), toMove);
 				return true;
+			} else {
+				if (Utils.tryAndGetIntoFactory(unit)) {
+					Utils.tryAndGetIntoRocket(unit);
+				}
 			}
 		}
 		return false;
+	}
+
+	public static boolean stuck() {
+		VecUnit units = Player.gc.myUnits();
+		for (int index = 0; index < units.size(); index++) {
+			if (units.get(index).unitType() != UnitType.Factory && units.get(index).unitType() != UnitType.Rocket
+					&& units.get(index).movementHeat() != 0) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public static void moveRandom(Unit unit) {
