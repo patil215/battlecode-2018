@@ -93,7 +93,7 @@ public class Player {
 						MapLocation spawnLoc = new MapLocation(gc.planet(), allySpawn.x, allySpawn.y);
 						minAllyDistance = Math.min(minAllyDistance, spawnLoc.distanceSquaredTo(loc));
 					}
-					if (minAllyDistance * 9 < minFoeDistance * 4) {
+					if (minAllyDistance * 3 < minFoeDistance* 2) {
 						reachableKarbonite += karbonite;
 					}
 				}
@@ -205,7 +205,7 @@ public class Player {
 		} else {
 			stuckCounter = 0;
 		}
-		if (stuckCounter > 10 && gc.round() > 100) {
+		if (stuckCounter > 10 && gc.round() > 100 && friendlyUnits.size()>1) {
 			gc.disintegrateUnit(Player.friendlyUnits.get((int) (Math.random() * friendlyUnits.size())).id());
 			System.out.println("Unit killed because nothing could move");
 			stuckCounter = 0;
