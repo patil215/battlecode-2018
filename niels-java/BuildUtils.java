@@ -13,7 +13,7 @@ public class BuildUtils {
 		markedStructureHealth = new HashMap<>();
 	}
 
-	private static boolean isBuilt(Unit target) {
+	public static boolean isBuilt(Unit target) {
 		long health = getStructureHealth(target);
 		return (target.unitType() == UnitType.Rocket && health >= Constants.MAX_ROCKET_HEALTH)
 				|| (target.unitType() == UnitType.Factory && health >= Constants.MAX_FACTORY_HEALTH);

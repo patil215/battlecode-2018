@@ -4,6 +4,10 @@ import java.util.*;
 import java.util.function.*;
 
 public class Utils {
+	// includes diagonals (1 vertical, 1 horiz = 1^2 + 1^2 = 2, this is inclusive)
+	// will not include any other squares.
+	private static final long DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS = 2L;
+
 	static int countSurrounding(MapLocation loc, Function<MapLocation, Boolean> f) {
 		int count = 0;
 		for (Direction dir : Direction.values()) {
@@ -18,7 +22,8 @@ public class Utils {
 	}
 
 	static int countNearbyWorkers(MapLocation loc) {
-		VecUnit workers = Player.gc.senseNearbyUnitsByType(loc, 1L, UnitType.Worker);
+		VecUnit workers = Player.gc.senseNearbyUnitsByType(loc, 
+				DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS, UnitType.Worker);
 		int numOurTeam = 0;
 		for (int i = 0; i < workers.size(); i++) {
 			if (workers.get(i).team() == Player.friendlyTeam) {
@@ -29,11 +34,13 @@ public class Utils {
 	}
 
 	static int countNearbyConstruction(MapLocation loc) {
-		VecUnit units = Player.gc.senseNearbyUnitsByType(loc, 1L, UnitType.Factory);
+		VecUnit units = Player.gc.senseNearbyUnitsByType(loc, 
+				DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS, UnitType.Factory);
 		int numOurTeam = 0;
 		for (int i = 0; i < units.size(); i++) {
 			Unit factory = units.get(i);
-			if (factory.team() == Player.friendlyTeam && factory.structureIsBuilt() == 0) {
+			if (factory.team() == Player.friendlyTeam 
+					&& !BuildUtils.isBuilt(factory)) {
 				numOurTeam++;
 			}
 		}
