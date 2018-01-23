@@ -10,7 +10,7 @@ public class HealerController {
 
 			tryToHeal(self);
 
-			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(self.location().mapLocation(), self.visionRange(),
+			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(self.location().mapLocation(), Constants.HEALER_FLEE_RADIUS,
 					Player.enemyTeam);
 			if (foes.size() > 0) {
 				fleeFromEnemy(self);
@@ -42,7 +42,7 @@ public class HealerController {
 
 	private static long healTargetScore(Unit unit) {
 		if (unit == null || unit.unitType() == UnitType.Factory || unit.unitType() == UnitType.Rocket) {
-			return Long.MAX_VALUE;
+			return 0;
 		}
 
 		return unit.maxHealth() - unit.health();
