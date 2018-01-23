@@ -82,7 +82,9 @@ public class CensusCounts {
 	}
 
 	public static void decrementWorkerModeCount(WorkerController.Mode mode) {
-		workerModeCounts.put(mode, workerModeCounts.get(mode) - 1);
+		if (workerModeCounts.get(mode) > 0) {
+			workerModeCounts.put(mode, workerModeCounts.get(mode) - 1);
+		}
 	}
 
 	public static int getWorkerModeCount(WorkerController.Mode mode) {
@@ -97,7 +99,9 @@ public class CensusCounts {
 	}
 
 	public static void decrementFactoryModeCount(FactoryController.Mode mode) {
-		factoryModeCounts.put(mode, factoryModeCounts.get(mode) - 1);
+		if (factoryModeCounts.get(mode) > 0) {
+			factoryModeCounts.put(mode, factoryModeCounts.get(mode) - 1);
+		}
 	}
 
 	public static int getFactoryModeCount(FactoryController.Mode mode) {
@@ -112,7 +116,9 @@ public class CensusCounts {
 	}
 
 	public static void decrementRangerModeCount(RangerController.Mode mode) {
-		rangerModeCounts.put(mode, rangerModeCounts.get(mode) - 1);
+		if (rangerModeCounts.get(mode) > 0) {
+			rangerModeCounts.put(mode, rangerModeCounts.get(mode) - 1);
+		}
 	}
 
 	public static int getRangerModeCount(RangerController.Mode mode) {

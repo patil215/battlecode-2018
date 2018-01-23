@@ -359,6 +359,10 @@ public class Player {
 			}
 			break;
 		}
+		case Factory: {
+			memory.factoryMode = FactoryController.Mode.PRODUCE;
+			CensusCounts.incrementFactoryModeCount(FactoryController.Mode.PRODUCE);
+		}
 		default:
 			break;
 		}
@@ -390,13 +394,17 @@ public class Player {
 
 				if (gc.karbonite() > (((numberFactoriesProducingUnits + 1) * Constants.RANGER_COST)
 						+ Constants.ROCKET_COST)) {
-					Utils.getMemory(unit).factoryMode = FactoryController.Mode.PRODUCE;
-					CensusCounts.decrementFactoryModeCount(FactoryController.Mode.IDLE);
-					CensusCounts.incrementFactoryModeCount(FactoryController.Mode.PRODUCE);
+					if (Utils.getMemory(unit).factoryMode == FactoryController.Mode.IDLE) {
+						Utils.getMemory(unit).factoryMode = FactoryController.Mode.PRODUCE;
+						CensusCounts.decrementFactoryModeCount(FactoryController.Mode.IDLE);
+						CensusCounts.incrementFactoryModeCount(FactoryController.Mode.PRODUCE);
+					}
 				} else {
-					Utils.getMemory(unit).factoryMode = FactoryController.Mode.IDLE;
-					CensusCounts.decrementFactoryModeCount(FactoryController.Mode.PRODUCE);
-					CensusCounts.incrementFactoryModeCount(FactoryController.Mode.IDLE);
+					if (Utils.getMemory(unit).factoryMode == FactoryController.Mode.PRODUCE) {
+						Utils.getMemory(unit).factoryMode = FactoryController.Mode.IDLE;
+						CensusCounts.decrementFactoryModeCount(FactoryController.Mode.PRODUCE);
+						CensusCounts.incrementFactoryModeCount(FactoryController.Mode.IDLE);
+					}
 				}
 
 			}

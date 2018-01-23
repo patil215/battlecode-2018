@@ -8,7 +8,7 @@ public class WorkerController {
 		HARVESTER, BUILD_FACTORIES, BUILD_ROCKETS, IDLE
 	}
 
-	private static final int ROCKET_BUILD_KARB_THRESHOLD = 80;
+	private static final int ROCKET_BUILD_KARB_THRESHOLD = 75;
 	private static final int FACTORY_BUILD_KARB_THRESHOLD = 100;
 	public static int MAX_NUMBER_WORKERS;
 
