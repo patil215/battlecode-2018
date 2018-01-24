@@ -17,9 +17,7 @@ public class WorkerController {
 			// TODO maybe prioritize fleeing over building in certain cases
 
 			// Try to replicate
-			if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS / 2
-					|| (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS
-							&& Player.gc.round() < Constants.WORKER_STOP_REP_ROUND)) {
+			if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS) {
 				Utils.tryAndReplicate(unit);
 			}
 

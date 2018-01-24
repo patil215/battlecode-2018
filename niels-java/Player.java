@@ -193,6 +193,9 @@ public class Player {
 	}
 
 	private static void beginTurn() {
+		if (gc.round() == Constants.LIMIT_WORKER_REP_ROUND) {
+			WorkerController.MAX_NUMBER_WORKERS = 6;
+		}
 		Player.hasMadeBluePrintThisTurn = false;
 		getUnits(true);
 		CombatUtils.initAtStartOfTurn();
@@ -200,12 +203,13 @@ public class Player {
 
 	private static void finishTurn() {
 		// TODO: Find better criteria for this
-		if (Utils.stuck()) {
+		if (gc.planet() == Planet.Earth && Utils.stuck()) {
 			stuckCounter++;
 		} else {
 			stuckCounter = 0;
 		}
-		if (stuckCounter > 10 && gc.round() > 100 && friendlyUnits.size()>1) {
+		if (stuckCounter > Constants.AMOUNT_STUCK_BEFORE_KILL && gc.round() > 100 && friendlyUnits.size()>1
+				&& gc.planet() == Planet.Earth) {
 			gc.disintegrateUnit(Player.friendlyUnits.get((int) (Math.random() * friendlyUnits.size())).id());
 			System.out.println("Unit killed because nothing could move");
 			stuckCounter = 0;
@@ -491,7 +495,7 @@ public class Player {
 
 	private static void initArmyMap() {
 		if (Constants.CLUMP_THRESHOLD > 0) {
-			VecUnit units = Player.gc.myUnits();
+			ArrayList<Unit> units = Player.friendlyUnits;
 			Set<Point> rallyPoints = new HashSet<>();
 			for (int index = 0; index < units.size(); index++) {
 				MapLocation current = units.get(index).location().mapLocation();

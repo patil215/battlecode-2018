@@ -17,7 +17,7 @@ public class FactoryController {
 
 		switch (Utils.getMemory(unit).factoryMode) {
 			case IDLE: {
-				// Do nothing
+				Utils.tryAndUnload(unit);
 				break;
 			}
 			case PRODUCE: {

@@ -23,6 +23,9 @@ public class Constants {
 	public static final int FLEE_RADIUS = 90;
 	
 	public static final int REACHABLE_KARBONITE_THREASHOLD = 120;
-	
-	public static int WORKER_STOP_REP_ROUND = 300;
+	public static final int AMOUNT_STUCK_BEFORE_KILL = Integer.MAX_VALUE;
+
+	public static int LIMIT_WORKER_REP_ROUND = 300;
+
+	public static int ROCKET_LAUNCH_INTERVAL = 1;
 }

@@ -30,30 +30,28 @@ public class RocketController {
 			tryToLaunch(unit);
 			return;
 		}
-		
-		// We won't launch an empty rocket till the last turn
-		if(unit.structureGarrison().size()==0) {
+
+		// Otherwise only launch if we have at least 1 unit
+		if(unit.structureGarrison().size() < 1) {
 			return;
 		}
 
 		// Launch if less than full health or if there is a nearby foe
-		if (unit.health() < unit.maxHealth() || Player.gc
-				.senseNearbyUnitsByTeam(unit.location().mapLocation(), Constants.FLEE_RADIUS, Player.enemyTeam)
-				.size() > 0) {
+		if (unit.health() < (Constants.ROCKET_HEALTH * (3.0 / 5.0))) {
 			tryToLaunch(unit);
 			return;
 		}
 
 		// Launch if full
-		if (unit.structureGarrison().size() == unit.structureMaxCapacity()) {
+		if (unit.structureGarrison().size() == unit.structureMaxCapacity() &&
+				(Player.gc.round() % Constants.ROCKET_LAUNCH_INTERVAL == 0)) {
 			tryToLaunch(unit);
 			return;
 		}
 	}
 
 	private static void runMarsLogic(Unit unit) {
-		while (Utils.tryAndUnload(unit))
-			;
+		while (Utils.tryAndUnload(unit));
 	}
 
 	private static void tryToLaunch(Unit unit) {

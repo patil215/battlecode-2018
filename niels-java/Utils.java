@@ -166,7 +166,9 @@ public class Utils {
 	public static boolean tryAndGetIntoFactory(Unit unit) {
 		for (int i = 0; i < Player.friendlyUnits.size(); i++) {
 			Unit potentialFactory = Player.friendlyUnits.get(i);
-			if (potentialFactory.unitType() == UnitType.Factory && potentialFactory.structureIsBuilt() == 1) {
+			if (potentialFactory.unitType() == UnitType.Factory && potentialFactory.structureIsBuilt() == 1
+					// Make sure factory has one slot to still produce
+					&& potentialFactory.structureGarrison().size() < potentialFactory.structureMaxCapacity() - 1) {
 				if (Player.gc.canLoad(potentialFactory.id(), unit.id())) {
 					Player.gc.load(potentialFactory.id(), unit.id());
 					return true;
@@ -190,7 +192,7 @@ public class Utils {
 	}
 
 	public static boolean stuck() {
-		VecUnit units = Player.gc.myUnits();
+		ArrayList<Unit> units = Player.friendlyUnits;
 		for (int index = 0; index < units.size(); index++) {
 			if (units.get(index).unitType() != UnitType.Factory && units.get(index).unitType() != UnitType.Rocket
 					&& units.get(index).movementHeat() != 0) {

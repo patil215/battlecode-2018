@@ -1,5 +1,4 @@
 import bc.Unit;
-import bc.UnitType;
 
 import java.util.HashMap;
 
@@ -52,17 +51,22 @@ public class CombatUtils {
 			return Long.MAX_VALUE; // Make sure we don't "overkill" units
 		}
 
-		if (target.unitType() == UnitType.Worker) {
-			return targetHealth * 2;
-		} else if (target.unitType() == UnitType.Healer) {
-			return targetHealth;
-		} else if (target.unitType() == UnitType.Factory) {
-			return targetHealth * 2;
-		} else if (target.unitType() == UnitType.Rocket) {
-			return targetHealth * 3;
+		switch (target.unitType()) {
+			case Knight:
+				return targetHealth;
+			case Ranger:
+				return targetHealth * 2;
+			case Healer:
+				return targetHealth * 2;
+			case Factory:
+				return targetHealth * 3;
+			case Worker:
+				return targetHealth * 4;
+			case Rocket:
+				return targetHealth * 5;
+			default:
+				return targetHealth;
 		}
-
-		return targetHealth;
 	}
 
 	public static void attack(Unit attacker, Unit target) {
