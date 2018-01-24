@@ -1,4 +1,5 @@
 import bc.Unit;
+import bc.UnitType;
 
 import java.util.HashMap;
 
@@ -74,7 +75,12 @@ public class CombatUtils {
 
 		// Update health in cache
 		if (markedEnemyHealth.containsKey(target)) {
-			markedEnemyHealth.put(target, markedEnemyHealth.get(target) - attacker.damage());
+			long defense = 0;
+			if (target.unitType() == UnitType.Knight) {
+				defense = target.knightDefense();
+			}
+
+			markedEnemyHealth.put(target, markedEnemyHealth.get(target) - attacker.damage() + defense);
 		} else {
 			markedEnemyHealth.put(target, target.health() - attacker.damage());
 		}
