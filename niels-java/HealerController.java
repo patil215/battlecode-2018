@@ -37,12 +37,35 @@ public class HealerController {
 
 		if (target != null) {
 			Utils.tryAndHeal(self, target);
-			if (Player.gc.canOvercharge(self.id(), target.id()) && self.abilityHeat()<10) {
-				Player.gc.overcharge(self.id(), target.id());
-				Player.moveUnit(Player.gc.unit(target.id()));
-				System.out.println("overchared");
+		}
+
+		// Pick an overcharge target
+		if (self.abilityHeat() < Constants.MAX_ABILITY_HEAT) {
+			Unit overchargeTarget = pickBestOverchargeTarget(self, nearbyFriendlies);
+			if (overchargeTarget != null) {
+				Player.gc.overcharge(self.id(), overchargeTarget.id());
+				Player.moveUnit(Player.gc.unit(overchargeTarget.id()));
 			}
 		}
+	}
+
+	/**
+	 * Picks best target based off of health.
+	 */
+	private static Unit pickBestOverchargeTarget(Unit self, VecUnit nearbyFriendlies) {
+		long best = 0;
+		Unit overchargeTarget = null;
+		for (int i = 0; i < nearbyFriendlies.size(); i++) {
+			Unit unit = nearbyFriendlies.get(i);
+			long newBest = unit.health();
+			if (newBest > best) {
+				if (unit.unitType() == UnitType.Ranger && Player.gc.canOvercharge(self.id(), unit.id())) {
+					overchargeTarget = unit;
+					best = newBest;
+				}
+			}
+		}
+		return overchargeTarget;
 	}
 
 	private static long healTargetScore(Unit unit) {
