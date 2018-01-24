@@ -54,17 +54,17 @@ public class CombatUtils {
 
 		switch (target.unitType()) {
 			case Knight:
-				return targetHealth;
+				return targetHealth * 2;
 			case Ranger:
 				return targetHealth * 2;
 			case Healer:
-				return targetHealth * 2;
-			case Factory:
 				return targetHealth * 3;
-			case Worker:
+			case Factory:
 				return targetHealth * 4;
-			case Rocket:
+			case Worker:
 				return targetHealth * 5;
+			case Rocket:
+				return targetHealth * 6;
 			default:
 				return targetHealth;
 		}
