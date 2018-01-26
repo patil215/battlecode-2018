@@ -127,4 +127,9 @@ public class CensusCounts {
 		}
 		return 0;
 	}
+
+	public static int getMilitaryCount() {
+		return CensusCounts.getUnitCount(UnitType.Healer) + CensusCounts.getUnitCount(UnitType.Knight)
+				+ CensusCounts.getUnitCount(UnitType.Ranger);
+	}
 }

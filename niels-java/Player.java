@@ -414,7 +414,7 @@ public class Player {
 
 				if (gc.karbonite() > (((numberFactoriesProducingUnits + 1) * Constants.RANGER_COST)
 						+ Constants.ROCKET_COST) // If we have enough Karbonite compared to rockets
-						|| CensusCounts.getUnitCount(Ranger) // If we have way more rockets than Karbonite
+						|| CensusCounts.getMilitaryCount() // If we have way more rockets than Karbonite
 						< (CensusCounts.getUnitCount(Rocket) * Utils.getMaxRocketCapacity())) {
 					if (Utils.getMemory(unit).factoryMode == FactoryController.Mode.IDLE) {
 						Utils.getMemory(unit).factoryMode = FactoryController.Mode.PRODUCE;
