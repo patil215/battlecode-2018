@@ -211,7 +211,6 @@ public class Player {
 		if (stuckCounter > Constants.AMOUNT_STUCK_BEFORE_KILL && gc.round() > 100 && friendlyUnits.size()>1
 				&& gc.planet() == Planet.Earth) {
 			gc.disintegrateUnit(Player.friendlyUnits.get((int) (Math.random() * friendlyUnits.size())).id());
-			System.out.println("Unit killed because nothing could move");
 			stuckCounter = 0;
 		}
 
@@ -241,7 +240,6 @@ public class Player {
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
 		robotMemory = new HashMap<>();
 		CensusCounts.resetCounts();
-		System.out.println("Reachable Karbonite is: " + Player.reachableKarbonite);
 		greedyEconMode = Player.reachableKarbonite >= Constants.REACHABLE_KARBONITE_THREASHOLD;
 		if (greedyEconMode) {
 			WorkerController.MAX_NUMBER_WORKERS = 12;
@@ -258,7 +256,6 @@ public class Player {
 		while (true) {
 			try {
 				if (gc.getTimeLeftMs() <= 100) {
-					System.out.println("Out of time. Waiting for passive regen...");
 					finishTurn();
 					continue;
 				}
@@ -416,7 +413,9 @@ public class Player {
 				int numberFactoriesProducingUnits = CensusCounts.getFactoryModeCount(FactoryController.Mode.PRODUCE);
 
 				if (gc.karbonite() > (((numberFactoriesProducingUnits + 1) * Constants.RANGER_COST)
-						+ Constants.ROCKET_COST)) {
+						+ Constants.ROCKET_COST) // If we have enough Karbonite compared to rockets
+						|| CensusCounts.getUnitCount(Ranger) // If we have way more rockets than Karbonite
+						< (CensusCounts.getUnitCount(Rocket) * Utils.getMaxRocketCapacity())) {
 					if (Utils.getMemory(unit).factoryMode == FactoryController.Mode.IDLE) {
 						Utils.getMemory(unit).factoryMode = FactoryController.Mode.PRODUCE;
 						CensusCounts.decrementFactoryModeCount(FactoryController.Mode.IDLE);
