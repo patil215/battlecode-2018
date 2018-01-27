@@ -17,7 +17,6 @@ public class Player {
 	static PlanetMap map;
 	static boolean hasMadeBluePrintThisTurn;
 	static long reachableKarbonite;
-	static boolean greedyEconMode;
 
 	// Initialized/updated once per turn
 	/**
@@ -75,8 +74,6 @@ public class Player {
 		long maxX = map.getWidth();
 		long maxY = map.getHeight();
 		Set<Point> targets = new HashSet<>();
-		Set<Point> foeSpawns = getInitialEnemyUnitLocations();
-		Set<Point> spawns = getInitialAllyUnitLocations();
 		reachableKarbonite = 0;
 		for (int x = 0; x < maxX; x++) {
 			for (int y = 0; y < maxY; y++) {
@@ -84,22 +81,11 @@ public class Player {
 				long karbonite = map.initialKarboniteAt(loc);
 				if (karbonite > 0) {
 					targets.add(new Point(x, y));
-					long minFoeDistance = Long.MAX_VALUE;
-					for (Point foeSpawn : foeSpawns) {
-						MapLocation spawnLoc = new MapLocation(gc.planet(), foeSpawn.x, foeSpawn.y);
-						minFoeDistance = Math.min(minFoeDistance, spawnLoc.distanceSquaredTo(loc));
-					}
-					long minAllyDistance = Long.MAX_VALUE;
-					for (Point allySpawn : spawns) {
-						MapLocation spawnLoc = new MapLocation(gc.planet(), allySpawn.x, allySpawn.y);
-						minAllyDistance = Math.min(minAllyDistance, spawnLoc.distanceSquaredTo(loc));
-					}
-					if (minAllyDistance * 3 < minFoeDistance * 2) {
-						reachableKarbonite += karbonite;
-					}
+					reachableKarbonite += karbonite;
 				}
 			}
 		}
+		reachableKarbonite /= 3;
 		System.out.println(reachableKarbonite);
 		return targets;
 	}
@@ -215,7 +201,7 @@ public class Player {
 		} else {
 			stuckCounter = 0;
 		}
-		if (stuckCounter > Constants.AMOUNT_STUCK_BEFORE_KILL && gc.round() > 100 && friendlyUnits.size()>1
+		if (stuckCounter > Constants.AMOUNT_STUCK_BEFORE_KILL && gc.round() > 100 && friendlyUnits.size() > 1
 				&& gc.planet() == Planet.Earth) {
 			gc.disintegrateUnit(Player.friendlyUnits.get((int) (Math.random() * friendlyUnits.size())).id());
 			stuckCounter = 0;
@@ -244,15 +230,31 @@ public class Player {
 		robotMemory = new HashMap<>();
 		CensusCounts.resetCounts();
 		getUnits(false);
-		initArmyMap();
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
-		greedyEconMode = Player.reachableKarbonite >= Constants.REACHABLE_KARBONITE_THREASHOLD;
-		if (greedyEconMode) {
-			WorkerController.MAX_NUMBER_WORKERS = 12;
-		} else {
-			WorkerController.MAX_NUMBER_WORKERS = 6;
+		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 45), 20);
+		
+		VecUnit starting = gc.startingMap(Planet.Earth).getInitial_units();
+		long minDist = Long.MAX_VALUE;
+		for(int outer = 0; outer < starting.size(); outer++) {
+			if(starting.get(outer).team() == Player.enemyTeam) {
+				continue;
+			}
+			
+			for(int inner = 0; inner < starting.size(); inner++) {
+				if(starting.get(outer).team() == Player.friendlyTeam) {
+					continue;
+				}
+				minDist = Math.min(minDist, starting.get(outer).location().mapLocation().distanceSquaredTo(starting.get(inner).location().mapLocation()));
+			}
 		}
+		if(minDist >= 800) {
+			Constants.CLUMP_THRESHOLD = 125;
+		} else {
+			Constants.CLUMP_THRESHOLD = -1;
+		}
+		
+		initArmyMap();
 	}
 
 	public static void main(String[] args) {
@@ -292,8 +294,8 @@ public class Player {
 
 	private static void moveNewlyCreatedUnits() {
 		// Backup the IDs of old units
-		HashSet<Integer> oldIds =
-				Player.friendlyUnits.stream().map(unit -> unit.id()).collect(Collectors.toCollection(HashSet::new));
+		HashSet<Integer> oldIds = Player.friendlyUnits.stream().map(unit -> unit.id())
+				.collect(Collectors.toCollection(HashSet::new));
 
 		// Update units list, and run recently created units
 		Player.getUnits(true);
@@ -352,27 +354,28 @@ public class Player {
 	}
 
 	private static void setupResearchQueue() {
-		/*gc.queueResearch(Ranger); // Ranger 1 complete round 25
-		gc.queueResearch(Healer); // Healer 1 complete round 50
-		gc.queueResearch(Healer); // Healer 2 complete round 150
-		gc.queueResearch(Healer); // Healer 3 complete round 250
-		gc.queueResearch(Rocket); // Rocket 1 complete round 300
-		gc.queueResearch(Rocket); // Rocket 2 complete round 400
-		gc.queueResearch(Rocket); // Rocket 3 complete round 500
-		// Remember to update the Utils.getMaxRocketCapacity if Rocket III timing is
-		// changed
-		gc.queueResearch(Ranger); // Ranger 2 complete round 600
-		gc.queueResearch(Worker); // Worker 1 complete round 625
-		gc.queueResearch(Worker); // Worker 2 complete round 700
-		gc.queueResearch(Ranger); // Ranger 3 complete round 900 (this is useless but might throw other team off)
+		/*
+		 * gc.queueResearch(Ranger); // Ranger 1 complete round 25
+		 * gc.queueResearch(Healer); // Healer 1 complete round 50
+		 * gc.queueResearch(Healer); // Healer 2 complete round 150
+		 * gc.queueResearch(Healer); // Healer 3 complete round 250
+		 * gc.queueResearch(Rocket); // Rocket 1 complete round 300
+		 * gc.queueResearch(Rocket); // Rocket 2 complete round 400
+		 * gc.queueResearch(Rocket); // Rocket 3 complete round 500 // Remember to
+		 * update the Utils.getMaxRocketCapacity if Rocket III timing is // changed
+		 * gc.queueResearch(Ranger); // Ranger 2 complete round 600
+		 * gc.queueResearch(Worker); // Worker 1 complete round 625
+		 * gc.queueResearch(Worker); // Worker 2 complete round 700
+		 * gc.queueResearch(Ranger); // Ranger 3 complete round 900 (this is useless but
+		 * might throw other team off)
 		 */
-		
+
 		gc.queueResearch(Worker); // 25
 		gc.queueResearch(Knight); // 50
 		gc.queueResearch(Knight); // 125
 		gc.queueResearch(Knight); // 225
 		gc.queueResearch(Healer); // 250
-		gc.queueResearch(Healer); // 350		
+		gc.queueResearch(Healer); // 350
 		gc.queueResearch(Healer); // 450
 		gc.queueResearch(Rocket); // 500
 		gc.queueResearch(Rocket); // 600

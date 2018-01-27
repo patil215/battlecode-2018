@@ -30,9 +30,7 @@ public class WorkerController {
 			switch (Utils.getMemory(unit).workerMode) {
 				case BUILD_FACTORIES: {
 					// Try to build factory
-					if (Player.gc.karbonite() >= Constants.FACTORY_COST
-							&& ((!Player.hasMadeBluePrintThisTurn && Player.blueprints.size() == 0)
-							|| Player.greedyEconMode)) {
+					if (Player.gc.karbonite() >= Constants.FACTORY_COST) {
 						Player.hasMadeBluePrintThisTurn = Utils.tryAndBuild(unit, UnitType.Factory);
 					}
 					break;
