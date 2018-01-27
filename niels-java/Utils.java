@@ -135,24 +135,28 @@ public class Utils {
 		}
 		if (bestDir == null) {
 			return false;
-		} else {
+		} 
+		Direction karbDir = Player.workerNav.getNextDirection(worker);
+		if (bestCount == 0 && karbDir != null) {
+			Player.gc.replicate(worker.id(), karbDir);
+		} else { 
 			Player.gc.replicate(worker.id(), bestDir);
-
-			// Backup the IDs of old workers
-			HashSet<Integer> oldWorkerIds =
-					Player.friendlyUnits.stream().filter(unit -> unit.unitType() == Worker)
-							.map(unit -> unit.id()).collect(Collectors.toCollection(HashSet::new));
-
-			// Update units list, and run recently created unit
-			Player.getUnits(true);
-			for (Unit unit : Player.friendlyUnits) {
-				if (unit.unitType() == Worker && !oldWorkerIds.contains(unit.id())) {
-					WorkerController.moveWorker(unit);
-					break;
-				}
-			}
-			return true;
 		}
+
+		// Backup the IDs of old workers
+		HashSet<Integer> oldWorkerIds =
+				Player.friendlyUnits.stream().filter(unit -> unit.unitType() == Worker)
+						.map(unit -> unit.id()).collect(Collectors.toCollection(HashSet::new));
+
+		// Update units list, and run recently created unit
+		Player.getUnits(true);
+		for (Unit unit : Player.friendlyUnits) {
+			if (unit.unitType() == Worker && !oldWorkerIds.contains(unit.id())) {
+				WorkerController.moveWorker(unit);
+				break;
+			}
+		}
+		return true;
 	}
 
 	public static boolean tryAndHarvest(Unit worker) {

@@ -257,10 +257,10 @@ public class Player {
 
 		while (true) {
 			try {
-				if (gc.getTimeLeftMs() <= 100) {
+				/*if (gc.getTimeLeftMs() <= 100) {
 					finishTurn();
 					continue;
-				}
+				}*/
 
 				beginTurn();
 
