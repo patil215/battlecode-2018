@@ -33,9 +33,9 @@ public class FactoryController {
 			CensusCounts.incrementUnitCount(UnitType.Worker);
 		} else if (unit.isFactoryProducing() == 0 && Player.gc.karbonite() >= bc.bcUnitTypeFactoryCost(UnitType.Ranger)) {
 		//&& CensusCounts.getUnitCount(UnitType.Ranger) <= 10 && Player.gc.round() > 375) { // USED FOR LIMITING, REMEMBER TO TURN OFF
-			if (CensusCounts.getUnitCount(UnitType.Ranger) < ((CensusCounts.getUnitCount(UnitType.Healer) + 1) * 4)) {
-				Player.gc.produceRobot(unit.id(), UnitType.Ranger);
-				CensusCounts.incrementUnitCount(UnitType.Ranger);
+			if (CensusCounts.getUnitCount(UnitType.Knight) < ((CensusCounts.getUnitCount(UnitType.Healer) + 1) * 3)) {
+				Player.gc.produceRobot(unit.id(), UnitType.Knight);
+				CensusCounts.incrementUnitCount(UnitType.Knight);
 			} else {
 				Player.gc.produceRobot(unit.id(), UnitType.Healer);
 				CensusCounts.incrementUnitCount(UnitType.Healer);

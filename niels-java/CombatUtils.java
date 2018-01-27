@@ -1,8 +1,13 @@
-import bc.Unit;
-import bc.UnitType;
-
+import java.awt.Point;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+import bc.MapLocation;
+import bc.Unit;
+import bc.UnitType;
+import bc.VecUnit;
 
 public class CombatUtils {
 	/**
@@ -18,7 +23,7 @@ public class CombatUtils {
 
 	public static void initAtStartOfTurn() {
 		// Commented because we aren't using knights
-		/*
+		
 		VecUnit foes = Player.gc.senseNearbyUnitsByTeam(new MapLocation(Player.gc.planet(), 1,1), Long.MAX_VALUE, Player.enemyTeam);
 		Set<Point> useless = new HashSet<>();
 		for (int i = 0; i < foes.size(); i++) {
@@ -26,7 +31,7 @@ public class CombatUtils {
 			useless.add(new Point(location.getX(), location.getY()));
 		}
 		microNav = new Navigation(Player.map, useless, 10);
-		*/
+		
 	}
 
 	public static void cleanupAtEndOfTurn() {
@@ -49,17 +54,17 @@ public class CombatUtils {
 
 		switch (target.unitType()) {
 			case Knight:
-				return targetHealth * 2;
+				return targetHealth;
 			case Ranger:
-				return targetHealth * 2;
+				return targetHealth;
 			case Healer:
-				return targetHealth * 3;
+				return targetHealth;
 			case Factory:
-				return targetHealth * 4;
+				return targetHealth;
 			case Worker:
-				return targetHealth * 5;
+				return targetHealth;
 			case Rocket:
-				return targetHealth * 6;
+				return targetHealth;
 			default:
 				return targetHealth;
 		}
@@ -92,6 +97,22 @@ public class CombatUtils {
 		}
 	}
 
+	public static void attackJavelin(Unit attacker, Unit target) {
+		Player.gc.javelin(attacker.id(), target.id());
+
+		// Update health in cache
+		if (markedEnemyHealth.containsKey(target)) {
+			long defense = 0;
+			if (target.unitType() == UnitType.Knight) {
+				defense = target.knightDefense();
+			}
+
+			markedEnemyHealth.put(target, markedEnemyHealth.get(target) - attacker.damage() + defense);
+		} else {
+			markedEnemyHealth.put(target, target.health() - attacker.damage());
+		}
+	}
+	
 	public static long assignRangerTargets() {
 		Collections.sort(Player.enemyUnits, (a, b) -> Long.compare(subScore(a), subScore(b)));
 

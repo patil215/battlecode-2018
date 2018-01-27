@@ -352,7 +352,7 @@ public class Player {
 	}
 
 	private static void setupResearchQueue() {
-		gc.queueResearch(Ranger); // Ranger 1 complete round 25
+		/*gc.queueResearch(Ranger); // Ranger 1 complete round 25
 		gc.queueResearch(Healer); // Healer 1 complete round 50
 		gc.queueResearch(Healer); // Healer 2 complete round 150
 		gc.queueResearch(Healer); // Healer 3 complete round 250
@@ -365,6 +365,18 @@ public class Player {
 		gc.queueResearch(Worker); // Worker 1 complete round 625
 		gc.queueResearch(Worker); // Worker 2 complete round 700
 		gc.queueResearch(Ranger); // Ranger 3 complete round 900 (this is useless but might throw other team off)
+		 */
+		
+		gc.queueResearch(Worker); // 25
+		gc.queueResearch(Knight); // 50
+		gc.queueResearch(Knight); // 125
+		gc.queueResearch(Knight); // 225
+		gc.queueResearch(Healer); // 250
+		gc.queueResearch(Healer); // 350		
+		gc.queueResearch(Healer); // 450
+		gc.queueResearch(Rocket); // 500
+		gc.queueResearch(Rocket); // 600
+		gc.queueResearch(Rocket); // 700
 	}
 
 	private static void updateUnitStates(ArrayList<Unit> units) {
@@ -408,7 +420,7 @@ public class Player {
 			if (gc.round() >= Constants.START_BUILDING_ROCKETS_ROUND) {
 				// Only try to make rockets if we have units that need them
 				int numRockets = CensusCounts.getUnitCount(Rocket);
-				int numRangers = CensusCounts.getUnitCount(Ranger);
+				int numRangers = CensusCounts.getMilitaryCount();
 				if (numRockets * Utils.getMaxRocketCapacity() >= numRangers) {
 					// TODO all of these workers might switch back and forth at once - is this what
 					// we want?

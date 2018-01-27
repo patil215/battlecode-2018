@@ -80,15 +80,15 @@ public class BuildUtils {
 					bestFactoryLocations.add(proposedLoc);
 				} else {
 					int numSurroundingWorkersProposed = Utils.countNearbyWorkers(proposedLoc);
-					int numEmptySquaresProposed = Utils.countEmptySquaresSurrounding(proposedLoc);
+					long distToEnemySpawnProposed = Utils.distToClosestEnemySpawn(proposedLoc);
 					int numSurroundingWorkersBest = Utils.countNearbyWorkers(bestFactoryLocations.get(0));
-					int numEmptySquaresBest = Utils.countEmptySquaresSurrounding(bestFactoryLocations.get(0));
+					long distToEnemySpawnBest = Utils.distToClosestEnemySpawn(bestFactoryLocations.get(0));
 
 					if (numSurroundingWorkersProposed == numSurroundingWorkersBest
-							&& numEmptySquaresProposed == numEmptySquaresBest) {
+							&& distToEnemySpawnProposed == distToEnemySpawnBest) {
 						bestFactoryLocations.add(proposedLoc);
 					} else if (numSurroundingWorkersProposed > numSurroundingWorkersBest ||
-							(numSurroundingWorkersProposed == numSurroundingWorkersBest && numEmptySquaresProposed > numEmptySquaresBest)) {
+							(numSurroundingWorkersProposed == numSurroundingWorkersBest && distToEnemySpawnProposed > distToEnemySpawnBest)) {
 						bestFactoryLocations.clear();
 						bestFactoryLocations.add(proposedLoc);
 					}

@@ -313,4 +313,18 @@ public class Utils {
 			return Constants.DEFAULT_ROCKET_CAPACITY;
 		}
 	}
+
+	public static long distToClosestEnemySpawn(MapLocation mapLocation) {
+		VecUnit foeStarts = Player.gc.startingMap(Planet.Earth).getInitial_units();
+		long minDist = Long.MAX_VALUE;
+		for(int index = 0; index < foeStarts.size(); index++) {
+			Unit spawnUnit = foeStarts.get(index);
+			if(spawnUnit.team() == Player.friendlyTeam) {
+				continue;
+			}
+			minDist = Math.min(minDist, mapLocation.distanceSquaredTo(spawnUnit.location().mapLocation()));
+			
+		}
+		return minDist;
+	}
 }

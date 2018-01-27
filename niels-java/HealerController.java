@@ -53,15 +53,18 @@ public class HealerController {
 	 * Picks best target based off of health.
 	 */
 	private static Unit pickBestOverchargeTarget(Unit self, VecUnit nearbyFriendlies) {
-		long best = 0;
+		long lowestHealth = Long.MAX_VALUE;
+		long largestHeat = 0;
 		Unit overchargeTarget = null;
 		for (int i = 0; i < nearbyFriendlies.size(); i++) {
 			Unit unit = nearbyFriendlies.get(i);
-			long newBest = unit.health();
-			if (newBest > best) {
+			long newHeat = unit.unitType() == UnitType.Knight ?  unit.abilityHeat() : 0;
+			long newHealth = unit.health();
+			if (newHeat > largestHeat || (newHeat ==largestHeat && newHealth < lowestHealth)) {
 				if (unit.unitType() == UnitType.Ranger && Player.gc.canOvercharge(self.id(), unit.id())) {
 					overchargeTarget = unit;
-					best = newBest;
+					lowestHealth = newHealth;
+					largestHeat = newHeat;
 				}
 			}
 		}

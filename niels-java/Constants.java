@@ -3,7 +3,7 @@ public class Constants {
 	public static final int MAX_ABILITY_HEAT = 10;
 	public static final int MAX_ATTACK_HEAT = 10;
 
-	public static final int START_BUILDING_ROCKETS_ROUND = 375;
+	public static final int START_BUILDING_ROCKETS_ROUND = 501;
 
 	public static final int RANGER_COST = 40;
 	public static final int ROCKET_COST = 150;
@@ -19,7 +19,7 @@ public class Constants {
 	public static final int MAX_FACTORY_HEALTH = 300;
 	public static final int MAX_ROCKET_HEALTH = 200;
 	
-	public static final int FLEE_RADIUS = 90;
+	public static final int FLEE_RADIUS = 25;
 	
 	public static final int REACHABLE_KARBONITE_THREASHOLD = 120;
 	public static final int AMOUNT_STUCK_BEFORE_KILL = 10;
