@@ -160,21 +160,27 @@ public class Utils {
 		MapLocation workerLoc = worker.location().mapLocation();
 		long maxKarb = 0;
 		Direction harvestDir = null;
+		MapLocation harvestLocation = null;
 
 		for (Direction direction : Direction.values()) {
 			MapLocation newLoc = workerLoc.add(direction);
 			if (Player.map.onMap(newLoc) 
 					&& Player.gc.canHarvest(workerId, direction)) {
 				long karb = Player.gc.karboniteAt(newLoc);
-				if(karb == 0) {
+				if (karb == 0) {
 					Player.workerNav.removeTarget(newLoc);
 				} else if(karb > maxKarb) {
 					maxKarb = karb;
 					harvestDir = direction;
+					harvestLocation = newLoc;
 				}
 			}
 		}
 		if (harvestDir == null) return false;
+		// Remove from target map if we make empty
+		if (maxKarb - worker.workerHarvestAmount() <= 0) {
+			Player.workerNav.removeTarget(harvestLocation);
+		}
 		Player.gc.harvest(workerId, harvestDir);
 		return true;
 	}
