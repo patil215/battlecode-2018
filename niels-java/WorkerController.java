@@ -19,9 +19,6 @@ public class WorkerController {
 
 			// 2. Try to finish building a building
 			boolean buildingBlueprint = BuildUtils.tryToBuildBlueprints(unit);
-			if (buildingBlueprint) {
-				return; // Nothing else to do
-			}
 
 			// 3. Try to flee from enemies
 			Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
@@ -56,17 +53,14 @@ public class WorkerController {
 			// 6. Try to move using Karbonite map
 			boolean harvesterMoveResult = false;
 			if (!builderMoveResult) {
-				System.out.println("harvestermove");
 				harvesterMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.workerNav);
 			}
 
 			// 7. Try to move randomly
 			boolean randomMoveResult = false;
 			if (!harvesterMoveResult && !builderMoveResult) {
-				System.out.println("randommmove");
 				randomMoveResult = Utils.moveRandom(unit);
 			}
-			System.out.println(randomMoveResult);
 
 			// 8. Harvest any Karbonite in adjacent squares
 			Utils.tryAndHarvest(unit);

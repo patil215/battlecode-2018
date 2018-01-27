@@ -1,6 +1,9 @@
+import bc.Direction;
+import bc.MapLocation;
 import bc.Unit;
 import bc.UnitType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class BuildUtils {
@@ -8,6 +11,7 @@ public class BuildUtils {
 	 Used to keep track of structure health increasing after being marked.
 	 */
 	private static HashMap<Unit, Long> markedStructureHealth = new HashMap<>();
+	private static ArrayList<MapLocation> bestFactoryLocations = new ArrayList<>();
 
 	public static void cleanupAtEndOfTurn() {
 		markedStructureHealth = new HashMap<>();
@@ -50,5 +54,50 @@ public class BuildUtils {
 			}
 		}
 		return false;
+	}
+
+	public static void findBestFactoryBuildLocations() {
+		bestFactoryLocations = new ArrayList<>();
+
+		for (Unit unit : Player.friendlyUnits) {
+			if (unit.unitType() != UnitType.Worker) {
+				continue;
+			}
+
+			if (unit.location().isInGarrison()) {
+				continue;
+			}
+
+			MapLocation unitLocation = unit.location().mapLocation();
+			for (Direction dir : Direction.values()) {
+				MapLocation proposedLoc = unitLocation.add(dir);
+
+				if (Player.map.isPassableTerrainAt(proposedLoc) == 0) {
+					continue;
+				}
+
+				if (bestFactoryLocations.isEmpty()) {
+					bestFactoryLocations.add(proposedLoc);
+				} else {
+					int numSurroundingWorkersProposed = Utils.countNearbyWorkers(proposedLoc);
+					int numEmptySquaresProposed = Utils.countEmptySquaresSurrounding(proposedLoc);
+					int numSurroundingWorkersBest = Utils.countNearbyWorkers(bestFactoryLocations.get(0));
+					int numEmptySquaresBest = Utils.countEmptySquaresSurrounding(bestFactoryLocations.get(0));
+
+					if (numSurroundingWorkersProposed == numSurroundingWorkersBest
+							&& numEmptySquaresProposed == numEmptySquaresBest) {
+						bestFactoryLocations.add(proposedLoc);
+					} else if (numSurroundingWorkersProposed > numSurroundingWorkersBest ||
+							(numSurroundingWorkersProposed == numSurroundingWorkersBest && numEmptySquaresProposed > numEmptySquaresBest)) {
+						bestFactoryLocations.clear();
+						bestFactoryLocations.add(proposedLoc);
+					}
+				}
+			}
+		}
+	}
+
+	public static ArrayList<MapLocation> getBestFactoryLocations() {
+		return bestFactoryLocations;
 	}
 }

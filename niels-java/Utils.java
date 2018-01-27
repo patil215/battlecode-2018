@@ -55,43 +55,26 @@ public class Utils {
 				&& !Player.gc.hasUnitAtLocation(loc));
 	}
 
+	private static boolean locationInside(ArrayList<MapLocation> bestFactoryLocations, MapLocation location) {
+		for (MapLocation loc : bestFactoryLocations) {
+			if (loc.getX() == location.getX() && loc.getY() == location.getY()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static boolean tryAndBuild(Unit worker, UnitType type) {
-		int workerId = worker.id();
-		MapLocation loc = worker.location().mapLocation();
-		int bestCount = -1;
-		List<MapLocation> bestNextPositions = new ArrayList<>();
-		// find the positions around that the worker that maximize the number
-		// of workers surrounding it
-		for (Direction direction : Direction.values()) {
-			MapLocation newLoc = loc.add(direction);
-			if (Player.gc.canBlueprint(workerId, type, direction)) {
-				int numSurroundingWorkers = countNearbyWorkers(newLoc);
-				if (numSurroundingWorkers > bestCount) {
-					bestNextPositions.clear();
-					bestNextPositions.add(newLoc);
-					bestCount = numSurroundingWorkers;
-				} else if (numSurroundingWorkers == bestCount) {
-					bestNextPositions.add(newLoc);
-				}
+		ArrayList<MapLocation> bestFactoryLocations = BuildUtils.getBestFactoryLocations();
+		for (Direction dir : Direction.values()) {
+			MapLocation proposedLocation = worker.location().mapLocation().add(dir);
+			if (locationInside(bestFactoryLocations, proposedLocation)
+					&& Player.gc.canBlueprint(worker.id(), type, dir)) {
+				addBlueprint(worker, type, dir);
+				return true;
 			}
 		}
-		int bestEmptySquareCount = -1;
-		MapLocation bestLoc = null;
-		// of those, pick the one that has the most free spaces around it
-		for (MapLocation possibleBest : bestNextPositions) {
-			int emptySquares = countEmptySquaresSurrounding(possibleBest);
-			if (emptySquares > bestEmptySquareCount) {
-				bestLoc = possibleBest;
-				bestEmptySquareCount = emptySquares;
-			}
-		}
-		if (bestLoc == null) {
-			return false;
-		} else {
-			Direction dir = loc.directionTo(bestLoc);
-			addBlueprint(worker, type, dir);
-			return true;
-		}
+		return false;
 	}
 
 	private static void addBlueprint(Unit worker, UnitType type, Direction dir) {

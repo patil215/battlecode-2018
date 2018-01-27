@@ -203,6 +203,7 @@ public class Player {
 		Player.hasMadeBluePrintThisTurn = false;
 		getUnits(true);
 		CombatUtils.initAtStartOfTurn();
+		BuildUtils.findBestFactoryBuildLocations();
 	}
 
 	private static void finishTurn() {
@@ -260,10 +261,10 @@ public class Player {
 
 		while (true) {
 			try {
-				/*if (gc.getTimeLeftMs() <= 100) {
+				if (gc.getTimeLeftMs() <= 100) {
 					finishTurn();
 					continue;
-				}*/
+				}
 
 				beginTurn();
 
