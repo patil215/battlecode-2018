@@ -1,8 +1,10 @@
 import bc.*;
 
-import java.util.*;
-import java.util.function.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
 
 import static bc.UnitType.Worker;
 
@@ -142,21 +144,8 @@ public class Utils {
 		} else { 
 			Player.gc.replicate(worker.id(), bestDir);
 		}
-
-		// Backup the IDs of old workers
-		HashSet<Integer> oldWorkerIds =
-				Player.friendlyUnits.stream().filter(unit -> unit.unitType() == Worker)
-						.map(unit -> unit.id()).collect(Collectors.toCollection(HashSet::new));
-
-		// Update units list, and run recently created unit
-		Player.getUnits(true);
-		for (Unit unit : Player.friendlyUnits) {
-			if (unit.unitType() == Worker && !oldWorkerIds.contains(unit.id())) {
-				WorkerController.moveWorker(unit);
-				break;
-			}
-		}
-		return true;
+    CensusCounts.incrementUnitCount(Worker);
+    return true;
 	}
 
 	public static boolean tryAndHarvest(Unit worker) {
