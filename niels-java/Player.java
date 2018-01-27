@@ -326,7 +326,6 @@ public class Player {
 			// Move towards enemies
 		} else {
 			// Move toward enemies
-			VecUnit foes = gc.senseNearbyUnitsByTeam(new MapLocation(planet, 1, 1), 250, Utils.getEnemyTeam());
 
 			for (Point loc : new HashSet<>(armyNav.getTargets())) {
 				MapLocation target = new MapLocation(planet, loc.x, loc.y);
@@ -336,15 +335,15 @@ public class Player {
 				}
 			}
 
-			for (int index = 0; index < foes.size(); index++) {
-				armyNav.addTarget(foes.get(index).location().mapLocation());
+			for (int index = 0; index < enemyUnits.size(); index++) {
+				armyNav.addTarget(enemyUnits.get(index).location().mapLocation());
 			}
-			if (Player.seenEnemies && foes.size() == 0) {
+			if (Player.seenEnemies && enemyUnits.size() == 0) {
 				Player.seenEnemies = false;
 				for (MapLocation loc : getUnseenLocations()) {
 					armyNav.addTarget(loc);
 				}
-			} else if (foes.size() > 0) {
+			} else if (enemyUnits.size() > 0) {
 				Player.seenEnemies = true;
 			}
 			armyNav.recalculateDistanceMap();
