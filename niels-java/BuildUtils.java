@@ -72,7 +72,7 @@ public class BuildUtils {
 			for (Direction dir : Direction.values()) {
 				MapLocation proposedLoc = unitLocation.add(dir);
 
-				if (Player.map.isPassableTerrainAt(proposedLoc) == 0) {
+				if (!Player.map.onMap(proposedLoc) || Player.map.isPassableTerrainAt(proposedLoc) == 0) {
 					continue;
 				}
 

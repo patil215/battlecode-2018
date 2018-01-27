@@ -272,7 +272,8 @@ public class Utils {
 
 			if (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight
 					|| foe.unitType() == UnitType.Ranger
-					|| (foe.unitType() == UnitType.Factory && foe.health() == Constants.MAX_FACTORY_HEALTH)) {
+					|| (foe.unitType() == UnitType.Factory
+					&& CombatUtils.getTargetHealth(foe) == Constants.MAX_FACTORY_HEALTH)) {
 				long newThreatDistance = unitLocation.distanceSquaredTo(foe.location().mapLocation());
 				if (threat == null || newThreatDistance < bestThreatDistance) {
 					if (newThreatDistance < unit.attackRange()) {

@@ -67,22 +67,4 @@ public class WorkerController {
 		}
 
 	}
-
-	private static void movePossiblyUsingBuilderMap(Unit unit) {
-		Direction direction = Player.builderNav.getNextDirection(unit);
-		if (direction != null) {
-			if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
-				Player.gc.moveRobot(unit.id(), direction);
-			}
-		}
-	}
-
-	private static void movePossiblyUsingKarboniteMap(Unit unit) {
-		Direction direction = Player.workerNav.getNextDirection(unit);
-		if (direction != null) {
-			if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
-				Player.gc.moveRobot(unit.id(), direction);
-			}
-		}
-	}
 }
