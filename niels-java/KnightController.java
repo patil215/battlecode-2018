@@ -32,7 +32,10 @@ public class KnightController {
 	}
 
 	private static void moveRecon(Unit unit) {
-		Utils.moveAccordingToDijkstraMap(unit, Player.armyNav);
+		boolean result = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.armyNav);
+		if (!result) {
+			Utils.moveRandom(unit);
+		}
 	}
 
 	private static void combatMicro(Unit unit) {

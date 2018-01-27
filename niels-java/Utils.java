@@ -206,17 +206,17 @@ public class Utils {
 		return false;
 	}
 
-	public static boolean moveAccordingToDijkstraMap(Unit unit, Navigation map) {
-		if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
-			Direction toMove = map.getNextDirection(unit);
-			if (toMove != null) {
-				Player.gc.moveRobot(unit.id(), toMove);
-				return true;
-			} else {
-				Utils.tryAndGetIntoFactory(unit);
-			}
+	public static boolean tryToMoveAccordingToDijkstraMap(Unit unit, Navigation map) {
+		if (unit.movementHeat() >= 10) {
+			return false;
 		}
-		return false;
+		Direction toMove = map.getNextDirection(unit);
+		if (toMove != null) {
+			Player.gc.moveRobot(unit.id(), toMove);
+			return true;
+		} else {
+			return Utils.tryAndGetIntoFactory(unit);
+		}
 	}
 
 	public static boolean stuck() {
@@ -230,9 +230,9 @@ public class Utils {
 		return true;
 	}
 
-	public static void moveRandom(Unit unit) {
+	public static boolean moveRandom(Unit unit) {
 		if (unit.movementHeat() >= 10) {
-			return;
+			return false;
 		}
 		ArrayList<Direction> nextMoves = new ArrayList<Direction>();
 		for (Direction direction : Direction.values()) {
@@ -242,7 +242,9 @@ public class Utils {
 		}
 		if (nextMoves.size() > 0) {
 			Player.gc.moveRobot(unit.id(), nextMoves.get((int) (Math.random() * nextMoves.size())));
+			return true;
 		}
+		return false;
 	}
 
 	/**

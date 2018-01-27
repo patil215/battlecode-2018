@@ -5,80 +5,73 @@ import static bc.UnitType.Worker;
 public class WorkerController {
 
 	public enum Mode {
-		HARVESTER, BUILD_FACTORIES, BUILD_ROCKETS, IDLE
+		BUILD_FACTORIES, BUILD_ROCKETS, IDLE
 	}
 	public static int MAX_NUMBER_WORKERS;
 
 	static void moveWorker(Unit unit) {
 		if (!unit.location().isInGarrison()) {
-			// TODO maybe prioritize fleeing over building in certain cases
 
-			// Try to replicate
+			// 0. Try to harvest
+			Utils.tryAndHarvest(unit);
+
+			// 1. Try to replicate
 			if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS) {
 				Utils.tryAndReplicate(unit);
 			}
 
+			// 2. Try to finish building a building
 			boolean buildingBlueprint = BuildUtils.tryToBuildBlueprints(unit);
 			if (buildingBlueprint) {
 				return; // Nothing else to do
 			}
 
-			// Try to flee from enemies
+			// 3. Try to flee from enemies
 			Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
 			if (nearbyEnemy != null) {
 				Utils.fleeFrom(unit, nearbyEnemy);
 			}
 
+			// 4. Try to build a building or rocket (if Karbonite exists)
 			switch (Utils.getMemory(unit).workerMode) {
-			case HARVESTER: {
-				MapLocation workerLoc = unit.location().mapLocation();
-				long karbAtLoc = Player.gc.karboniteAt(workerLoc);
-				if (karbAtLoc == 0) {
-					Player.workerNav.removeTarget(workerLoc);
-					Direction toMove = Player.workerNav.getNextDirection(unit);
-					if (toMove == null) { 
-						// nothing to harvest, change to builder
-						RobotMemory workerMemory = Player.robotMemory.get(unit.id());
-						workerMemory.workerMode = WorkerController.Mode.BUILD_FACTORIES;
-						CensusCounts.decrementWorkerModeCount(WorkerController.Mode.HARVESTER);
-						CensusCounts.incrementWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES);
-					} else if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
-						Player.gc.moveRobot(unit.id(), toMove);
+				case BUILD_FACTORIES: {
+					// Try to build factory
+					if (Player.gc.karbonite() >= Constants.FACTORY_COST
+							&& ((!Player.hasMadeBluePrintThisTurn && Player.blueprints.size() == 0)
+							|| Player.greedyEconMode)) {
+						Player.hasMadeBluePrintThisTurn = Utils.tryAndBuild(unit, UnitType.Factory);
 					}
+					break;
 				}
-				// Move according to Dijkstra map
-				break;
-			}
 
-			case BUILD_FACTORIES: {
-				movePossiblyUsingBuilderMap(unit);
-				// Try to build factory
-				if (Player.gc.karbonite() >= Constants.FACTORY_COST
-						&& ((!Player.hasMadeBluePrintThisTurn && Player.blueprints.size() == 0)
-								|| Player.greedyEconMode)) {
-					Player.hasMadeBluePrintThisTurn = Utils.tryAndBuild(unit, UnitType.Factory);
+				case BUILD_ROCKETS: {
+					// Try to build rocket
+					if (Player.gc.karbonite() >= Constants.ROCKET_COST) {
+						Utils.tryAndBuild(unit, UnitType.Rocket);
+					}
+					break;
 				}
-				break;
 			}
 
-			case BUILD_ROCKETS: {
-				movePossiblyUsingBuilderMap(unit);
-				// Try to build rocket
-				if (Player.gc.karbonite() >= Constants.ROCKET_COST) {
-					Utils.tryAndBuild(unit, UnitType.Rocket);
-				}
-				break;
+			// 5. Try to move using builder map
+			boolean builderMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.builderNav);
+
+			// 6. Try to move using Karbonite map
+			boolean harvesterMoveResult = false;
+			if (!builderMoveResult) {
+				System.out.println("harvestermove");
+				harvesterMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.workerNav);
 			}
 
-			case IDLE: {
-				// Move randomly and do nothing else
-				Utils.moveRandom(unit);
-				break;
+			// 7. Try to move randomly
+			boolean randomMoveResult = false;
+			if (!harvesterMoveResult && !builderMoveResult) {
+				System.out.println("randommmove");
+				randomMoveResult = Utils.moveRandom(unit);
 			}
-			}
+			System.out.println(randomMoveResult);
 
-			// Harvest any Karbonite in adjacent squares
-			// TODO: maybe we want to harvest first
+			// 8. Harvest any Karbonite in adjacent squares
 			Utils.tryAndHarvest(unit);
 		}
 
@@ -90,8 +83,15 @@ public class WorkerController {
 			if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
 				Player.gc.moveRobot(unit.id(), direction);
 			}
-		} else {
-			Utils.moveRandom(unit);
+		}
+	}
+
+	private static void movePossiblyUsingKarboniteMap(Unit unit) {
+		Direction direction = Player.workerNav.getNextDirection(unit);
+		if (direction != null) {
+			if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
+				Player.gc.moveRobot(unit.id(), direction);
+			}
 		}
 	}
 }

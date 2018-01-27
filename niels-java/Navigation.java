@@ -137,7 +137,7 @@ public class Navigation {
 			if (newX > -1 && newY > -1
 					&& newX < distances.length
 					&& newY < distances[newX].length
-					&& distances[newX][newY] <= minDist
+					&& distances[newX][newY] < minDist
 					&& map.onMap(newLoc) && Player.gc.canMove(unit.id(), dir)) {
 				next = dir;
 				minDist = distances[newX][newY];

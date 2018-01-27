@@ -77,7 +77,10 @@ public class HealerController {
 	}
 
 	private static void moveRecon(Unit unit) {
-		Utils.moveAccordingToDijkstraMap(unit, Player.armyNav); // TODO ideally this would be army, not army's target
+		boolean result = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.armyNav); // TODO ideally this would be army, not army's target
+		if (!result) {
+			Utils.moveRandom(unit);
+		}
 	}
 
 	private static void fleeFromEnemy(Unit unit) {
