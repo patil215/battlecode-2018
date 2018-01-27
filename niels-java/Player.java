@@ -1,11 +1,11 @@
-import static bc.UnitType.*;
+import bc.*;
 
 import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import bc.*;
+import static bc.UnitType.*;
 
 public class Player {
 
