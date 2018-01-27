@@ -140,15 +140,16 @@ public class Utils {
 
 		for (Direction direction : Direction.values()) {
 			MapLocation newLoc = workerLoc.add(direction);
-			if (Player.map.onMap(newLoc) 
-					&& Player.gc.canHarvest(workerId, direction)) {
-				long karb = Player.gc.karboniteAt(newLoc);
-				if (karb == 0) {
+			if (Player.map.onMap(newLoc)) {
+				if (Player.gc.canHarvest(workerId, direction)) {
+					long karb = Player.gc.karboniteAt(newLoc);
+					if (karb > maxKarb) {
+						maxKarb = karb;
+						harvestDir = direction;
+						harvestLocation = newLoc;
+					}
+				} else {
 					Player.workerNav.removeTarget(newLoc);
-				} else if(karb > maxKarb) {
-					maxKarb = karb;
-					harvestDir = direction;
-					harvestLocation = newLoc;
 				}
 			}
 		}
@@ -189,7 +190,7 @@ public class Utils {
 		return false;
 	}
 
-	public static boolean tryToMoveAccordingToDijkstraMap(Unit unit, Navigation map) {
+	public static boolean tryToMoveAccordingToDijkstraMap(Unit unit, Navigation map, boolean getIntoFactories) {
 		if (unit.movementHeat() >= 10) {
 			return false;
 		}
@@ -197,9 +198,10 @@ public class Utils {
 		if (toMove != null) {
 			Player.gc.moveRobot(unit.id(), toMove);
 			return true;
-		} else {
+		} else if (getIntoFactories) {
 			return Utils.tryAndGetIntoFactory(unit);
 		}
+		return false;
 	}
 
 	public static boolean stuck() {

@@ -1,9 +1,8 @@
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-
 import bc.Unit;
 import bc.UnitType;
+
+import java.util.Collections;
+import java.util.HashMap;
 
 public class CombatUtils {
 	/**

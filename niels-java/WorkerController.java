@@ -48,12 +48,12 @@ public class WorkerController {
 			}
 
 			// 5. Try to move using builder map
-			boolean builderMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.builderNav);
+			boolean builderMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.builderNav, false);
 
 			// 6. Try to move using Karbonite map
 			boolean harvesterMoveResult = false;
 			if (!builderMoveResult) {
-				harvesterMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.workerNav);
+				harvesterMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.workerNav, false);
 			}
 
 			// 7. Try to move randomly

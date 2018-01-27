@@ -24,7 +24,7 @@ public class RangerController {
 	}
 
 	private static void moveRecon(Unit unit) {
-		boolean result = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.armyNav);
+		boolean result = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.armyNav, true);
 		if (!result) {
 			Utils.moveRandom(unit);
 		}
