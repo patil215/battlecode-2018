@@ -47,7 +47,7 @@ public class BuildUtils {
 				}
 
 				if (isBuilt(blueprint)) {
-					Player.builderNav.removeTarget(unit.location().mapLocation());
+					Player.builderNav.removeTarget(blueprint.location().mapLocation());
 					Player.builderNav.recalculateDistanceMap();
 				}
 				return true;
