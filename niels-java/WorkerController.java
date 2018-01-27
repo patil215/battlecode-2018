@@ -80,8 +80,8 @@ public class WorkerController {
 			}
 			}
 
-			// Harvest any Karbonite in a square we're on 
-			// TODO: maybe we want to harvest
+			// Harvest any Karbonite in adjacent squares
+			// TODO: maybe we want to harvest first
 			Utils.tryAndHarvest(unit);
 		}
 

@@ -254,7 +254,6 @@ public class Player {
 	public static void main(String[] args) {
 		initializeVariables();
 		setupResearchQueue();
-		initialTurns();
 
 		while (true) {
 			try {
@@ -468,25 +467,6 @@ public class Player {
 		default:
 			break;
 		}
-	}
-
-	private static void initialTurns() {
-		// Turn
-		beginTurn();
-		for (int index = 0; index < friendlyUnits.size(); index++) {
-			Utils.tryAndReplicate(friendlyUnits.get(index));
-		}
-		finishTurn();
-
-		// Turn
-		beginTurn();
-		for (int index = 0; index < friendlyUnits.size(); index++) {
-			Unit worker = friendlyUnits.get(index);
-			if (Utils.tryAndBuild(worker, Factory)) {
-				break;
-			}
-		}
-		finishTurn();
 	}
 
 	private static void initArmyMap() {
