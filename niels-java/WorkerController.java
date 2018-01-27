@@ -7,9 +7,6 @@ public class WorkerController {
 	public enum Mode {
 		HARVESTER, BUILD_FACTORIES, BUILD_ROCKETS, IDLE
 	}
-
-	private static final int ROCKET_BUILD_KARB_THRESHOLD = 75;
-	private static final int FACTORY_BUILD_KARB_THRESHOLD = 100;
 	public static int MAX_NUMBER_WORKERS;
 
 	static void moveWorker(Unit unit) {
@@ -56,7 +53,7 @@ public class WorkerController {
 			case BUILD_FACTORIES: {
 				movePossiblyUsingBuilderMap(unit);
 				// Try to build factory
-				if (Player.gc.karbonite() > FACTORY_BUILD_KARB_THRESHOLD
+				if (Player.gc.karbonite() >= Constants.FACTORY_COST
 						&& ((!Player.hasMadeBluePrintThisTurn && Player.blueprints.size() == 0)
 								|| Player.greedyEconMode)) {
 					Player.hasMadeBluePrintThisTurn = Utils.tryAndBuild(unit, UnitType.Factory);
@@ -67,7 +64,7 @@ public class WorkerController {
 			case BUILD_ROCKETS: {
 				movePossiblyUsingBuilderMap(unit);
 				// Try to build rocket
-				if (Player.gc.karbonite() > ROCKET_BUILD_KARB_THRESHOLD) {
+				if (Player.gc.karbonite() >= Constants.ROCKET_COST) {
 					Utils.tryAndBuild(unit, UnitType.Rocket);
 				}
 				break;

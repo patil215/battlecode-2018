@@ -37,7 +37,7 @@ public class RocketController {
 		}
 
 		// Launch if less than full health or if there is a nearby foe
-		if (unit.health() < (Constants.ROCKET_HEALTH * (3.0 / 5.0))) {
+		if (unit.health() < (Constants.MAX_ROCKET_HEALTH * (3.0 / 5.0))) {
 			tryToLaunch(unit);
 			return;
 		}
