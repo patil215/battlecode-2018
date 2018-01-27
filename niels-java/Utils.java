@@ -2,6 +2,9 @@ import bc.*;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collectors;
+
+import static bc.UnitType.Worker;
 
 public class Utils {
 	// includes diagonals (1 vertical, 1 horiz = 1^2 + 1^2 = 2, this is inclusive)
@@ -23,7 +26,7 @@ public class Utils {
 
 	static int countNearbyWorkers(MapLocation loc) {
 		VecUnit workers = Player.gc.senseNearbyUnitsByType(loc, DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS,
-				UnitType.Worker);
+				Worker);
 		int numOurTeam = 0;
 		for (int i = 0; i < workers.size(); i++) {
 			if (workers.get(i).team() == Player.friendlyTeam) {
@@ -134,6 +137,20 @@ public class Utils {
 			return false;
 		} else {
 			Player.gc.replicate(worker.id(), bestDir);
+
+			// Backup the IDs of old workers
+			HashSet<Integer> oldWorkerIds =
+					Player.friendlyUnits.stream().filter(unit -> unit.unitType() == Worker)
+							.map(unit -> unit.id()).collect(Collectors.toCollection(HashSet::new));
+
+			// Update units list, and run recently created unit
+			Player.getUnits(true);
+			for (Unit unit : Player.friendlyUnits) {
+				if (unit.unitType() == Worker && !oldWorkerIds.contains(unit.id())) {
+					WorkerController.moveWorker(unit);
+					break;
+				}
+			}
 			return true;
 		}
 	}

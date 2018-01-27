@@ -93,12 +93,13 @@ public class Player {
 						MapLocation spawnLoc = new MapLocation(gc.planet(), allySpawn.x, allySpawn.y);
 						minAllyDistance = Math.min(minAllyDistance, spawnLoc.distanceSquaredTo(loc));
 					}
-					if (minAllyDistance * 3 < minFoeDistance* 2) {
+					if (minAllyDistance * 3 < minFoeDistance * 2) {
 						reachableKarbonite += karbonite;
 					}
 				}
 			}
 		}
+		System.out.println(reachableKarbonite);
 		return targets;
 	}
 
@@ -139,7 +140,7 @@ public class Player {
 		}
 	}
 
-	private static void getUnits(boolean sort) {
+	public static void getUnits(boolean sort) {
 		allUnits = new ArrayList<>();
 		friendlyUnits = new ArrayList<>();
 		enemyUnits = new ArrayList<>();
@@ -153,6 +154,8 @@ public class Player {
 				friendlyUnits.add(unit);
 			}
 		}
+
+		updateUnitStates(friendlyUnits);
 
 		if (sort) {
 			// Sort friendly units so that they're processed in a way that coordinates the
@@ -234,12 +237,12 @@ public class Player {
 		map = gc.startingMap(planet);
 		friendlyTeam = gc.team();
 		enemyTeam = Utils.getEnemyTeam();
+		robotMemory = new HashMap<>();
+		CensusCounts.resetCounts();
 		getUnits(false);
 		initArmyMap();
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
-		robotMemory = new HashMap<>();
-		CensusCounts.resetCounts();
 		greedyEconMode = Player.reachableKarbonite >= Constants.REACHABLE_KARBONITE_THREASHOLD;
 		if (greedyEconMode) {
 			WorkerController.MAX_NUMBER_WORKERS = 12;
@@ -267,8 +270,6 @@ public class Player {
 				} else if (gc.round() == Constants.CLUMP_THRESHOLD) {
 					armyNav = new Navigation(map, getInitialEnemyUnitLocations());
 				}
-
-				updateUnitStates(friendlyUnits);
 				CensusCounts.computeCensus(friendlyUnits);
 				moveUnits(friendlyUnits);
 
@@ -470,15 +471,11 @@ public class Player {
 	}
 
 	private static void initialTurns() {
-
-		finishTurn();
-
 		// Turn
 		beginTurn();
 		for (int index = 0; index < friendlyUnits.size(); index++) {
 			Utils.tryAndReplicate(friendlyUnits.get(index));
 		}
-		updateUnitStates(friendlyUnits);
 		finishTurn();
 
 		// Turn
