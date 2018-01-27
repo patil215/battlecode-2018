@@ -12,9 +12,6 @@ public class WorkerController {
 	static void moveWorker(Unit unit) {
 		if (!unit.location().isInGarrison()) {
 
-			// 0. Try to harvest
-			Utils.tryAndHarvest(unit);
-
 			// 1. Try to replicate
 			if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS) {
 				Utils.tryAndReplicate(unit);
