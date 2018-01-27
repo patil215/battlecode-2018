@@ -140,14 +140,26 @@ public class Utils {
 
 	public static boolean tryAndHarvest(Unit worker) {
 		int workerId = worker.id();
+		MapLocation workerLoc = worker.location().mapLocation();
+		long maxKarb = 0;
+		Direction harvestDir = null;
+
 		for (Direction direction : Direction.values()) {
-			if (Player.gc.canHarvest(workerId, direction)) {
-				Player.gc.harvest(workerId, direction);
-				return true;
+			MapLocation newLoc = workerLoc.add(direction);
+			if (Player.map.onMap(newLoc) 
+					&& Player.gc.canHarvest(workerId, direction)) {
+				long karb = Player.gc.karboniteAt(newLoc);
+				if(karb == 0) {
+					Player.workerNav.removeTarget(newLoc);
+				} else if(karb > maxKarb) {
+					maxKarb = karb;
+					harvestDir = direction;
+				}
 			}
 		}
-
-		return false;
+		if (harvestDir == null) return false;
+		Player.gc.harvest(workerId, harvestDir);
+		return true;
 	}
 
 	public static boolean tryAndGetIntoRocket(Unit unit) {
@@ -258,7 +270,8 @@ public class Utils {
 			MapLocation unitLocation = unit.location().mapLocation();
 
 			if (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight
-					|| foe.unitType() == UnitType.Ranger) {
+					|| foe.unitType() == UnitType.Ranger
+					|| (foe.unitType() == UnitType.Factory && foe.health() == Constants.MAX_FACTORY_HEALTH)) {
 				long newThreatDistance = unitLocation.distanceSquaredTo(foe.location().mapLocation());
 				if (threat == null || newThreatDistance < bestThreatDistance) {
 					if (newThreatDistance < unit.attackRange()) {

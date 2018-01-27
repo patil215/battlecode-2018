@@ -39,7 +39,13 @@ public class WorkerController {
 				if (karbAtLoc == 0) {
 					Player.workerNav.removeTarget(workerLoc);
 					Direction toMove = Player.workerNav.getNextDirection(unit);
-					if (toMove != null && unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
+					if (toMove == null) { 
+						// nothing to harvest, change to builder
+						RobotMemory workerMemory = Player.robotMemory.get(unit.id());
+						workerMemory.workerMode = WorkerController.Mode.BUILD_FACTORIES;
+						CensusCounts.decrementWorkerModeCount(WorkerController.Mode.HARVESTER);
+						CensusCounts.incrementWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES);
+					} else if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
 						Player.gc.moveRobot(unit.id(), toMove);
 					}
 				}
@@ -74,8 +80,8 @@ public class WorkerController {
 			}
 			}
 
-			// Harvest any Karbonite in a square we're on TODO: maybe we want to harvest
-			// first
+			// Harvest any Karbonite in a square we're on 
+			// TODO: maybe we want to harvest
 			Utils.tryAndHarvest(unit);
 		}
 
