@@ -1,7 +1,9 @@
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+
 import bc.Unit;
 import bc.UnitType;
-
-import java.util.HashMap;
 
 public class CombatUtils {
 	/**
@@ -11,6 +13,7 @@ public class CombatUtils {
 	Accordingly, these changes should be cached and taken into account.
 	 */
 	private static HashMap<Unit, Long> markedEnemyHealth = new HashMap<>();
+	private static HashMap<Integer, Integer> rangerTargets = new HashMap<>();
 
 	static Navigation microNav;
 
@@ -39,14 +42,7 @@ public class CombatUtils {
 		return target.health();
 	}
 
-	/**
-	 * Returns a score for a target. If the target is not attackable, returns Long.MAX_VALUE.
-	 */
-	public static long targetScore(Unit attacker, Unit target) {
-		if (target == null || !Player.gc.canAttack(attacker.id(), target.id())) {
-			return Long.MAX_VALUE;
-		}
-
+	private static long subScore(Unit target) {
 		long targetHealth = getTargetHealth(target);
 		if (targetHealth == 0) {
 			return Long.MAX_VALUE; // Make sure we don't "overkill" units
@@ -70,6 +66,17 @@ public class CombatUtils {
 		}
 	}
 
+	/**
+	 * Returns a score for a target. If the target is not attackable, returns Long.MAX_VALUE.
+	 */
+	public static long targetScore(Unit attacker, Unit target) {
+		if (target == null || !Player.gc.canAttack(attacker.id(), target.id())) {
+			return Long.MAX_VALUE;
+		}
+
+		return subScore(target);
+	}
+
 	public static void attack(Unit attacker, Unit target) {
 		Player.gc.attack(attacker.id(), target.id());
 
@@ -84,5 +91,23 @@ public class CombatUtils {
 		} else {
 			markedEnemyHealth.put(target, target.health() - attacker.damage());
 		}
+	}
+
+	public static long assignRangerTargets() {
+		Collections.sort(Player.enemyUnits, (a, b) -> Long.compare(subScore(a), subScore(b)));
+
+
+		for (Unit foe : Player.enemyUnits) {
+
+		}
+
+		for (Unit friendly : Player.friendlyUnits) {
+			if (friendly.unitType() != UnitType.Ranger) {
+				continue;
+			}
+
+
+		}
+		return 0;
 	}
 }
