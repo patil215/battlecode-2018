@@ -3,6 +3,7 @@ import static bc.UnitType.*;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import bc.*;
 
@@ -205,6 +206,8 @@ public class Player {
 	}
 
 	private static void finishTurn() {
+		moveNewlyCreatedUnits();
+
 		// TODO: Find better criteria for this
 		if (gc.planet() == Planet.Earth && Utils.stuck()) {
 			stuckCounter++;
@@ -282,6 +285,21 @@ public class Player {
 			} catch (Exception e) {
 				e.printStackTrace();
 				gc.nextTurn();
+			}
+		}
+	}
+
+	private static void moveNewlyCreatedUnits() {
+		// Backup the IDs of old units
+		HashSet<Integer> oldIds =
+				Player.friendlyUnits.stream().map(unit -> unit.id()).collect(Collectors.toCollection(HashSet::new));
+
+		// Update units list, and run recently created units
+		Player.getUnits(true);
+		for (Unit unit : Player.friendlyUnits) {
+			if (!oldIds.contains(unit.id())) {
+				moveUnit(unit);
+				break;
 			}
 		}
 	}
