@@ -11,6 +11,10 @@ public class WorkerController {
 	public static int MAX_NUMBER_WORKERS;
 
 	static void moveWorker(Unit unit) {
+		if (unit.location().isOnPlanet(Planet.Mars)) {
+			runMarsWorkerLogic(unit);
+			return;
+		}
 		if (!unit.location().isInGarrison()) {
 
 			// 1. Try to replicate
@@ -21,6 +25,9 @@ public class WorkerController {
 			// 2. Try to finish building a building
 			boolean buildingBlueprint = BuildUtils.tryToBuildBlueprints(unit);
 
+			if (Player.gc.round() > 700 && !Player.sentWorkerToMars) {
+				Player.sentWorkerToMars = Utils.tryAndGetIntoRocket(unit);;
+			}
 			// 3. Try to flee from enemies
 			boolean fleed = false;
 			if (!buildingBlueprint) {
@@ -32,21 +39,21 @@ public class WorkerController {
 
 			// 4. Try to build a building or rocket (if Karbonite is enough)
 			switch (Utils.getMemory(unit).workerMode) {
-				case BUILD_FACTORIES: {
-					// Try to build factory
-					if (Player.gc.karbonite() >= Constants.FACTORY_COST) {
-						Utils.tryAndBuild(unit, UnitType.Factory);
-					}
-					break;
+			case BUILD_FACTORIES: {
+				// Try to build factory
+				if (Player.gc.karbonite() >= Constants.FACTORY_COST) {
+					Utils.tryAndBuild(unit, UnitType.Factory);
 				}
+				break;
+			}
 
-				case BUILD_ROCKETS: {
-					// Try to build rocket
-					if (Player.gc.karbonite() >= Constants.ROCKET_COST) {
-						Utils.tryAndBuild(unit, UnitType.Rocket);
-					}
-					break;
+			case BUILD_ROCKETS: {
+				// Try to build rocket
+				if (Player.gc.karbonite() >= Constants.ROCKET_COST) {
+					Utils.tryAndBuild(unit, UnitType.Rocket);
 				}
+				break;
+			}
 			}
 
 			// 5. Try to move using builder map
@@ -65,15 +72,13 @@ public class WorkerController {
 			// 7. Try to move towards built factories
 			boolean factoryMoveResult = false;
 			int dMapValue = Player.completedFactoryNav.getDijkstraMapValue(unit.location().mapLocation());
-			if (!fleed && !harvesterMoveResult
-					&& !builderMoveResult 
-					&& dMapValue >= Constants.SAFE_FACTORY_DISTANCE) {
+			if (!fleed && !harvesterMoveResult && !builderMoveResult && dMapValue >= Constants.SAFE_FACTORY_DISTANCE) {
 				factoryMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.completedFactoryNav, false);
 			}
 
 			// 8. Try to move randomly
 			boolean randomMoveResult = false;
-			if(!fleed && !factoryMoveResult && !harvesterMoveResult && !builderMoveResult) {
+			if (!fleed && !factoryMoveResult && !harvesterMoveResult && !builderMoveResult) {
 				randomMoveResult = Utils.moveRandom(unit);
 			}
 
@@ -81,5 +86,13 @@ public class WorkerController {
 			Utils.tryAndHarvest(unit);
 		}
 
+	}
+
+	private static void runMarsWorkerLogic(Unit unit) {
+		if (Player.gc.round() > 750) {
+			Utils.tryAndReplicate(unit);
+		}
+		Utils.moveRandom(unit);
+		Utils.tryAndHarvest(unit);
 	}
 }

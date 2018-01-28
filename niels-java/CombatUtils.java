@@ -46,8 +46,9 @@ public class CombatUtils {
 		if (targetHealth == 0) {
 			return Long.MAX_VALUE; // Make sure we don't "overkill" units
 		}
-
 		switch (target.unitType()) {
+			case Mage:
+				return targetHealth / 2;
 			case Knight:
 				return targetHealth * 2;
 			case Ranger:

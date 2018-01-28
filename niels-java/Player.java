@@ -17,6 +17,7 @@ public class Player {
 	static PlanetMap map;
 	static long reachableKarbonite;
 	static ArrayList<Unit> initialUnits;
+	static boolean sentWorkerToMars = false;
 
 	// Initialized/updated once per turn
 	/**
@@ -389,8 +390,8 @@ public class Player {
 
 	private static void setupResearchQueue() {
 		gc.queueResearch(Worker); // Worker 1 complete round 25
-		gc.queueResearch(Healer); // Healer 1 complete round 50
-		gc.queueResearch(Ranger); // Ranger 1 complete round 75
+		gc.queueResearch(Ranger); // Ranger 1 complete round 50
+		gc.queueResearch(Healer); // Healer 1 complete round 75
 		gc.queueResearch(Healer); // Healer 2 complete round 175
 		gc.queueResearch(Healer); // Healer 3 complete round 275
 		gc.queueResearch(Ranger); // Ranger 2 complete round 375
