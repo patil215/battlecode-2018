@@ -84,7 +84,13 @@ public class Utils {
 		MapLocation workerLoc = worker.location().mapLocation();
 		MapLocation blueprintLoc = workerLoc.add(dir);
 		if (WorkerController.MAX_NUMBER_WORKERS==10) {
-			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 45.0), 30);
+			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 50.0), 15);
+		} else if(WorkerController.MAX_NUMBER_WORKERS == 15) {
+			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 50.0), 20);
+		}else if(WorkerController.MAX_NUMBER_WORKERS == 20) {
+			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 50.0), 25);
+		} else if(WorkerController.MAX_NUMBER_WORKERS == 25) {
+			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 50.0), 30);
 		}
 		// Assign number of knights if first factory
 		if (Constants.BEGINNING_KNIGHTS == -1) { 
