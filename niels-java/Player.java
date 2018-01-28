@@ -339,8 +339,8 @@ public class Player {
 			}
 
 			for (int index = 0; index < enemyUnits.size(); index++) {
-				if (!enemyUnits.get(index).location().isInGarrison()) {
-					armyNav.addTarget(enemyUnits.get(index).location().mapLocation());
+				if(enemyLoc.isOnPlanet(planet)) {
+					armyNav.addTarget(enemyLoc.mapLocation());
 				}
 			}
 			if (Player.seenEnemies && enemyUnits.size() == 0) {
