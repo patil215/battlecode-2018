@@ -264,7 +264,7 @@ public class Utils {
 	/**
 	 * Returns null if can't move in any direction.
 	 */
-	public static Direction fleeFrom(Unit self, Unit foe) {
+private static Direction getFleeDirection(Unit self, Unit foe) {
 		Direction away = bc
 				.bcDirectionOpposite(self.location().mapLocation().directionTo(foe.location().mapLocation()));
 		if (Player.gc.canMove(self.id(), away)) {
@@ -285,6 +285,15 @@ public class Utils {
 		}
 
 		return null;
+	}
+
+	public static boolean tryAndFleeFrom(Unit self, Unit foe) {
+		Direction fleeDirection = getFleeDirection(self, foe);
+		if (fleeDirection != null && self.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
+			Player.gc.moveRobot(self.id(), fleeDirection);
+			return true;
+		}
+		return false;
 	}
 
 	/**

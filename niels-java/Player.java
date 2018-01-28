@@ -182,7 +182,7 @@ public class Player {
 
 	private static void beginTurn() {
 		if (gc.round() == Constants.LIMIT_WORKER_REP_ROUND) {
-			WorkerController.MAX_NUMBER_WORKERS = 6;
+			WorkerController.MAX_NUMBER_WORKERS = Math.min(6, WorkerController.MAX_NUMBER_WORKERS);
 		}
 		getUnits(true);
 		CombatUtils.initAtStartOfTurn();

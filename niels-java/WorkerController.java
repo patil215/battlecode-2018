@@ -22,9 +22,12 @@ public class WorkerController {
 			boolean buildingBlueprint = BuildUtils.tryToBuildBlueprints(unit);
 
 			// 3. Try to flee from enemies
-			Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
-			if (nearbyEnemy != null) {
-				Utils.fleeFrom(unit, nearbyEnemy);
+			boolean fleed = false;
+			if (!buildingBlueprint) {
+				Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
+				if (nearbyEnemy != null) {
+					fleed = Utils.tryAndFleeFrom(unit, nearbyEnemy);
+				}
 			}
 
 			// 4. Try to build a building or rocket (if Karbonite is enough)
@@ -47,19 +50,22 @@ public class WorkerController {
 			}
 
 			// 5. Try to move using builder map
-			boolean builderMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.builderNav, false);
+			boolean builderMoveResult = false;
+			if (!fleed) {
+				builderMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.builderNav, false);
+			}
 
 			// 6. Try to move using Karbonite map
 			boolean shouldHarvest = Player.robotMemory.get(unit.id()).searchForKarbonite;
 			boolean harvesterMoveResult = false;
-			if (!builderMoveResult && shouldHarvest) {
+			if (!fleed && !builderMoveResult && shouldHarvest) {
 				harvesterMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.workerNav, false);
 			}
 
 			// 7. Try to move towards built factories
 			boolean factoryMoveResult = false;
 			int dMapValue = Player.completedFactoryNav.getDijkstraMapValue(unit.location().mapLocation());
-			if (!harvesterMoveResult 
+			if (!fleed && !harvesterMoveResult
 					&& !builderMoveResult 
 					&& dMapValue >= Constants.SAFE_FACTORY_DISTANCE) {
 				factoryMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.completedFactoryNav, false);
@@ -67,7 +73,7 @@ public class WorkerController {
 
 			// 8. Try to move randomly
 			boolean randomMoveResult = false;
-			if(!factoryMoveResult && !harvesterMoveResult && !builderMoveResult) {
+			if(!fleed && !factoryMoveResult && !harvesterMoveResult && !builderMoveResult) {
 				randomMoveResult = Utils.moveRandom(unit);
 			}
 
