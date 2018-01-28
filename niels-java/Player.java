@@ -266,7 +266,7 @@ public class Player {
 
 		while (true) {
 			try {
-				if (gc.getTimeLeftMs() <= 200) {
+				if (gc.getTimeLeftMs() <= Constants.TIME_BUFFER_MS) {
 					finishTurn();
 					continue;
 				}
@@ -341,6 +341,8 @@ public class Player {
 			}
 
 			for (int index = 0; index < enemyUnits.size(); index++) {
+				Location enemyLoc = enemyUnits.get(index).location();
+
 				if(enemyLoc.isOnPlanet(planet)) {
 					armyNav.addTarget(enemyLoc.mapLocation());
 				}
@@ -358,32 +360,31 @@ public class Player {
 	}
 
 	private static void setupResearchQueue() {
-		/*
-		 * gc.queueResearch(Ranger); // Ranger 1 complete round 25
-		 * gc.queueResearch(Healer); // Healer 1 complete round 50
-		 * gc.queueResearch(Healer); // Healer 2 complete round 150
-		 * gc.queueResearch(Healer); // Healer 3 complete round 250
-		 * gc.queueResearch(Rocket); // Rocket 1 complete round 300
-		 * gc.queueResearch(Rocket); // Rocket 2 complete round 400
-		 * gc.queueResearch(Rocket); // Rocket 3 complete round 500 // Remember to
-		 * update the Utils.getMaxRocketCapacity if Rocket III timing is // changed
-		 * gc.queueResearch(Ranger); // Ranger 2 complete round 600
-		 * gc.queueResearch(Worker); // Worker 1 complete round 625
-		 * gc.queueResearch(Worker); // Worker 2 complete round 700
-		 * gc.queueResearch(Ranger); // Ranger 3 complete round 900 (this is useless but
-		 * might throw other team off)
-		 */
+	
+	 gc.queueResearch(Worker);
+	 gc.queueResearch(Ranger); // Ranger 1 complete round 50
+	 gc.queueResearch(Healer); // Healer 1 complete round 75
+	 gc.queueResearch(Healer); // Healer 2 complete round 175
+	 gc.queueResearch(Healer); // Healer 3 complete round 275
+	 gc.queueResearch(Rocket); // Rocket 1 complete round 325
+	 gc.queueResearch(Rocket); // Rocket 2 complete round 425
+	 gc.queueResearch(Rocket); // Rocket 3 complete round 525 // Remember to update the Utils.getMaxRocketCapacity if Rocket III timing is // changed
+	 gc.queueResearch(Ranger); // Ranger 2 complete round 625
+	 gc.queueResearch(Worker); // Worker 1 complete round 650
+	 gc.queueResearch(Ranger); // Ranger 3 complete round 925 (this is useless but might throw other team off)
 
+		/*
 		gc.queueResearch(Worker); // 25
-		gc.queueResearch(Knight); // 50
-		gc.queueResearch(Knight); // 125
-		gc.queueResearch(Knight); // 225
+		gc.queueResearch(Ranger); // 50
+		gc.queueResearch(Ranger); // 125
+		gc.queueResearch(Ranger); // 225
 		gc.queueResearch(Healer); // 250
 		gc.queueResearch(Healer); // 350
 		gc.queueResearch(Healer); // 450
 		gc.queueResearch(Rocket); // 500
 		gc.queueResearch(Rocket); // 600
 		gc.queueResearch(Rocket); // 700
+		*/
 	}
 
 	private static void updateUnitStates(ArrayList<Unit> units) {
