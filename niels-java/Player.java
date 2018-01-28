@@ -80,7 +80,7 @@ public class Player {
 				MapLocation karbLocation = new MapLocation(planet, i, d);
 				long karboniteAtLoc = map.initialKarboniteAt(karbLocation);
 				karbonite += karboniteAtLoc;
-				if(karboniteAtLoc>0) {
+				if(karboniteAtLoc > 0) {
 					karbLocs.add(new Point(karbLocation.getX(), karbLocation.getY()));
 				}
 			}
