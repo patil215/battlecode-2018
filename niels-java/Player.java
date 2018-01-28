@@ -231,7 +231,8 @@ public class Player {
 	}
 
 	private static void determineMaxNumberOfWorkers() {
-		
+
+		// IF YOU CHANGE THE 10 HERE, YOU NEED TO CHANGE THE SOFT CAPPING. BE VERY CAREFUL.
 		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 50.0), 10);
 		System.out.println(WorkerController.MAX_NUMBER_WORKERS + " workers will be created.");
 	}
