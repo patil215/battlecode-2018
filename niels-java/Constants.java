@@ -16,7 +16,7 @@ public class Constants {
 
 	public static int CLUMP_THRESHOLD;
 
-	public static final int BUILDER_NAV_SIZE = 5;
+	public static final int BUILDER_NAV_SIZE = 4;
 
 	public static final int MAX_FACTORY_HEALTH = 300;
 	public static final int MAX_ROCKET_HEALTH = 200;
