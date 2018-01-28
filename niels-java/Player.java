@@ -68,27 +68,25 @@ public class Player {
 		return targets;
 	}
 
-	/*
-	 * Note: call this to also compute the karbonite that is safe to grab
+	/**
+	 * Runs a weighted breadth-first search in order to find the amount of reachable karbonite.
+	 * We do a linear scaling.
 	 */
 	private static Set<Point> getInitialKarboniteLocations() {
-		long maxX = map.getWidth();
-		long maxY = map.getHeight();
-		Set<Point> targets = new HashSet<>();
-		reachableKarbonite = 0;
-		for (int x = 0; x < maxX; x++) {
-			for (int y = 0; y < maxY; y++) {
-				MapLocation loc = new MapLocation(planet, x, y);
-				long karbonite = map.initialKarboniteAt(loc);
-				if (karbonite > 0) {
-					targets.add(new Point(x, y));
-					reachableKarbonite += karbonite;
+		long karbonite = 0;
+		Navigation karbNav = new Navigation(map, getInitialAllyUnitLocations());
+		Set<Point> karbLocs = new HashSet<>();
+		for (int i = 0; i < karbNav.distances.length; i++) {
+			for (int d = 0; d < karbNav.distances[i].length; d++) {
+				if (karbNav.distances[i][d] == Integer.MAX_VALUE) {
+					continue;
 				}
+				MapLocation karbLocation = new MapLocation(planet, i, d);
+				karbonite += map.initialKarboniteAt(karbLocation);
 			}
 		}
-		reachableKarbonite /= 3;
-		System.out.println(reachableKarbonite);
-		return targets;
+		reachableKarbonite = karbonite / 3;
+		return karbLocs;
 	}
 
 	private static List<MapLocation> getUnseenLocations() {
@@ -223,7 +221,8 @@ public class Player {
 	}
 
 	private static void determineMaxNumberOfWorkers() {
-		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 45), 16);
+		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 45.0), 16);
+		System.out.println(WorkerController.MAX_NUMBER_WORKERS + " workers will be created.");
 	}
 
 	private static void determineIfClumping() {
@@ -259,13 +258,13 @@ public class Player {
 
 		CensusCounts.resetCounts();
 		getUnits(false);
-		determineMaxNumberOfWorkers();
 		determineIfClumping();
 
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
 		factoryNav = new Navigation(map, new HashSet<>());
 
+		determineMaxNumberOfWorkers();
 		initArmyMap();
 	}
 

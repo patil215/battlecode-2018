@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Queue;
 
 public class Navigation {
-	private int[][] distances;
+	public int[][] distances;
 	private final PlanetMap map;
 	private final Planet planet;
 	private Set<Point> targets;
