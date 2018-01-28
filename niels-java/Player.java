@@ -1,21 +1,22 @@
-import bc.*;
+import static bc.UnitType.*;
 
 import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bc.UnitType.*;
+import bc.*;
 
 public class Player {
 
 	// Initialized once per game
 	static GameController gc;
-	static Team enemyTeam;
 	static Team friendlyTeam;
+	static Team enemyTeam;
 	static Planet planet;
 	static PlanetMap map;
 	static long reachableKarbonite;
+	static ArrayList<Unit> initialUnits;
 
 	// Initialized/updated once per turn
 	/**
@@ -29,24 +30,22 @@ public class Player {
 	static ArrayList<Unit> friendlyUnits;
 	static ArrayList<Unit> enemyUnits;
 	static ArrayList<Unit> allUnits;
-
 	static ArrayList<Unit> blueprints;
 
 	// Dijkstra maps
 	static Navigation workerNav;
 	static Navigation armyNav;
 	static Navigation builderNav;
-	static Navigation factoryNav;
+	static Navigation completedFactoryNav;
 
 	static HashMap<Integer, RobotMemory> robotMemory;
-	public static boolean seenEnemies = true;
+
+	static boolean seenEnemies = true;
 	private static int stuckCounter;
 
 	public static Set<Point> getInitialEnemyUnitLocations() {
-		VecUnit initialUnits = map.getInitial_units();
 		Set<Point> targets = new HashSet<>();
-		for (int i = 0; i < initialUnits.size(); i++) {
-			Unit unit = initialUnits.get(i);
+		for (Unit unit : initialUnits) {
 			if (unit.team() == enemyTeam) {
 				MapLocation unitLoc = unit.location().mapLocation();
 				targets.add(new Point(unitLoc.getX(), unitLoc.getY()));
@@ -56,10 +55,8 @@ public class Player {
 	}
 
 	private static Set<Point> getInitialAllyUnitLocations() {
-		VecUnit initialUnits = map.getInitial_units();
 		Set<Point> targets = new HashSet<>();
-		for (int i = 0; i < initialUnits.size(); i++) {
-			Unit unit = initialUnits.get(i);
+		for (Unit unit : initialUnits) {
 			if (unit.team() == friendlyTeam) {
 				MapLocation unitLoc = unit.location().mapLocation();
 				targets.add(new Point(unitLoc.getX(), unitLoc.getY()));
@@ -69,8 +66,7 @@ public class Player {
 	}
 
 	/**
-	 * Runs a weighted breadth-first search in order to find the amount of reachable karbonite.
-	 * We do a linear scaling.
+	 * Runs a weighted breadth-first search in order to find reachable karbonite.
 	 */
 	private static Set<Point> getInitialKarboniteLocations() {
 		long karbonite = 0;
@@ -85,7 +81,7 @@ public class Player {
 				karbonite += map.initialKarboniteAt(karbLocation);
 			}
 		}
-		reachableKarbonite = karbonite / 3;
+		reachableKarbonite = karbonite / 3; // "Closer to us than enemy"
 		return karbLocs;
 	}
 
@@ -121,7 +117,6 @@ public class Player {
 			return 4;
 		default:
 			return Integer.MAX_VALUE;
-
 		}
 	}
 
@@ -191,13 +186,14 @@ public class Player {
 	}
 
 	private static void eliminateUnitIfStuck() {
-		if (gc.planet() == Planet.Earth && Utils.stuck()) {
+		if (gc.planet() == Planet.Earth && Utils.allUnitsStuck()) {
 			stuckCounter++;
 		} else {
 			stuckCounter = 0;
 		}
 		if (stuckCounter > Constants.AMOUNT_STUCK_BEFORE_KILL
-				&& gc.round() > 100 && friendlyUnits.size() > 1
+				&& friendlyUnits.size() > 1
+				&& gc.round() > 100
 				&& gc.planet() == Planet.Earth) {
 			gc.disintegrateUnit(Player.friendlyUnits.get((int) (Math.random() * friendlyUnits.size())).id());
 			stuckCounter = 0;
@@ -206,7 +202,10 @@ public class Player {
 
 	private static void finishTurn() {
 		moveNewlyCreatedUnits();
-		eliminateUnitIfStuck();
+
+		if (gc.getTimeLeftMs() >= Constants.TIME_BUFFER_MS) {
+			eliminateUnitIfStuck();
+		}
 
 		CombatUtils.cleanupAtEndOfTurn();
 		BuildUtils.cleanupAtEndOfTurn();
@@ -257,6 +256,11 @@ public class Player {
 		friendlyTeam = gc.team();
 		enemyTeam = Utils.getEnemyTeam();
 		robotMemory = new HashMap<>();
+		initialUnits = new ArrayList<>();
+		VecUnit initials = map.getInitial_units();
+		for (int i = 0; i < initials.size(); i++) {
+			initialUnits.add(initials.get(i));
+		}
 
 		CensusCounts.resetCounts();
 		getUnits(false);
@@ -264,8 +268,7 @@ public class Player {
 
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
-		factoryNav = new Navigation(map, new HashSet<>());
-		determineMaxNumberOfWorkers();
+		completedFactoryNav = new Navigation(map, new HashSet<>());
 
 		determineMaxNumberOfWorkers();
 		initArmyMap();
@@ -284,21 +287,23 @@ public class Player {
 
 				beginTurn();
 
-				if (gc.round() % 3 == 0 && gc.round() > Constants.CLUMP_THRESHOLD) {
-					updateRangerTargets();
+				if (gc.round() % Constants.ARMY_MAP_RECALCULATE_INTERVAL == 0
+						&& gc.round() > Constants.CLUMP_THRESHOLD) {
+					updateArmyTargets();
 				} else if (gc.round() == Constants.CLUMP_THRESHOLD) {
 					armyNav = new Navigation(map, getInitialEnemyUnitLocations());
 				}
+
 				CensusCounts.computeCensus(friendlyUnits);
 				moveUnits(friendlyUnits);
 
-				// Workers will update empty karbonite positions in workerController
-				if (gc.round() % 3 == 0) {
+				// Periodically update karbonite locations
+				if (gc.round() % Constants.KARBONITE_MAP_RECALCULATE_INTERVAL == 0) {
 					workerNav.recalculateDistanceMap();
 				}
 
-				// Submit the actions we've done, and wait for our next turn.
 				finishTurn();
+
 			} catch (Exception e) {
 				e.printStackTrace();
 				gc.nextTurn();
@@ -321,28 +326,23 @@ public class Player {
 		}
 	}
 
-	private static void updateRangerTargets() {
+	private static void updateArmyTargets() {
 		// Move towards rockets if we need to bail
-		if (planet == Planet.Earth && gc.round() >= 500) {
-			for (Point loc : new HashSet<>(armyNav.getTargets())) {
-				MapLocation target = new MapLocation(planet, loc.x, loc.y);
-				armyNav.removeTarget(target);
-			}
+		if (planet == Planet.Earth && gc.round() >= Constants.START_GETTING_INTO_ROCKETS_ROUND) {
+			armyNav.clearTargets();
 
 			// Move toward rockets
 			for (Unit unit : friendlyUnits) {
 				// Add all rockets that are ready to be loaded up
-				// TODO don't use constant for rocket capacity
-				if (unit.unitType() == Rocket && unit.structureIsBuilt() == 1
+				if (unit.unitType() == Rocket && BuildUtils.isBuilt(unit)
 						&& unit.structureGarrison().size() < unit.structureMaxCapacity()) {
 					armyNav.addTarget(unit.location().mapLocation());
 				}
 			}
+
 			armyNav.recalculateDistanceMap();
-			// Move towards enemies
 		} else {
 			// Move toward enemies
-
 			for (Point loc : new HashSet<>(armyNav.getTargets())) {
 				MapLocation target = new MapLocation(planet, loc.x, loc.y);
 				if (gc.canSenseLocation(target)
@@ -351,13 +351,14 @@ public class Player {
 				}
 			}
 
-			for (int index = 0; index < enemyUnits.size(); index++) {
-				Location enemyLoc = enemyUnits.get(index).location();
+			for (Unit unit : enemyUnits) {
+				Location enemyLoc = unit.location();
 
 				if(enemyLoc.isOnPlanet(planet)) {
 					armyNav.addTarget(enemyLoc.mapLocation());
 				}
 			}
+
 			if (Player.seenEnemies && enemyUnits.size() == 0) {
 				Player.seenEnemies = false;
 				for (MapLocation loc : getUnseenLocations()) {
@@ -366,6 +367,7 @@ public class Player {
 			} else if (enemyUnits.size() > 0) {
 				Player.seenEnemies = true;
 			}
+
 			armyNav.recalculateDistanceMap();
 		}
 	}
@@ -416,7 +418,6 @@ public class Player {
 				memory.workerMode = WorkerController.Mode.BUILD_FACTORIES;
 				CensusCounts.incrementWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES);
 			} else if (gc.round() > Constants.START_BUILDING_ROCKETS_ROUND) {
-				// TODO modify to make sure we have at least 2-3 factories
 				memory.workerMode = WorkerController.Mode.BUILD_ROCKETS;
 				CensusCounts.incrementWorkerModeCount(WorkerController.Mode.BUILD_ROCKETS);
 			}
@@ -437,15 +438,20 @@ public class Player {
 		case Worker: {
 			// Make workers start to build rockets after a certain round
 			if (gc.round() >= Constants.START_BUILDING_ROCKETS_ROUND) {
-				// Only try to make rockets if we have units that need them
-				int numRockets = CensusCounts.getUnitCount(Rocket);
-				int numRangers = CensusCounts.getMilitaryCount();
-				if (numRockets * Utils.getMaxRocketCapacity() >= numRangers) {
-					// TODO all of these workers might switch back and forth at once - is this what
-					// we want?
-					Utils.getMemory(unit).workerMode = WorkerController.Mode.IDLE;
+				// Replenish factories
+				int numFactories = CensusCounts.getUnitCount(Factory);
+				if (numFactories == 0) { // Replenish a factory if we lose it
+					if (Utils.getMemory(unit).workerMode == WorkerController.Mode.BUILD_ROCKETS) {
+						CensusCounts.decrementWorkerModeCount(WorkerController.Mode.BUILD_ROCKETS);
+						Utils.getMemory(unit).workerMode = WorkerController.Mode.BUILD_FACTORIES;
+						CensusCounts.incrementWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES);
+					}
 				} else {
-					Utils.getMemory(unit).workerMode = WorkerController.Mode.BUILD_ROCKETS;
+					if (Utils.getMemory(unit).workerMode == WorkerController.Mode.BUILD_FACTORIES) {
+						CensusCounts.decrementWorkerModeCount(WorkerController.Mode.BUILD_FACTORIES);
+						Utils.getMemory(unit).workerMode = WorkerController.Mode.BUILD_ROCKETS;
+						CensusCounts.incrementWorkerModeCount(WorkerController.Mode.BUILD_ROCKETS);
+					}
 				}
 			}
 			break;
@@ -460,14 +466,14 @@ public class Player {
 						|| CensusCounts.getMilitaryCount() // If we have way more rockets than Karbonite
 						< (CensusCounts.getUnitCount(Rocket) * Utils.getMaxRocketCapacity())) {
 					if (Utils.getMemory(unit).factoryMode == FactoryController.Mode.IDLE) {
-						Utils.getMemory(unit).factoryMode = FactoryController.Mode.PRODUCE;
 						CensusCounts.decrementFactoryModeCount(FactoryController.Mode.IDLE);
+						Utils.getMemory(unit).factoryMode = FactoryController.Mode.PRODUCE;
 						CensusCounts.incrementFactoryModeCount(FactoryController.Mode.PRODUCE);
 					}
 				} else {
 					if (Utils.getMemory(unit).factoryMode == FactoryController.Mode.PRODUCE) {
-						Utils.getMemory(unit).factoryMode = FactoryController.Mode.IDLE;
 						CensusCounts.decrementFactoryModeCount(FactoryController.Mode.PRODUCE);
+						Utils.getMemory(unit).factoryMode = FactoryController.Mode.IDLE;
 						CensusCounts.incrementFactoryModeCount(FactoryController.Mode.IDLE);
 					}
 				}
@@ -481,8 +487,7 @@ public class Player {
 	}
 
 	private static void moveUnits(ArrayList<Unit> units) {
-		for (int index = 0; index < units.size(); index++) {
-			Unit unit = units.get(index);
+		for (Unit unit : units) {
 			moveUnit(unit);
 		}
 	}

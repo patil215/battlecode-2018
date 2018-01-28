@@ -58,9 +58,9 @@ public class HealerController {
 		Unit overchargeTarget = null;
 		for (int i = 0; i < nearbyFriendlies.size(); i++) {
 			Unit unit = nearbyFriendlies.get(i);
-			long newHeat = unit.unitType() == UnitType.Knight ?  unit.abilityHeat() : 0;
+			long newHeat = unit.unitType() == UnitType.Knight ? unit.abilityHeat() : 0;
 			long newHealth = unit.health();
-			if (newHeat > largestHeat || (newHeat ==largestHeat && newHealth < lowestHealth)) {
+			if (newHeat > largestHeat || (newHeat == largestHeat && newHealth < lowestHealth)) {
 				if (unit.unitType() == UnitType.Ranger && Player.gc.canOvercharge(self.id(), unit.id())) {
 					overchargeTarget = unit;
 					lowestHealth = newHealth;
@@ -80,7 +80,7 @@ public class HealerController {
 	}
 
 	private static void moveRecon(Unit unit) {
-		boolean result = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.armyNav, true); // TODO ideally this would be army, not army's target
+		boolean result = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.armyNav, true);
 		if (!result) {
 			Utils.moveRandom(unit);
 		}

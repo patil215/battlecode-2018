@@ -66,8 +66,9 @@ public class KnightController {
 		if (target != null) {
 			CombatUtils.attack(unit, target);
 		}
-		
-		targets = Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.abilityRange(), Player.enemyTeam);
+
+		// Javelin code
+		/*targets = Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.abilityRange(), Player.enemyTeam);
 		target = null;
 		bestTargetScore = Long.MAX_VALUE;
 		for (int index = 0; index < targets.size(); index++) {
@@ -80,6 +81,6 @@ public class KnightController {
 		}
 		if (target != null && unit.abilityHeat() < 10 && Player.gc.canJavelin(unit.id(), target.id())) {
 			CombatUtils.attackJavelin(unit, target);
-		}
+		}*/
 	}
 }

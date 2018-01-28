@@ -3,13 +3,8 @@ import bc.Unit;
 import bc.UnitType;
 import bc.VecUnit;
 
-import java.awt.*;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
-
-import static bc.UnitType.Ranger;
 
 public class CombatUtils {
 	/**
@@ -19,17 +14,13 @@ public class CombatUtils {
 	Accordingly, these changes should be cached and taken into account.
 	 */
 	private static HashMap<Unit, Long> markedEnemyHealth = new HashMap<>();
-	private static HashMap<Integer, Integer> rangerTargets = new HashMap<>();
 
-	static Navigation microNav = new Navigation(Player.map, new HashSet<>());
+	static Navigation microNav = new Navigation(Player.map, new HashSet<>(), Constants.KNIGHT_MICRO_NAV_MAXDIST);
 
 	public static void initAtStartOfTurn() {
-		// Commented because we aren't using knights
-		
-		if(CensusCounts.getUnitCount(UnitType.Knight) > 0) { 
+		if (CensusCounts.getUnitCount(UnitType.Knight) > 0) {
 			microNav.clearTargets();
-			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(new MapLocation(Player.gc.planet(), 1,1), Long.MAX_VALUE, Player.enemyTeam);
-			Set<Point> useless = new HashSet<>();
+			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(new MapLocation(Player.gc.planet(), 1, 1), Long.MAX_VALUE, Player.enemyTeam);
 			for (int i = 0; i < foes.size(); i++) {
 				MapLocation location = foes.get(i).location().mapLocation();
 				microNav.addTarget(location);
@@ -146,23 +137,5 @@ public class CombatUtils {
 		} else {
 			markedEnemyHealth.put(target, target.health() - attacker.damage());
 		}
-	}
-	
-	public static long assignRangerTargets() {
-		Collections.sort(Player.enemyUnits, (a, b) -> Long.compare(rangerSubscore(a), rangerSubscore(b)));
-
-
-		for (Unit foe : Player.enemyUnits) {
-
-		}
-
-		for (Unit friendly : Player.friendlyUnits) {
-			if (friendly.unitType() != Ranger) {
-				continue;
-			}
-
-
-		}
-		return 0;
 	}
 }

@@ -8,8 +8,8 @@ import java.awt.Point;
 
 public class BuildUtils {
 	/**
-		Used to keep track of structure health increasing after being marked.
-		*/
+	Used to keep track of structure health increasing after being marked.
+	*/
 	private static HashMap<Unit, Long> markedStructureHealth = new HashMap<>();
 	private static ArrayList<MapLocation> bestFactoryLocations = new ArrayList<>();
 
@@ -33,19 +33,18 @@ public class BuildUtils {
 
 	private static void clearDestroyedFactories() {
 		// avoid ConcurrentModificationException
-		List<Point> oldTargets = new ArrayList<>(Player.factoryNav.getTargets());
+		List<Point> oldTargets = new ArrayList<>(Player.completedFactoryNav.getTargets());
 		for(Point target : oldTargets) {
-			MapLocation targetLoc = 
-				new MapLocation(Player.planet, target.x, target.y);
+			MapLocation targetLoc = new MapLocation(Player.planet, target.x, target.y);
 			if(Player.gc.hasUnitAtLocation(targetLoc)) {
 				Unit building = Player.gc.senseUnitAtLocation(targetLoc);
-				if(building.team() != Player.friendlyTeam 
+				if (building.team() != Player.friendlyTeam
 						&& building.unitType() != UnitType.Factory 
 						&& building.unitType() != UnitType.Rocket) {
-					Player.factoryNav.removeTarget(targetLoc);
+					Player.completedFactoryNav.removeTarget(targetLoc);
 				}
 			} else { 
-				Player.factoryNav.removeTarget(targetLoc);
+				Player.completedFactoryNav.removeTarget(targetLoc);
 			}
 		}
 	}
@@ -70,8 +69,8 @@ public class BuildUtils {
 					MapLocation blueprintLoc = blueprint.location().mapLocation();
 
 					clearDestroyedFactories();
-					Player.factoryNav.addTarget(blueprintLoc);
-					Player.factoryNav.recalculateDistanceMap();
+					Player.completedFactoryNav.addTarget(blueprintLoc);
+					Player.completedFactoryNav.recalculateDistanceMap();
 
 					Player.builderNav.removeTarget(blueprintLoc);
 					Player.builderNav.recalculateDistanceMap();
@@ -106,9 +105,9 @@ public class BuildUtils {
 					bestFactoryLocations.add(proposedLoc);
 				} else {
 					int numSurroundingWorkersProposed = Utils.countNearbyWorkers(proposedLoc);
-					long distToEnemySpawnProposed = Utils.distToClosestEnemySpawn(proposedLoc);
+					long distToEnemySpawnProposed = Utils.getDistanceToClosestEnemySpawn(proposedLoc);
 					int numSurroundingWorkersBest = Utils.countNearbyWorkers(bestFactoryLocations.get(0));
-					long distToEnemySpawnBest = Utils.distToClosestEnemySpawn(bestFactoryLocations.get(0));
+					long distToEnemySpawnBest = Utils.getDistanceToClosestEnemySpawn(bestFactoryLocations.get(0));
 
 					if (numSurroundingWorkersProposed == numSurroundingWorkersBest
 							&& distToEnemySpawnProposed == distToEnemySpawnBest) {
@@ -117,7 +116,7 @@ public class BuildUtils {
 							(numSurroundingWorkersProposed == numSurroundingWorkersBest && distToEnemySpawnProposed > distToEnemySpawnBest)) {
 						bestFactoryLocations.clear();
 						bestFactoryLocations.add(proposedLoc);
-							}
+					}
 				}
 			}
 		}

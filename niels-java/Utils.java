@@ -9,15 +9,18 @@ import java.util.function.Function;
 import static bc.UnitType.Worker;
 
 public class Utils {
-	// includes diagonals (1 vertical, 1 horiz = 1^2 + 1^2 = 2, this is inclusive)
-	// will not include any other squares.
+	/**
+	 * Includes diagonals (1 vertical, 1 horiz = 1^2 + 1^2 = 2, this is inclusive)
+	 * Will not include any other squares.
+	 */
 	private static final long DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS = 2L;
 
 	static int countSurrounding(MapLocation loc, Function<MapLocation, Boolean> f) {
 		int count = 0;
 		for (Direction dir : Direction.values()) {
-			if (dir == Direction.Center)
+			if (dir == Direction.Center) {
 				continue;
+			}
 			MapLocation newLoc = loc.add(dir);
 			if (Player.map.onMap(newLoc) && f.apply(newLoc)) {
 				count++;
@@ -38,7 +41,7 @@ public class Utils {
 		return numOurTeam;
 	}
 
-	static int countNearbyConstruction(MapLocation loc) {
+	static int countNearbyUnderConstruction(MapLocation loc) {
 		VecUnit units = Player.gc.senseNearbyUnitsByType(loc, DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS, UnitType.Factory);
 		int numOurTeam = 0;
 		for (int i = 0; i < units.size(); i++) {
@@ -55,7 +58,7 @@ public class Utils {
 				&& !Player.gc.hasUnitAtLocation(loc));
 	}
 
-	private static boolean locationInside(ArrayList<MapLocation> bestFactoryLocations, MapLocation location) {
+	private static boolean locInList(ArrayList<MapLocation> bestFactoryLocations, MapLocation location) {
 		for (MapLocation loc : bestFactoryLocations) {
 			if (loc.getX() == location.getX() && loc.getY() == location.getY()) {
 				return true;
@@ -68,7 +71,7 @@ public class Utils {
 		ArrayList<MapLocation> bestFactoryLocations = BuildUtils.getBestFactoryLocations();
 		for (Direction dir : Direction.values()) {
 			MapLocation proposedLocation = worker.location().mapLocation().add(dir);
-			if (locationInside(bestFactoryLocations, proposedLocation)
+			if (locInList(bestFactoryLocations, proposedLocation)
 					&& Player.gc.canBlueprint(worker.id(), type, dir)) {
 				addBlueprint(worker, type, dir);
 				return true;
@@ -80,19 +83,20 @@ public class Utils {
 	private static void addBlueprint(Unit worker, UnitType type, Direction dir) {
 		MapLocation workerLoc = worker.location().mapLocation();
 		MapLocation blueprintLoc = workerLoc.add(dir);
+
+		// Assign number of knights if first factory
 		if (Constants.BEGINNING_KNIGHTS == -1) { 
-			int distance = -1;
-			if(Player.seenEnemies) { 
-				System.out.println("army distance");
+			int distance;
+			if (Player.seenEnemies) {
 				distance = Player.armyNav.getDijkstraMapValue(blueprintLoc);
 			} else {
 				Navigation enemyNav = new Navigation(Player.map, Player.getInitialEnemyUnitLocations()); 
 				distance = enemyNav.getDijkstraMapValue(blueprintLoc);
 			}
-			System.out.println("distance " + distance);
 			// Black magic 
 			Constants.BEGINNING_KNIGHTS = Math.max(0, 5 - (distance / 3));
 		}
+
 		Player.gc.blueprint(worker.id(), type, dir);
 		Player.builderNav.addTarget(workerLoc.add(dir));
 		Player.builderNav.recalculateDistanceMap();
@@ -116,39 +120,45 @@ public class Utils {
 	}
 
 	public static boolean tryAndReplicate(Unit worker) {
+		int workerId = worker.id();
+		MapLocation workerLoc = worker.location().mapLocation();
+
 		int bestCount = -1;
 		Direction bestDir = null;
-		MapLocation loc = worker.location().mapLocation();
-		int workerId = worker.id();
-		// pick the direction that maximizes the number of blueprints around it
+		// Pick direction maximizing number of blueprints around it
 		for (Direction dir : Direction.values()) {
-			if (dir == Direction.Center)
+			if (dir == Direction.Center) {
 				continue;
+			}
 			if (Player.gc.canReplicate(workerId, dir)) {
-				MapLocation newLoc = loc.add(dir);
-				int numFactories = countNearbyConstruction(newLoc);
+				MapLocation newLoc = workerLoc.add(dir);
+				int numFactories = countNearbyUnderConstruction(newLoc);
 				if (numFactories > bestCount) {
 					bestCount = numFactories;
 					bestDir = dir;
 				}
 			}
 		}
+
 		if (bestDir == null) {
 			return false;
-		} 
+		}
+
 		Direction karbDir = Player.workerNav.getNextDirection(worker);
 		if (bestCount == 0 && karbDir != null) {
 			Player.gc.replicate(worker.id(), karbDir);
 		} else { 
 			Player.gc.replicate(worker.id(), bestDir);
 		}
-			CensusCounts.incrementUnitCount(Worker);
-			return true;
+
+		CensusCounts.incrementUnitCount(Worker);
+		return true;
 	}
 
 	public static boolean tryAndHarvest(Unit worker) {
 		int workerId = worker.id();
 		MapLocation workerLoc = worker.location().mapLocation();
+
 		long maxKarb = 0;
 		Direction harvestDir = null;
 		MapLocation harvestLocation = null;
@@ -157,7 +167,7 @@ public class Utils {
 			MapLocation newLoc = workerLoc.add(direction);
 			if (Player.map.onMap(newLoc)) {
 				long karb = Player.gc.karboniteAt(newLoc);
-				if (Player.gc.canHarvest(workerId, direction) && karb > maxKarb) {
+				if (karb > maxKarb && Player.gc.canHarvest(workerId, direction)) {
 					maxKarb = karb;
 					harvestDir = direction;
 					harvestLocation = newLoc;
@@ -166,18 +176,22 @@ public class Utils {
 				}
 			}
 		}
-		if (harvestDir == null) return false;
+
+		if (harvestDir == null) {
+			return false;
+		}
+
 		// Remove from target map if we make empty
 		if (maxKarb - worker.workerHarvestAmount() <= 0) {
 			Player.workerNav.removeTarget(harvestLocation);
 		}
+
 		Player.gc.harvest(workerId, harvestDir);
 		return true;
 	}
 
 	public static boolean tryAndGetIntoRocket(Unit unit) {
-		for (int i = 0; i < Player.friendlyUnits.size(); i++) {
-			Unit potentialRocket = Player.friendlyUnits.get(i);
+		for (Unit potentialRocket : Player.friendlyUnits) {
 			if (potentialRocket.unitType() == UnitType.Rocket && potentialRocket.structureIsBuilt() == 1) {
 				if (Player.gc.canLoad(potentialRocket.id(), unit.id())) {
 					Player.gc.load(potentialRocket.id(), unit.id());
@@ -189,8 +203,7 @@ public class Utils {
 	}
 
 	public static boolean tryAndGetIntoFactory(Unit unit) {
-		for (int i = 0; i < Player.friendlyUnits.size(); i++) {
-			Unit potentialFactory = Player.friendlyUnits.get(i);
+		for (Unit potentialFactory : Player.friendlyUnits) {
 			if (potentialFactory.unitType() == UnitType.Factory && potentialFactory.structureIsBuilt() == 1
 					// Make sure factory has one slot to still produce
 					&& potentialFactory.structureGarrison().size() < potentialFactory.structureMaxCapacity() - 1) {
@@ -207,6 +220,7 @@ public class Utils {
 		if (unit.movementHeat() >= 10) {
 			return false;
 		}
+
 		Direction toMove = map.getNextDirection(unit);
 		if (toMove != null) {
 			Player.gc.moveRobot(unit.id(), toMove);
@@ -214,14 +228,13 @@ public class Utils {
 		} else if (getIntoFactories) {
 			return Utils.tryAndGetIntoFactory(unit);
 		}
+
 		return false;
 	}
 
-	public static boolean stuck() {
-		ArrayList<Unit> units = Player.friendlyUnits;
-		for (int index = 0; index < units.size(); index++) {
-			if (units.get(index).unitType() != UnitType.Factory && units.get(index).unitType() != UnitType.Rocket
-					&& units.get(index).movementHeat() != 0) {
+	public static boolean allUnitsStuck() {
+		for (Unit unit : Player.friendlyUnits) {
+			if (unit.unitType() != UnitType.Factory && unit.unitType() != UnitType.Rocket && unit.movementHeat() != 0) {
 				return false;
 			}
 		}
@@ -229,46 +242,49 @@ public class Utils {
 	}
 
 	public static boolean moveRandom(Unit unit) {
-		if (unit.movementHeat() >= 10) {
+		if (unit.movementHeat() >= Constants.MAX_MOVEMENT_HEAT) {
 			return false;
 		}
+
 		ArrayList<Direction> nextMoves = new ArrayList<Direction>();
 		for (Direction direction : Direction.values()) {
 			if (Player.gc.canMove(unit.id(), direction)) {
 				nextMoves.add(direction);
 			}
 		}
+
 		if (nextMoves.size() > 0) {
 			Player.gc.moveRobot(unit.id(), nextMoves.get((int) (Math.random() * nextMoves.size())));
 			return true;
 		}
+
 		return false;
 	}
 
 	/**
 	 * Returns null if can't move in any direction.
 	 */
-	public static Direction fleeFrom(Unit ours, Unit foe) {
+	public static Direction fleeFrom(Unit self, Unit foe) {
 		Direction away = bc
-				.bcDirectionOpposite(ours.location().mapLocation().directionTo(foe.location().mapLocation()));
-		if (Player.gc.canMove(ours.id(), away)) {
+				.bcDirectionOpposite(self.location().mapLocation().directionTo(foe.location().mapLocation()));
+		if (Player.gc.canMove(self.id(), away)) {
 			return away;
 		} else {
 			Direction left = bc.bcDirectionRotateLeft(away);
 			Direction right = bc.bcDirectionRotateRight(away);
 			for (int count = 0; count < 4; count++) {
-				if (Player.gc.canMove(ours.id(), left)) {
+				if (Player.gc.canMove(self.id(), left)) {
 					return left;
 				}
-				if (Player.gc.canMove(ours.id(), right)) {
+				if (Player.gc.canMove(self.id(), right)) {
 					return right;
 				}
 				left = bc.bcDirectionRotateLeft(left);
 				right = bc.bcDirectionRotateRight(right);
 			}
 		}
-		return null;
 
+		return null;
 	}
 
 	/**
@@ -290,10 +306,8 @@ public class Utils {
 					|| (foe.unitType() == UnitType.Factory
 					&& CombatUtils.getTargetHealth(foe) == Constants.MAX_FACTORY_HEALTH)) {
 				long newThreatDistance = unitLocation.distanceSquaredTo(foe.location().mapLocation());
-				if (threat == null || newThreatDistance < bestThreatDistance) {
-					if (newThreatDistance < unit.attackRange()) {
-						threat = foe;
-					}
+				if (newThreatDistance < bestThreatDistance && newThreatDistance < unit.attackRange()) {
+					threat = foe;
 				}
 			}
 		}
@@ -320,23 +334,20 @@ public class Utils {
 	}
 
 	public static int getMaxRocketCapacity() {
-		if (Player.gc.round() >= 500) {
+		if (Player.gc.round() >= Constants.ROCKET_CAPACITY_UPGRADE_ROUND) {
 			return Constants.UPGRADED_ROCKET_CAPACITY;
 		} else {
 			return Constants.DEFAULT_ROCKET_CAPACITY;
 		}
 	}
 
-	public static long distToClosestEnemySpawn(MapLocation mapLocation) {
-		VecUnit foeStarts = Player.gc.startingMap(Planet.Earth).getInitial_units();
+	public static long getDistanceToClosestEnemySpawn(MapLocation mapLocation) {
 		long minDist = Long.MAX_VALUE;
-		for(int index = 0; index < foeStarts.size(); index++) {
-			Unit spawnUnit = foeStarts.get(index);
+		for(Unit spawnUnit : Player.initialUnits) {
 			if(spawnUnit.team() == Player.friendlyTeam) {
 				continue;
 			}
 			minDist = Math.min(minDist, mapLocation.distanceSquaredTo(spawnUnit.location().mapLocation()));
-			
 		}
 		return minDist;
 	}

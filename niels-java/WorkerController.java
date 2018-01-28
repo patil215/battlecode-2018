@@ -5,8 +5,9 @@ import static bc.UnitType.Worker;
 public class WorkerController {
 
 	public enum Mode {
-		BUILD_FACTORIES, BUILD_ROCKETS, IDLE
+		BUILD_FACTORIES, BUILD_ROCKETS
 	}
+
 	public static int MAX_NUMBER_WORKERS;
 
 	static void moveWorker(Unit unit) {
@@ -26,7 +27,7 @@ public class WorkerController {
 				Utils.fleeFrom(unit, nearbyEnemy);
 			}
 
-			// 4. Try to build a building or rocket (if Karbonite exists)
+			// 4. Try to build a building or rocket (if Karbonite is enough)
 			switch (Utils.getMemory(unit).workerMode) {
 				case BUILD_FACTORIES: {
 					// Try to build factory
@@ -55,14 +56,13 @@ public class WorkerController {
 				harvesterMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.workerNav, false);
 			}
 
-			// 7. if not harvesting or this worker is assigned to a building, try to
-			// move towards our own factories. 
+			// 7. Try to move towards built factories
 			boolean factoryMoveResult = false;
-			int dMapValue = Player.factoryNav.getDijkstraMapValue(unit.location().mapLocation());
+			int dMapValue = Player.completedFactoryNav.getDijkstraMapValue(unit.location().mapLocation());
 			if (!harvesterMoveResult 
 					&& !builderMoveResult 
 					&& dMapValue >= Constants.SAFE_FACTORY_DISTANCE) {
-				factoryMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.factoryNav, false);
+				factoryMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.completedFactoryNav, false);
 			}
 
 			// 8. Try to move randomly

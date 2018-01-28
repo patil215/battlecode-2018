@@ -43,9 +43,11 @@ public class RangerController {
 				bestTargetScore = newScore;
 			}
 		}
+
 		if (target != null && unit.attackHeat() < Constants.MAX_ATTACK_HEAT) {
 			CombatUtils.attack(unit, target);
 		}
+
 		if (threat != null) {
 			Direction toMove = Utils.fleeFrom(unit, threat);
 			if (toMove != null && unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
