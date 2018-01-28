@@ -39,10 +39,10 @@ public class Player {
 	static Navigation factoryNav;
 
 	static HashMap<Integer, RobotMemory> robotMemory;
-	private static boolean seenEnemies = true;
+	public static boolean seenEnemies = true;
 	private static int stuckCounter;
 
-	private static Set<Point> getInitialEnemyUnitLocations() {
+	public static Set<Point> getInitialEnemyUnitLocations() {
 		VecUnit initialUnits = map.getInitial_units();
 		Set<Point> targets = new HashSet<>();
 		for (int i = 0; i < initialUnits.size(); i++) {
@@ -227,6 +227,7 @@ public class Player {
 	}
 
 	private static void determineIfClumping() {
+		/*
 		VecUnit starting = gc.startingMap(Planet.Earth).getInitial_units();
 		long minDist = Long.MAX_VALUE;
 		for (int outer = 0; outer < starting.size(); outer++) {
@@ -246,7 +247,8 @@ public class Player {
 			Constants.CLUMP_THRESHOLD = 125;
 		} else {
 			Constants.CLUMP_THRESHOLD = -1;
-		}
+		}*/
+		Constants.CLUMP_THRESHOLD = -1;
 	}
 
 	private static void initializeVariables() {
@@ -265,6 +267,7 @@ public class Player {
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
 		factoryNav = new Navigation(map, new HashSet<>());
+		determineMaxNumberOfWorkers();
 
 		initArmyMap();
 	}

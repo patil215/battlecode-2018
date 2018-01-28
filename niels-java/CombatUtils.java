@@ -21,19 +21,21 @@ public class CombatUtils {
 	private static HashMap<Unit, Long> markedEnemyHealth = new HashMap<>();
 	private static HashMap<Integer, Integer> rangerTargets = new HashMap<>();
 
-	static Navigation microNav;
+	static Navigation microNav = new Navigation(Player.map, new HashSet<>());
 
 	public static void initAtStartOfTurn() {
 		// Commented because we aren't using knights
 		
-		VecUnit foes = Player.gc.senseNearbyUnitsByTeam(new MapLocation(Player.gc.planet(), 1,1), Long.MAX_VALUE, Player.enemyTeam);
-		Set<Point> useless = new HashSet<>();
-		for (int i = 0; i < foes.size(); i++) {
-			MapLocation location = foes.get(i).location().mapLocation();
-			useless.add(new Point(location.getX(), location.getY()));
-		}
-		microNav = new Navigation(Player.map, useless, 10);
-		
+		if(CensusCounts.getUnitCount(UnitType.Knight) > 0) { 
+			microNav.clearTargets();
+			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(new MapLocation(Player.gc.planet(), 1,1), Long.MAX_VALUE, Player.enemyTeam);
+			Set<Point> useless = new HashSet<>();
+			for (int i = 0; i < foes.size(); i++) {
+				MapLocation location = foes.get(i).location().mapLocation();
+				microNav.addTarget(location);
+			}
+			microNav.recalculateDistanceMap();
+		}		
 	}
 
 	public static void cleanupAtEndOfTurn() {

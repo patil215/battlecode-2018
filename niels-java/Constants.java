@@ -29,6 +29,8 @@ public class Constants {
 	public static int ROCKET_LAUNCH_INTERVAL = 1;
 	public static int SAFE_FACTORY_DISTANCE = 4;
 
-	public static final int BEGINNING_KNIGHTS = 5;
-	public static final int TIME_BUFFER_MS = 300;
+	public static int BEGINNING_KNIGHTS = -1;
+	public static final int TIME_BUFFER_MS = 200;
+
+	public static final int MAX_RANGERS = 175; 
 }
