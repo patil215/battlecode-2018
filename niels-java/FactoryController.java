@@ -10,8 +10,12 @@ public class FactoryController {
 	}
 
 	public static void moveFactory(Unit unit) {
-		// Don't do anything if we're not built yet
 		if (unit.structureIsBuilt() == 0) {
+			// Remove us from the builder map if we have at least 4 workers around us
+			if (Utils.countNearbyWorkers(unit.location().mapLocation()) >= 4) {
+				Player.builderNav.removeTarget(unit.location().mapLocation());
+				Player.builderNav.recalculateDistanceMap();
+			}
 			return;
 		}
 

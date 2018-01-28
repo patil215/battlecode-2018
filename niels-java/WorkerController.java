@@ -15,6 +15,7 @@ public class WorkerController {
 			runMarsWorkerLogic(unit);
 			return;
 		}
+
 		if (!unit.location().isInGarrison()) {
 
 			// 1. Try to replicate
@@ -23,38 +24,28 @@ public class WorkerController {
 			}
 
 			// 2. Try to finish building a building
-			boolean buildingBlueprint = BuildUtils.tryToBuildBlueprints(unit);
+			int buildingResult = BuildUtils.tryToBuildBlueprints(unit);
+			if (buildingResult == 0) {
+				// Currently in process of building
+				// Harvesting and starting other stuff we should do. We shouldn't move or flee or anything.
+				startBuilding(unit);
+				Utils.tryAndHarvest(unit);
+				return;
+			}
 
-			if (Player.gc.round() > 700 && !Player.sentWorkerToMars) {
+			if (Player.gc.round() > Constants.SEND_WORKER_TO_MARS_ROUND && !Player.sentWorkerToMars) {
 				Player.sentWorkerToMars = Utils.tryAndGetIntoRocket(unit);;
 			}
+
 			// 3. Try to flee from enemies
 			boolean fleed = false;
-			if (!buildingBlueprint) {
-				Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
-				if (nearbyEnemy != null) {
-					fleed = Utils.tryAndFleeFrom(unit, nearbyEnemy);
-				}
+			Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
+			if (nearbyEnemy != null) {
+				fleed = Utils.tryAndFleeFrom(unit, nearbyEnemy);
 			}
 
 			// 4. Try to build a building or rocket (if Karbonite is enough)
-			switch (Utils.getMemory(unit).workerMode) {
-			case BUILD_FACTORIES: {
-				// Try to build factory
-				if (Player.gc.karbonite() >= Constants.FACTORY_COST) {
-					Utils.tryAndBuild(unit, UnitType.Factory);
-				}
-				break;
-			}
-
-			case BUILD_ROCKETS: {
-				// Try to build rocket
-				if (Player.gc.karbonite() >= Constants.ROCKET_COST) {
-					Utils.tryAndBuild(unit, UnitType.Rocket);
-				}
-				break;
-			}
-			}
+			startBuilding(unit);
 
 			// 5. Try to move using builder map
 			boolean builderMoveResult = false;
@@ -86,6 +77,26 @@ public class WorkerController {
 			Utils.tryAndHarvest(unit);
 		}
 
+	}
+
+	private static void startBuilding(Unit unit) {
+		switch (Utils.getMemory(unit).workerMode) {
+			case BUILD_FACTORIES: {
+				// Try to build factory
+				if (Player.gc.karbonite() >= Constants.FACTORY_COST) {
+					Utils.tryAndBuild(unit, UnitType.Factory);
+				}
+				break;
+			}
+
+			case BUILD_ROCKETS: {
+				// Try to build rocket
+				if (Player.gc.karbonite() >= Constants.ROCKET_COST) {
+					Utils.tryAndBuild(unit, UnitType.Rocket);
+				}
+				break;
+			}
+		}
 	}
 
 	private static void runMarsWorkerLogic(Unit unit) {
