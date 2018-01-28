@@ -49,10 +49,7 @@ public class RangerController {
 		}
 
 		if (threat != null) {
-			Direction toMove = Utils.fleeFrom(unit, threat);
-			if (toMove != null && unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT) {
-				Player.gc.moveRobot(unit.id(), toMove);
-			}
+			Utils.tryAndFleeFrom(unit, threat);
 		} else {
 			if (target == null) {
 				moveRecon(unit);
