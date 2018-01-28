@@ -141,14 +141,12 @@ public class Utils {
 		for (Direction direction : Direction.values()) {
 			MapLocation newLoc = workerLoc.add(direction);
 			if (Player.map.onMap(newLoc)) {
-				if (Player.gc.canHarvest(workerId, direction)) {
-					long karb = Player.gc.karboniteAt(newLoc);
-					if (karb > maxKarb) {
-						maxKarb = karb;
-						harvestDir = direction;
-						harvestLocation = newLoc;
-					}
-				} else {
+				long karb = Player.gc.karboniteAt(newLoc);
+				if (Player.gc.canHarvest(workerId, direction) && karb > maxKarb) {
+					maxKarb = karb;
+					harvestDir = direction;
+					harvestLocation = newLoc;
+				} else if (karb == 0) {
 					Player.workerNav.removeTarget(newLoc);
 				}
 			}
