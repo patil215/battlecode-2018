@@ -83,7 +83,9 @@ public class Utils {
 	private static void addBlueprint(Unit worker, UnitType type, Direction dir) {
 		MapLocation workerLoc = worker.location().mapLocation();
 		MapLocation blueprintLoc = workerLoc.add(dir);
-
+		if (WorkerController.MAX_NUMBER_WORKERS==10) {
+			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 45.0), 30);
+		}
 		// Assign number of knights if first factory
 		if (Constants.BEGINNING_KNIGHTS == -1) { 
 			int distance;
