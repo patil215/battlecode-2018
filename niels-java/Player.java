@@ -15,7 +15,6 @@ public class Player {
 	static Team friendlyTeam;
 	static Planet planet;
 	static PlanetMap map;
-	static boolean hasMadeBluePrintThisTurn;
 	static long reachableKarbonite;
 
 	// Initialized/updated once per turn
@@ -24,7 +23,8 @@ public class Player {
 	 * Note that this can mean they are slightly out of date if we spawn a unit on a
 	 * particular turn (since gc.units() would return that new unit immediately.
 	 * However, this shouldn't make much of a difference because units have an
-	 * initial cooldown, so they wouldn't be doing anything anyways.
+	 * initial cooldown, so they wouldn't be doing anything anyways. In cases it
+	 * matters, we end up updating them through calls to getUnits();
 	 */
 	static ArrayList<Unit> friendlyUnits;
 	static ArrayList<Unit> enemyUnits;
@@ -39,7 +39,7 @@ public class Player {
 	static Navigation factoryNav;
 
 	static HashMap<Integer, RobotMemory> robotMemory;
-	static boolean seenEnemies = true;
+	private static boolean seenEnemies = true;
 	private static int stuckCounter;
 
 	private static Set<Point> getInitialEnemyUnitLocations() {
@@ -106,9 +106,8 @@ public class Player {
 		return targets;
 	}
 
-	private static int getValueFromUnitType(UnitType type) {
-		// Lower is firster. Basically determines the order (by type) that units should
-		// execute
+	private static int getOrderFromUnitType(UnitType type) {
+		// Lower = firster. Determines order (by type) units should execute.
 		switch (type) {
 		case Knight:
 			return 0;
@@ -128,10 +127,11 @@ public class Player {
 		}
 	}
 
-	public static void getUnits(boolean sort) {
+	public static void getUnits(boolean sortFriendlyUnits) {
 		allUnits = new ArrayList<>();
 		friendlyUnits = new ArrayList<>();
 		enemyUnits = new ArrayList<>();
+
 		VecUnit units = gc.units();
 		for (int i = 0; i < units.size(); i++) {
 			Unit unit = units.get(i);
@@ -145,14 +145,14 @@ public class Player {
 
 		updateUnitStates(friendlyUnits);
 
-		if (sort) {
+		if (sortFriendlyUnits) {
 			// Sort friendly units so that they're processed in a way that coordinates the
 			// armies better
 			Collections.sort(friendlyUnits, (a, b) -> {
 				// Sorts in ascending order, so lower values should be better
 				if (a.unitType() != b.unitType()) {
-					int aTypeValue = getValueFromUnitType(a.unitType());
-					int bTypeValue = getValueFromUnitType(b.unitType());
+					int aTypeValue = getOrderFromUnitType(a.unitType());
+					int bTypeValue = getOrderFromUnitType(b.unitType());
 					return Integer.compare(aTypeValue, bTypeValue);
 				} else {
 					if (a.location().isInGarrison() && b.location().isInGarrison()) {
@@ -187,55 +187,46 @@ public class Player {
 		if (gc.round() == Constants.LIMIT_WORKER_REP_ROUND) {
 			WorkerController.MAX_NUMBER_WORKERS = 6;
 		}
-		Player.hasMadeBluePrintThisTurn = false;
 		getUnits(true);
 		CombatUtils.initAtStartOfTurn();
 		BuildUtils.findBestFactoryBuildLocations();
 	}
 
-	private static void finishTurn() {
-		moveNewlyCreatedUnits();
-
-		// TODO: Find better criteria for this
+	private static void eliminateUnitIfStuck() {
 		if (gc.planet() == Planet.Earth && Utils.stuck()) {
 			stuckCounter++;
 		} else {
 			stuckCounter = 0;
 		}
-		if (stuckCounter > Constants.AMOUNT_STUCK_BEFORE_KILL && gc.round() > 100 && friendlyUnits.size() > 1
+		if (stuckCounter > Constants.AMOUNT_STUCK_BEFORE_KILL
+				&& gc.round() > 100 && friendlyUnits.size() > 1
 				&& gc.planet() == Planet.Earth) {
 			gc.disintegrateUnit(Player.friendlyUnits.get((int) (Math.random() * friendlyUnits.size())).id());
 			stuckCounter = 0;
 		}
+	}
+
+	private static void finishTurn() {
+		moveNewlyCreatedUnits();
+		eliminateUnitIfStuck();
 
 		CombatUtils.cleanupAtEndOfTurn();
 		BuildUtils.cleanupAtEndOfTurn();
 
 		// Fix their stupid memory leak error
 		if (gc.round() > 0 && gc.round() % 10 == 0) {
-			long start = System.currentTimeMillis();
 			System.runFinalization();
 			System.gc();
-			long end = System.currentTimeMillis();
 		}
 
 		gc.nextTurn();
 	}
 
-	private static void initializeVariables() {
-		gc = new GameController();
-		planet = Player.gc.planet();
-		map = gc.startingMap(planet);
-		friendlyTeam = gc.team();
-		enemyTeam = Utils.getEnemyTeam();
-		robotMemory = new HashMap<>();
-		CensusCounts.resetCounts();
-		getUnits(false);
-		workerNav = new Navigation(map, getInitialKarboniteLocations());
-		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
-		factoryNav = new Navigation(map, new HashSet<>());
-		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 45), 20);
+	private static void determineMaxNumberOfWorkers() {
+		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 45), 16);
+	}
 
+	private static void determineIfClumping() {
 		VecUnit starting = gc.startingMap(Planet.Earth).getInitial_units();
 		long minDist = Long.MAX_VALUE;
 		for (int outer = 0; outer < starting.size(); outer++) {
@@ -256,6 +247,24 @@ public class Player {
 		} else {
 			Constants.CLUMP_THRESHOLD = -1;
 		}
+	}
+
+	private static void initializeVariables() {
+		gc = new GameController();
+		planet = Player.gc.planet();
+		map = gc.startingMap(planet);
+		friendlyTeam = gc.team();
+		enemyTeam = Utils.getEnemyTeam();
+		robotMemory = new HashMap<>();
+
+		CensusCounts.resetCounts();
+		getUnits(false);
+		determineMaxNumberOfWorkers();
+		determineIfClumping();
+
+		workerNav = new Navigation(map, getInitialKarboniteLocations());
+		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
+		factoryNav = new Navigation(map, new HashSet<>());
 
 		initArmyMap();
 	}

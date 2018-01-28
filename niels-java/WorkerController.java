@@ -31,7 +31,7 @@ public class WorkerController {
 				case BUILD_FACTORIES: {
 					// Try to build factory
 					if (Player.gc.karbonite() >= Constants.FACTORY_COST) {
-						Player.hasMadeBluePrintThisTurn = Utils.tryAndBuild(unit, UnitType.Factory);
+						Utils.tryAndBuild(unit, UnitType.Factory);
 					}
 					break;
 				}
