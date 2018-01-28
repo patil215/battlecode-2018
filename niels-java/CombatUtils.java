@@ -1,13 +1,15 @@
-import java.awt.Point;
+import bc.MapLocation;
+import bc.Unit;
+import bc.UnitType;
+import bc.VecUnit;
+
+import java.awt.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import bc.MapLocation;
-import bc.Unit;
-import bc.UnitType;
-import bc.VecUnit;
+import static bc.UnitType.Ranger;
 
 public class CombatUtils {
 	/**
@@ -46,7 +48,31 @@ public class CombatUtils {
 		return target.health();
 	}
 
-	private static long subScore(Unit target) {
+	private static long rangerSubscore(Unit target) {
+		long targetHealth = getTargetHealth(target);
+		if (targetHealth == 0) {
+			return Long.MAX_VALUE; // Make sure we don't "overkill" units
+		}
+
+		switch (target.unitType()) {
+			case Knight:
+				return targetHealth * 2;
+			case Ranger:
+				return targetHealth * 2;
+			case Healer:
+				return targetHealth * 3;
+			case Factory:
+				return targetHealth * 4;
+			case Worker:
+				return targetHealth * 5;
+			case Rocket:
+				return targetHealth * 6;
+			default:
+				return targetHealth;
+		}
+	}
+
+	private static long knightSubscore(Unit target) {
 		long targetHealth = getTargetHealth(target);
 		if (targetHealth == 0) {
 			return Long.MAX_VALUE; // Make sure we don't "overkill" units
@@ -78,7 +104,14 @@ public class CombatUtils {
 			return Long.MAX_VALUE;
 		}
 
-		return subScore(target);
+		switch (attacker.unitType()) {
+			case Ranger:
+				return rangerSubscore(target);
+			case Knight:
+				return knightSubscore(target);
+			default:
+				return knightSubscore(target);
+		}
 	}
 
 	public static void attack(Unit attacker, Unit target) {
@@ -114,7 +147,7 @@ public class CombatUtils {
 	}
 	
 	public static long assignRangerTargets() {
-		Collections.sort(Player.enemyUnits, (a, b) -> Long.compare(subScore(a), subScore(b)));
+		Collections.sort(Player.enemyUnits, (a, b) -> Long.compare(rangerSubscore(a), rangerSubscore(b)));
 
 
 		for (Unit foe : Player.enemyUnits) {
@@ -122,7 +155,7 @@ public class CombatUtils {
 		}
 
 		for (Unit friendly : Player.friendlyUnits) {
-			if (friendly.unitType() != UnitType.Ranger) {
+			if (friendly.unitType() != Ranger) {
 				continue;
 			}
 
