@@ -78,8 +78,23 @@ public class Utils {
 	}
 
 	private static void addBlueprint(Unit worker, UnitType type, Direction dir) {
+		MapLocation workerLoc = worker.location().mapLocation();
+		MapLocation blueprintLoc = workerLoc.add(dir);
+		if (Constants.BEGINNING_KNIGHTS == -1) { 
+			int distance = -1;
+			if(Player.seenEnemies) { 
+				System.out.println("army distance");
+				distance = Player.armyNav.getDijkstraMapValue(blueprintLoc);
+			} else {
+				Navigation enemyNav = new Navigation(Player.map, Player.getInitialEnemyUnitLocations()); 
+				distance = enemyNav.getDijkstraMapValue(blueprintLoc);
+			}
+			System.out.println("distance " + distance);
+			// Black magic 
+			Constants.BEGINNING_KNIGHTS = Math.max(0, 5 - (distance / 3));
+		}
 		Player.gc.blueprint(worker.id(), type, dir);
-		Player.builderNav.addTarget(worker.location().mapLocation().add(dir));
+		Player.builderNav.addTarget(workerLoc.add(dir));
 		Player.builderNav.recalculateDistanceMap();
 	}
 

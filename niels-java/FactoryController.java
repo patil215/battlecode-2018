@@ -41,12 +41,14 @@ public class FactoryController {
 				Player.gc.produceRobot(unit.id(), UnitType.Knight);
 				CensusCounts.incrementUnitCount(UnitType.Knight);
 				knightsProduced++;
-			} else if (CensusCounts.getUnitCount(UnitType.Ranger) < (((CensusCounts.getUnitCount(UnitType.Healer) + 1) *3))) {
-				Player.gc.produceRobot(unit.id(), UnitType.Ranger);
-				CensusCounts.incrementUnitCount(UnitType.Ranger);
-			} else {
-				Player.gc.produceRobot(unit.id(), UnitType.Healer);
-				CensusCounts.incrementUnitCount(UnitType.Healer);
+			} else if (CensusCounts.getUnitCount(UnitType.Ranger) < Constants.MAX_RANGERS) { 
+				if (CensusCounts.getUnitCount(UnitType.Ranger) < (((CensusCounts.getUnitCount(UnitType.Healer) + 1) *3))) {
+					Player.gc.produceRobot(unit.id(), UnitType.Ranger);
+					CensusCounts.incrementUnitCount(UnitType.Ranger);
+				} else {
+					Player.gc.produceRobot(unit.id(), UnitType.Healer);
+					CensusCounts.incrementUnitCount(UnitType.Healer);
+				}
 			}
 		}
 		Utils.tryAndUnload(unit);

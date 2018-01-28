@@ -162,6 +162,10 @@ public class Navigation {
 	public void removeTarget(MapLocation pos) {
 		targets.remove(new Point(pos.getX(), pos.getY()));
 	}
+
+	public void clearTargets() {
+		targets.clear();
+	}
 	
 	public Set<Point> getTargets() {
 		return targets;
