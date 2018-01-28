@@ -66,27 +66,7 @@ public class CombatUtils {
 	}
 
 	private static long knightSubscore(Unit target) {
-		long targetHealth = getTargetHealth(target);
-		if (targetHealth == 0) {
-			return Long.MAX_VALUE; // Make sure we don't "overkill" units
-		}
-
-		switch (target.unitType()) {
-			case Knight:
-				return targetHealth;
-			case Ranger:
-				return targetHealth;
-			case Healer:
-				return targetHealth;
-			case Factory:
-				return targetHealth;
-			case Worker:
-				return targetHealth;
-			case Rocket:
-				return targetHealth;
-			default:
-				return targetHealth;
-		}
+		return rangerSubscore(target);
 	}
 
 	/**
