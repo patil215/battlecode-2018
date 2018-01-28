@@ -78,7 +78,11 @@ public class Player {
 					continue;
 				}
 				MapLocation karbLocation = new MapLocation(planet, i, d);
-				karbonite += map.initialKarboniteAt(karbLocation);
+				long karboniteAtLoc = map.initialKarboniteAt(karbLocation);
+				karbonite += karboniteAtLoc;
+				if(karboniteAtLoc>0) {
+					karbLocs.add(new Point(karbLocation.getX(), karbLocation.getY()));
+				}
 			}
 		}
 		reachableKarbonite = karbonite / 3; // "Closer to us than enemy"

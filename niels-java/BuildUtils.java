@@ -113,7 +113,7 @@ public class BuildUtils {
 							&& distToEnemySpawnProposed == distToEnemySpawnBest) {
 						bestFactoryLocations.add(proposedLoc);
 					} else if (numSurroundingWorkersProposed > numSurroundingWorkersBest ||
-							(numSurroundingWorkersProposed == numSurroundingWorkersBest && distToEnemySpawnProposed > distToEnemySpawnBest)) {
+							(numSurroundingWorkersProposed == numSurroundingWorkersBest && distToEnemySpawnProposed < distToEnemySpawnBest)) {
 						bestFactoryLocations.clear();
 						bestFactoryLocations.add(proposedLoc);
 					}
