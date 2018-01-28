@@ -173,6 +173,12 @@ public class Player {
 						int bDijValue = Player.workerNav.getDijkstraMapValue(b.location().mapLocation());
 						return Integer.compare(aDijValue, bDijValue);
 					}
+					case Factory: {
+						// Sort factories by distance to enemy. This makes units default to spawning closer to enemy.
+						int aDijValue = Player.armyNav.getBuildingDijkstraMapValue(a.location().mapLocation());
+						int bDijValue = Player.armyNav.getBuildingDijkstraMapValue(b.location().mapLocation());
+						return Integer.compare(aDijValue, bDijValue);
+					}
 					}
 				}
 				return 0;

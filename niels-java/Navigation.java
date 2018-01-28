@@ -10,6 +10,7 @@ public class Navigation {
 	private final PlanetMap map;
 	private final Planet planet;
 	private Set<Point> targets;
+	private HashMap<Point, Integer> buildings; // Used to keep track of building distances
 	private int maxDistance;
 
 	public void printDistances() {
@@ -65,14 +66,14 @@ public class Navigation {
 			distances[target.x][target.y] = 0;
 			queue.add(new MapLocation(planet, target.x, target.y));
 		}
-		Set<Point> buildings = new HashSet<>();
+		buildings.clear();
 		for(int i = 0; i < Player.friendlyUnits.size(); i++) {
 			Unit unit = Player.friendlyUnits.get(i);
 			UnitType type = unit.unitType();
 			// TODO: go through factories
 			if(type == UnitType.Rocket || type == UnitType.Factory) {
 				MapLocation loc = unit.location().mapLocation();
-				buildings.add(new Point(loc.getX(), loc.getY()));
+				buildings.put(new Point(loc.getX(), loc.getY()), Integer.MAX_VALUE);
 			}
 		}
 		while (!queue.isEmpty()) {
@@ -90,13 +91,17 @@ public class Navigation {
 				if ((newX > -1 && newY > -1)
 						&& newX < distances.length
 						&& newY < distances[newX].length
-						&& distances[newX][newY] > curDistance + 1
-						&& !buildings.contains(new Point(newX, newY))
 						&& curDistance + 1 < maxDistance
 						&& map.onMap(newLocation)
 						&& map.isPassableTerrainAt(newLocation) == 1) {
-					distances[newX][newY] = curDistance + 1;
-					queue.add(newLocation);
+					Point proposedPoint = new Point(newX, newY);
+					if (buildings.containsKey(proposedPoint) && buildings.get(proposedPoint) > curDistance + 1) {
+						// Keep track of the building distances too
+						buildings.put(proposedPoint, curDistance + 1);
+					} else if (distances[newX][newY] > curDistance + 1) {
+						distances[newX][newY] = curDistance + 1;
+						queue.add(newLocation);
+					}
 				}
 			}
 		}
@@ -110,6 +115,7 @@ public class Navigation {
 		this.maxDistance = maxDistance;
 		this.distances = new int[(int) map.getWidth()][(int) map.getHeight()];
 		this.targets = targets;
+		this.buildings = new HashMap<>();
 		recalculateDistanceMap();
 	}
 
@@ -157,7 +163,15 @@ public class Navigation {
 		if (x >= -1 && y >= -1 && x < distances.length && y < distances[x].length) {
 			return distances[x][y];
 		}
-		return Integer.MIN_VALUE; // TODO this is probably bad
+		return Integer.MIN_VALUE; // TODO should this be max or min?
+	}
+
+	public int getBuildingDijkstraMapValue(MapLocation location) {
+		Point point = new Point(location.getX(), location.getY());
+		if (buildings.containsKey(point)) {
+			return buildings.get(point);
+		}
+		return Integer.MAX_VALUE; // TODO should this be max or min?
 	}
 
 	public void addTarget(MapLocation pos) {
