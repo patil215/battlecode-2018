@@ -5,8 +5,7 @@ import bc.bc;
 public class FactoryController {
 
 	public enum Mode {
-		PRODUCE,
-		IDLE
+		PRODUCE, IDLE
 	}
 
 	public static void moveFactory(Unit unit) {
@@ -16,14 +15,14 @@ public class FactoryController {
 		}
 
 		switch (Utils.getMemory(unit).factoryMode) {
-			case IDLE: {
-				Utils.tryAndUnload(unit);
-				break;
-			}
-			case PRODUCE: {
-				moveProduce(unit);
-				break;
-			}
+		case IDLE: {
+			Utils.tryAndUnload(unit);
+			break;
+		}
+		case PRODUCE: {
+			moveProduce(unit);
+			break;
+		}
 		}
 	}
 
@@ -33,7 +32,7 @@ public class FactoryController {
 			CensusCounts.incrementUnitCount(UnitType.Worker);
 		} else if (unit.isFactoryProducing() == 0 && Player.gc.karbonite() >= bc.bcUnitTypeFactoryCost(UnitType.Ranger)) {
 		//&& CensusCounts.getUnitCount(UnitType.Ranger) <= 10 && Player.gc.round() > 375) { // USED FOR LIMITING, REMEMBER TO TURN OFF
-			if (CensusCounts.getUnitCount(UnitType.Knight) < ((CensusCounts.getUnitCount(UnitType.Healer) + 1) * 3)) {
+			if (CensusCounts.getUnitCount(UnitType.Knight) < (((CensusCounts.getUnitCount(UnitType.Healer) + 1) *3))) {
 				Player.gc.produceRobot(unit.id(), UnitType.Knight);
 				CensusCounts.incrementUnitCount(UnitType.Knight);
 			} else {

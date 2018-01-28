@@ -233,27 +233,28 @@ public class Player {
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
 		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 45), 20);
-		
+
 		VecUnit starting = gc.startingMap(Planet.Earth).getInitial_units();
 		long minDist = Long.MAX_VALUE;
-		for(int outer = 0; outer < starting.size(); outer++) {
-			if(starting.get(outer).team() == Player.enemyTeam) {
+		for (int outer = 0; outer < starting.size(); outer++) {
+			if (starting.get(outer).team() == Player.enemyTeam) {
 				continue;
 			}
-			
-			for(int inner = 0; inner < starting.size(); inner++) {
-				if(starting.get(outer).team() == Player.friendlyTeam) {
+
+			for (int inner = 0; inner < starting.size(); inner++) {
+				if (starting.get(outer).team() == Player.friendlyTeam) {
 					continue;
 				}
-				minDist = Math.min(minDist, starting.get(outer).location().mapLocation().distanceSquaredTo(starting.get(inner).location().mapLocation()));
+				minDist = Math.min(minDist, starting.get(outer).location().mapLocation()
+						.distanceSquaredTo(starting.get(inner).location().mapLocation()));
 			}
 		}
-		if(minDist >= 800) {
+		if (minDist >= 800) {
 			Constants.CLUMP_THRESHOLD = 125;
 		} else {
 			Constants.CLUMP_THRESHOLD = -1;
 		}
-		
+
 		initArmyMap();
 	}
 
@@ -263,7 +264,7 @@ public class Player {
 
 		while (true) {
 			try {
-				if (gc.getTimeLeftMs() <= 100) {
+				if (gc.getTimeLeftMs() <= 200) {
 					finishTurn();
 					continue;
 				}
@@ -338,7 +339,9 @@ public class Player {
 			}
 
 			for (int index = 0; index < enemyUnits.size(); index++) {
-				armyNav.addTarget(enemyUnits.get(index).location().mapLocation());
+				if (!enemyUnits.get(index).location().isInGarrison()) {
+					armyNav.addTarget(enemyUnits.get(index).location().mapLocation());
+				}
 			}
 			if (Player.seenEnemies && enemyUnits.size() == 0) {
 				Player.seenEnemies = false;
