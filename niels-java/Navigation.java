@@ -22,6 +22,11 @@ public class Navigation {
 		}
 	}
 
+	// call recalculateDistanceMap
+	public void setThreshold(int threshold) { 
+		this.maxDistance = threshold;
+	}
+
 	private static final Map<Direction, Point> createDirToDispMap() {
 		EnumMap<Direction, Point> map = new EnumMap<Direction, Point>(Direction.class);
 		map.put(Direction.Northeast, new Point(1, 1));
