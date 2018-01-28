@@ -12,7 +12,7 @@ public class Constants {
 	public static final int DEFAULT_ROCKET_CAPACITY = 8;
 	public static final int UPGRADED_ROCKET_CAPACITY = 12;
 	
-	public static final int CLUMP_THRESHOLD = -1;
+	public static int CLUMP_THRESHOLD;
 
 	public static final int BUILDER_NAV_SIZE = 5;
 
