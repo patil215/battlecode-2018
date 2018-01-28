@@ -50,9 +50,10 @@ public class BuildUtils {
 	}
 
 	/**
-	 * Tries to build a blueprint. Returns true if it finds one and begins building.
+	 * Tries to build a blueprint. Returns -1 if no buildable blueprint was found, 0 if we successfully contributed to
+	 * building a blueprint, and 1 if we successfully finished building a blueprint.
 	 */
-	public static boolean tryToBuildBlueprints(Unit unit) {
+	public static int tryToBuildBlueprints(Unit unit) {
 		for (Unit blueprint : Player.blueprints) {
 			if (Player.gc.canBuild(unit.id(), blueprint.id()) && !isBuilt(blueprint)) {
 				Player.gc.build(unit.id(), blueprint.id());
@@ -74,11 +75,13 @@ public class BuildUtils {
 
 					Player.builderNav.removeTarget(blueprintLoc);
 					Player.builderNav.recalculateDistanceMap();
+					return 1;
+				} else {
+					return 0;
 				}
-				return true;
 			}
 		}
-		return false;
+		return -1;
 	}
 
 	public static void findBestFactoryBuildLocations() {
