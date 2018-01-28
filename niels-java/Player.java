@@ -298,6 +298,11 @@ public class Player {
 					armyNav = new Navigation(map, getInitialEnemyUnitLocations());
 				}
 
+				if (gc.round() == Constants.STOP_HARVESTING_KARB_GLOBALLY_ROUND) {
+					workerNav.setThreshold(Constants.KARB_SMALL_HARVEST_DISTANCE);
+					workerNav.recalculateDistanceMap();
+				}
+
 				CensusCounts.computeCensus(friendlyUnits);
 				moveUnits(friendlyUnits);
 

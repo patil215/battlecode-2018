@@ -39,4 +39,7 @@ public class Constants {
 	public static final int ARMY_MAP_RECALCULATE_INTERVAL = 3;
 
 	public static final int START_GETTING_INTO_ROCKETS_ROUND = 500;
+
+	public static final int STOP_HARVESTING_KARB_GLOBALLY_ROUND = 150;
+	public static final int KARB_SMALL_HARVEST_DISTANCE = 3;
 }

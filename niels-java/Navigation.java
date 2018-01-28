@@ -23,7 +23,7 @@ public class Navigation {
 	}
 
 	// call recalculateDistanceMap
-	public void setThreshold(int threshold) { 
+	public void setThreshold(int threshold) {
 		this.maxDistance = threshold;
 	}
 
