@@ -231,7 +231,8 @@ public class Player {
 	}
 
 	private static void determineMaxNumberOfWorkers() {
-		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 45.0), 30);
+		
+		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 45.0), 10);
 		System.out.println(WorkerController.MAX_NUMBER_WORKERS + " workers will be created.");
 	}
 

@@ -19,7 +19,7 @@ public class WorkerController {
 		if (!unit.location().isInGarrison()) {
 
 			// 1. Try to replicate
-			if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS) {
+			if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS){
 				Utils.tryAndReplicate(unit);
 			}
 
