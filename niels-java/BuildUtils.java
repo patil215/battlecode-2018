@@ -3,13 +3,13 @@ import bc.MapLocation;
 import bc.Unit;
 import bc.UnitType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
+import java.awt.Point;
 
 public class BuildUtils {
 	/**
-	 Used to keep track of structure health increasing after being marked.
-	 */
+		Used to keep track of structure health increasing after being marked.
+		*/
 	private static HashMap<Unit, Long> markedStructureHealth = new HashMap<>();
 	private static ArrayList<MapLocation> bestFactoryLocations = new ArrayList<>();
 
@@ -20,7 +20,7 @@ public class BuildUtils {
 	public static boolean isBuilt(Unit target) {
 		long health = getStructureHealth(target);
 		return (target.unitType() == UnitType.Rocket && health >= Constants.MAX_ROCKET_HEALTH)
-				|| (target.unitType() == UnitType.Factory && health >= Constants.MAX_FACTORY_HEALTH);
+			|| (target.unitType() == UnitType.Factory && health >= Constants.MAX_FACTORY_HEALTH);
 	}
 
 	public static long getStructureHealth(Unit target) {
@@ -29,6 +29,25 @@ public class BuildUtils {
 			return markedStructureHealth.get(target);
 		}
 		return target.health();
+	}
+
+	private static void clearDestroyedFactories() {
+		// avoid ConcurrentModificationException
+		List<Point> oldTargets = new ArrayList<>(Player.factoryNav.getTargets());
+		for(Point target : oldTargets) {
+			MapLocation targetLoc = 
+				new MapLocation(Player.planet, target.x, target.y);
+			if(Player.gc.hasUnitAtLocation(targetLoc)) {
+				Unit building = Player.gc.senseUnitAtLocation(targetLoc);
+				if(building.team() != Player.friendlyTeam 
+						&& building.unitType() != UnitType.Factory 
+						&& building.unitType() != UnitType.Rocket) {
+					Player.factoryNav.removeTarget(targetLoc);
+				}
+			} else { 
+				Player.factoryNav.removeTarget(targetLoc);
+			}
+		}
 	}
 
 	/**
@@ -47,7 +66,14 @@ public class BuildUtils {
 				}
 
 				if (isBuilt(blueprint)) {
-					Player.builderNav.removeTarget(blueprint.location().mapLocation());
+					Player.robotMemory.get(unit.id()).searchForKarbonite = false;
+					MapLocation blueprintLoc = blueprint.location().mapLocation();
+
+					clearDestroyedFactories();
+					Player.factoryNav.addTarget(blueprintLoc);
+					Player.factoryNav.recalculateDistanceMap();
+
+					Player.builderNav.removeTarget(blueprintLoc);
 					Player.builderNav.recalculateDistanceMap();
 				}
 				return true;
@@ -91,7 +117,7 @@ public class BuildUtils {
 							(numSurroundingWorkersProposed == numSurroundingWorkersBest && distToEnemySpawnProposed > distToEnemySpawnBest)) {
 						bestFactoryLocations.clear();
 						bestFactoryLocations.add(proposedLoc);
-					}
+							}
 				}
 			}
 		}

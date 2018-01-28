@@ -27,4 +27,5 @@ public class Constants {
 	public static int LIMIT_WORKER_REP_ROUND = 300;
 
 	public static int ROCKET_LAUNCH_INTERVAL = 1;
+	public static int SAFE_FACTORY_DISTANCE = 4;
 }

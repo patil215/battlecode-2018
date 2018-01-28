@@ -127,8 +127,8 @@ public class Utils {
 		} else { 
 			Player.gc.replicate(worker.id(), bestDir);
 		}
-    	CensusCounts.incrementUnitCount(Worker);
-    	return true;
+			CensusCounts.incrementUnitCount(Worker);
+			return true;
 	}
 
 	public static boolean tryAndHarvest(Unit worker) {

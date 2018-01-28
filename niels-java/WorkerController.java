@@ -49,18 +49,29 @@ public class WorkerController {
 			boolean builderMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.builderNav, false);
 
 			// 6. Try to move using Karbonite map
+			boolean shouldHarvest = Player.robotMemory.get(unit.id()).searchForKarbonite;
 			boolean harvesterMoveResult = false;
-			if (!builderMoveResult) {
+			if (!builderMoveResult && shouldHarvest) {
 				harvesterMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.workerNav, false);
 			}
 
-			// 7. Try to move randomly
+			// 7. if not harvesting or this worker is assigned to a building, try to
+			// move towards our own factories. 
+			boolean factoryMoveResult = false;
+			int dMapValue = Player.factoryNav.getDijkstraMapValue(unit.location().mapLocation());
+			if (!harvesterMoveResult 
+					&& !builderMoveResult 
+					&& dMapValue >= Constants.SAFE_FACTORY_DISTANCE) {
+				factoryMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.factoryNav, false);
+			}
+
+			// 8. Try to move randomly
 			boolean randomMoveResult = false;
-			if (!harvesterMoveResult && !builderMoveResult) {
+			if(!factoryMoveResult && !harvesterMoveResult && !builderMoveResult) {
 				randomMoveResult = Utils.moveRandom(unit);
 			}
 
-			// 8. Harvest any Karbonite in adjacent squares
+			// 9. Harvest any Karbonite in adjacent squares
 			Utils.tryAndHarvest(unit);
 		}
 

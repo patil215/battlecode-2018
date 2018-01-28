@@ -36,6 +36,7 @@ public class Player {
 	static Navigation workerNav;
 	static Navigation armyNav;
 	static Navigation builderNav;
+	static Navigation factoryNav;
 
 	static HashMap<Integer, RobotMemory> robotMemory;
 	static boolean seenEnemies = true;
@@ -232,6 +233,7 @@ public class Player {
 		getUnits(false);
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
+		factoryNav = new Navigation(map, new HashSet<>());
 		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 45), 20);
 		
 		VecUnit starting = gc.startingMap(Planet.Earth).getInitial_units();
