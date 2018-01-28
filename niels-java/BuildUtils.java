@@ -39,8 +39,8 @@ public class BuildUtils {
 			if(Player.gc.hasUnitAtLocation(targetLoc)) {
 				Unit building = Player.gc.senseUnitAtLocation(targetLoc);
 				if (building.team() != Player.friendlyTeam
-						&& building.unitType() != UnitType.Factory 
-						&& building.unitType() != UnitType.Rocket) {
+						|| (building.unitType() != UnitType.Factory 
+						&& building.unitType() != UnitType.Rocket)) {
 					Player.completedFactoryNav.removeTarget(targetLoc);
 				}
 			} else { 
