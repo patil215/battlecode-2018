@@ -103,7 +103,16 @@ public class WorkerController {
 		if (Player.gc.round() > 750) {
 			Utils.tryAndReplicate(unit);
 		}
-		Utils.moveRandom(unit);
+
+		boolean fleed = false;
+		Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
+		if (nearbyEnemy != null) {
+			fleed = Utils.tryAndFleeFrom(unit, nearbyEnemy);
+		}
+
+		if (!fleed) {
+			Utils.moveRandom(unit);
+		}
 		Utils.tryAndHarvest(unit);
 	}
 }
