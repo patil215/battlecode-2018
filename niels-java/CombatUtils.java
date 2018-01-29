@@ -1,7 +1,6 @@
 import bc.MapLocation;
 import bc.Unit;
 import bc.UnitType;
-import bc.VecUnit;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,10 +19,11 @@ public class CombatUtils {
 	public static void initAtStartOfTurn() {
 		if (CensusCounts.getUnitCount(UnitType.Knight) > 0) {
 			microNav.clearTargets();
-			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(new MapLocation(Player.gc.planet(), 1, 1), Long.MAX_VALUE, Player.enemyTeam);
-			for (int i = 0; i < foes.size(); i++) {
-				MapLocation location = foes.get(i).location().mapLocation();
-				microNav.addTarget(location);
+			for (Unit foe : Player.enemyUnits) {
+				if (foe.location().isOnPlanet(Player.planet) && !foe.location().isInGarrison()) {
+					MapLocation location = foe.location().mapLocation();
+					microNav.addTarget(location);
+				}
 			}
 			microNav.recalculateDistanceMap();
 		}		

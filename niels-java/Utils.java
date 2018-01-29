@@ -309,8 +309,7 @@ private static Direction getFleeDirection(Unit self, Unit foe) {
 	 * passed in unit's line of sight.
 	 */
 	public static Unit getMostDangerousNearbyEnemy(Unit unit) {
-		VecUnit nearbyEnemies = Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(),
-				Player.enemyTeam);
+		VecUnit nearbyEnemies = NearbyUnitsCache.getEnemiesInVisionRange(unit);
 
 		Unit threat = null;
 		long bestThreatDistance = Long.MAX_VALUE;

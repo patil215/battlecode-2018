@@ -13,8 +13,7 @@ public class RangerController {
 				Utils.tryAndGetIntoRocket(unit);
 			}
 
-			VecUnit foes = Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(),
-					Player.enemyTeam);
+			VecUnit foes = NearbyUnitsCache.getEnemiesInVisionRange(unit);
 			if (foes.size() > 0) {
 				combatMicro(unit, foes);
 			} else {

@@ -1,10 +1,9 @@
-import bc.Direction;
-import bc.MapLocation;
-import bc.Unit;
-import bc.UnitType;
+import bc.*;
 
-import java.util.*;
-import java.awt.Point;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class BuildUtils {
 	/**
@@ -87,6 +86,9 @@ public class BuildUtils {
 	public static void findBestFactoryBuildLocations() {
 		bestFactoryLocations = new ArrayList<>();
 
+		// First consider only workers that have no enemies in their sight range
+		ArrayList<Unit> workersWithNoEnemies = new ArrayList<>();
+		ArrayList<Unit> allWorkers = new ArrayList<>();
 		for (Unit unit : Player.friendlyUnits) {
 			if (unit.unitType() != UnitType.Worker) {
 				continue;
@@ -96,6 +98,30 @@ public class BuildUtils {
 				continue;
 			}
 
+			VecUnit nearbyEnemies = NearbyUnitsCache.getEnemiesInVisionRange(unit);
+			int numberMilitaryUnits = 0;
+			for (int i = 0; i < nearbyEnemies.size(); i++) {
+				Unit foe = nearbyEnemies.get(i);
+				if (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight
+						|| foe.unitType() == UnitType.Ranger || foe.unitType() == UnitType.Factory) {
+					numberMilitaryUnits++;
+				}
+			}
+			if (numberMilitaryUnits == 0) {
+				workersWithNoEnemies.add(unit);
+			}
+			allWorkers.add(unit);
+		}
+
+		boolean wasAbleToFindValidWorker = addToBestFactoryLocations(workersWithNoEnemies);
+		if (!wasAbleToFindValidWorker) {
+			addToBestFactoryLocations(allWorkers);
+		}
+
+	}
+
+	private static boolean addToBestFactoryLocations(ArrayList<Unit> workersToConsider) {
+		for (Unit unit : workersToConsider) {
 			MapLocation unitLocation = unit.location().mapLocation();
 			for (Direction dir : Direction.values()) {
 				MapLocation proposedLoc = unitLocation.add(dir);
@@ -123,6 +149,7 @@ public class BuildUtils {
 				}
 			}
 		}
+		return bestFactoryLocations.size() > 0;
 	}
 
 	public static ArrayList<MapLocation> getBestFactoryLocations() {

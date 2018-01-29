@@ -1,4 +1,3 @@
-import bc.Direction;
 import bc.Planet;
 import bc.Unit;
 import bc.VecUnit;
@@ -22,8 +21,7 @@ public class KnightController {
 			Utils.tryAndGetIntoRocket(unit);
 		}
 
-		VecUnit foes =
-				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.visionRange(), Player.enemyTeam);
+		VecUnit foes = NearbyUnitsCache.getEnemiesInVisionRange(unit);
 		if (foes.size() > 0) {
 			combatMicro(unit);
 		} else {
