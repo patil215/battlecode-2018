@@ -6,4 +6,5 @@ public class RobotMemory {
 	public FactoryController.Mode factoryMode = FactoryController.Mode.PRODUCE;
 	public RangerController.Mode rangerMode = RangerController.Mode.FIGHT_ENEMIES;
 	public boolean searchForKarbonite = true;
+	public int timeSinceLastMoveOrShoot = 0;
 }

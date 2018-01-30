@@ -1,7 +1,9 @@
-import bc.*;
+import bc.Unit;
+import bc.UnitType;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import static bc.UnitType.Rocket;
