@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-import static bc.UnitType.Worker;
+import static bc.UnitType.*;
 
 public class Utils {
 	/**
@@ -29,7 +29,7 @@ public class Utils {
 		return count;
 	}
 
-	static int countNearbyWorkers(MapLocation loc) {
+	static int countNearbyFriendlyWorkers(MapLocation loc) {
 		VecUnit workers = Player.gc.senseNearbyUnitsByType(loc, DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS,
 				Worker);
 		int numOurTeam = 0;
@@ -39,6 +39,16 @@ public class Utils {
 			}
 		}
 		return numOurTeam;
+	}
+
+	static int countNearbyFriendlyMilitaryAndFactories(MapLocation loc) {
+		return countSurrounding(loc, proposedLoc -> {
+			if (!Player.gc.hasUnitAtLocation(loc)) {
+				return false;
+			}
+			Unit unit = Player.gc.senseUnitAtLocation(loc);
+			return unit.unitType() == Factory || Utils.isMilitary(unit);
+		});
 	}
 
 	static int countNearbyUnderConstruction(MapLocation loc) {
@@ -69,10 +79,12 @@ public class Utils {
 
 	public static boolean tryAndBuild(Unit worker, UnitType type) {
 		ArrayList<MapLocation> bestFactoryLocations = BuildUtils.getBestFactoryLocations();
+		ArrayList<MapLocation> bestRocketLocations = BuildUtils.getBestRocketLocations();
+		ArrayList<MapLocation> listToCheck = type == Factory ? bestFactoryLocations : bestRocketLocations;
+
 		for (Direction dir : Direction.values()) {
 			MapLocation proposedLocation = worker.location().mapLocation().add(dir);
-			if (locInList(bestFactoryLocations, proposedLocation)
-					&& Player.gc.canBlueprint(worker.id(), type, dir)) {
+			if (locInList(listToCheck, proposedLocation) && Player.gc.canBlueprint(worker.id(), type, dir)) {
 				addBlueprint(worker, type, dir);
 				return true;
 			}
@@ -83,6 +95,8 @@ public class Utils {
 	private static void addBlueprint(Unit worker, UnitType type, Direction dir) {
 		MapLocation workerLoc = worker.location().mapLocation();
 		MapLocation blueprintLoc = workerLoc.add(dir);
+
+		// TODO refactor this
 		if (WorkerController.MAX_NUMBER_WORKERS==10) {
 			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 50.0), 15);
 		} else if(WorkerController.MAX_NUMBER_WORKERS == 15) {
@@ -92,6 +106,7 @@ public class Utils {
 		} else if(WorkerController.MAX_NUMBER_WORKERS == 25) {
 			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 50.0), 30);
 		}
+
 		// Assign number of knights if first factory
 		if (Constants.BEGINNING_KNIGHTS == -1) { 
 			int distance;
@@ -366,5 +381,10 @@ private static Direction getFleeDirection(Unit self, Unit foe) {
 			minDist = Math.min(minDist, mapLocation.distanceSquaredTo(spawnUnit.location().mapLocation()));
 		}
 		return minDist;
+	}
+
+	private static boolean isMilitary(Unit unit) {
+		UnitType type = unit.unitType();
+		return type == Ranger || type == Healer || type == Knight || type == Mage;
 	}
 }

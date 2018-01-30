@@ -198,7 +198,7 @@ public class Player {
 		getUnits(true);
 		CombatUtils.initAtStartOfTurn();
 		NearbyUnitsCache.initializeAtStartOfTurn();
-		BuildUtils.findBestFactoryBuildLocations();
+		BuildUtils.initAtStartOfTurn();
 	}
 
 	private static void eliminateUnitIfStuck() {

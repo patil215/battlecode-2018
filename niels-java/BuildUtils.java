@@ -11,6 +11,7 @@ public class BuildUtils {
 	*/
 	private static HashMap<Unit, Long> markedStructureHealth = new HashMap<>();
 	private static ArrayList<MapLocation> bestFactoryLocations = new ArrayList<>();
+	private static ArrayList<MapLocation> bestRocketLocations = new ArrayList<>();
 
 	public static void cleanupAtEndOfTurn() {
 		markedStructureHealth = new HashMap<>();
@@ -83,12 +84,11 @@ public class BuildUtils {
 		return -1;
 	}
 
-	public static void findBestFactoryBuildLocations() {
-		bestFactoryLocations = new ArrayList<>();
-
-		// First consider only workers that have no enemies in their sight range
-		ArrayList<Unit> workersWithNoEnemies = new ArrayList<>();
-		ArrayList<Unit> allWorkers = new ArrayList<>();
+	/**
+	 * Adds workers to the provided arraylist parameters (i.e. these are mutated). Pass in an empty arraylist, get a
+	 * full one.
+	 */
+	private static void populateWorkers(ArrayList<Unit> allWorkers, ArrayList<Unit> workersWithNoEnemies) {
 		for (Unit unit : Player.friendlyUnits) {
 			if (unit.unitType() != UnitType.Worker) {
 				continue;
@@ -112,6 +112,15 @@ public class BuildUtils {
 			}
 			allWorkers.add(unit);
 		}
+	}
+
+	public static void findBestFactoryBuildLocations() {
+		bestFactoryLocations = new ArrayList<>();
+
+		// First consider only workers that have no enemies in their sight range
+		ArrayList<Unit> workersWithNoEnemies = new ArrayList<>();
+		ArrayList<Unit> allWorkers = new ArrayList<>();
+		populateWorkers(allWorkers, workersWithNoEnemies);
 
 		boolean wasAbleToFindValidWorker = addToBestFactoryLocations(workersWithNoEnemies);
 		if (!wasAbleToFindValidWorker) {
@@ -133,9 +142,9 @@ public class BuildUtils {
 				if (bestFactoryLocations.isEmpty()) {
 					bestFactoryLocations.add(proposedLoc);
 				} else {
-					int numSurroundingWorkersProposed = Utils.countNearbyWorkers(proposedLoc);
+					int numSurroundingWorkersProposed = Utils.countNearbyFriendlyWorkers(proposedLoc);
 					long distToEnemySpawnProposed = Utils.getDistanceToClosestEnemySpawn(proposedLoc);
-					int numSurroundingWorkersBest = Utils.countNearbyWorkers(bestFactoryLocations.get(0));
+					int numSurroundingWorkersBest = Utils.countNearbyFriendlyWorkers(bestFactoryLocations.get(0));
 					long distToEnemySpawnBest = Utils.getDistanceToClosestEnemySpawn(bestFactoryLocations.get(0));
 
 					if (numSurroundingWorkersProposed == numSurroundingWorkersBest
@@ -154,5 +163,63 @@ public class BuildUtils {
 
 	public static ArrayList<MapLocation> getBestFactoryLocations() {
 		return bestFactoryLocations;
+	}
+
+	public static void findBestRocketBuildLocations() {
+
+		bestRocketLocations = new ArrayList<>();
+
+		// First consider only workers that have no enemies in their sight range
+		ArrayList<Unit> workersWithNoEnemies = new ArrayList<>();
+		ArrayList<Unit> allWorkers = new ArrayList<>();
+		populateWorkers(allWorkers, workersWithNoEnemies);
+
+		boolean wasAbleToFindValidWorker = addToBestRocketLocations(workersWithNoEnemies);
+		if (!wasAbleToFindValidWorker) {
+			addToBestRocketLocations(allWorkers);
+		}
+	}
+
+	private static boolean addToBestRocketLocations(ArrayList<Unit> workersToConsider) {
+		for (Unit unit : workersToConsider) {
+			MapLocation unitLocation = unit.location().mapLocation();
+			for (Direction dir : Direction.values()) {
+				MapLocation proposedLoc = unitLocation.add(dir);
+
+				if (!Player.map.onMap(proposedLoc) || Player.map.isPassableTerrainAt(proposedLoc) == 0) {
+					continue;
+				}
+
+				if (bestRocketLocations.isEmpty()) {
+					bestRocketLocations.add(proposedLoc);
+				} else {
+					int numSurroundingMilitaryProposed = Utils.countNearbyFriendlyMilitaryAndFactories(proposedLoc);
+					long distToEnemySpawnProposed = Utils.getDistanceToClosestEnemySpawn(proposedLoc);
+					int numSurroundingMilitaryBest = Utils.countNearbyFriendlyMilitaryAndFactories(bestRocketLocations.get(0));
+					long distToEnemySpawnBest = Utils.getDistanceToClosestEnemySpawn(bestRocketLocations.get(0));
+
+					if (numSurroundingMilitaryProposed == numSurroundingMilitaryBest
+							&& distToEnemySpawnProposed == distToEnemySpawnBest) {
+						bestRocketLocations.add(proposedLoc);
+					} else if (numSurroundingMilitaryProposed > numSurroundingMilitaryBest ||
+							(numSurroundingMilitaryProposed == numSurroundingMilitaryBest && distToEnemySpawnProposed < distToEnemySpawnBest)) {
+						bestRocketLocations.clear();
+						bestRocketLocations.add(proposedLoc);
+					}
+				}
+			}
+		}
+		return bestFactoryLocations.size() > 0;
+	}
+
+	public static ArrayList<MapLocation> getBestRocketLocations() {
+		return bestRocketLocations;
+	}
+
+	public static void initAtStartOfTurn() {
+		findBestFactoryBuildLocations();
+		if (Player.gc.round() > Constants.START_BUILDING_ROCKETS_ROUND) {
+			findBestRocketBuildLocations();
+		}
 	}
 }
