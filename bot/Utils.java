@@ -174,7 +174,9 @@ public class Utils {
 		}
 
 		CensusCounts.incrementUnitCount(Worker);
-		CensusCounts.workersOnEarth++;
+		if (worker.location().isOnPlanet(Planet.Earth)) {
+			CensusCounts.workersOnEarth++;
+		}
 		return true;
 	}
 
