@@ -378,6 +378,11 @@ public class Utils {
 		return type == Ranger || type == Healer || type == Knight || type == Mage;
 	}
 
+
+	public static boolean targetsExist(Navigation nav, MapLocation loc) {
+		return nav.getDijkstraMapValue(loc) != Integer.MAX_VALUE;
+	}
+
 	public static void tryAndRepair(Unit unit) {
 		for (Direction dir : Direction.values()) {
 			if (dir == Direction.Center) {
@@ -394,4 +399,5 @@ public class Utils {
 			}
 		}
 	}
+  
 }

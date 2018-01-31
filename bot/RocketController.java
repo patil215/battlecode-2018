@@ -64,7 +64,7 @@ public class RocketController {
 		}
 	}
 
-	static List<Point> validLocations = new ArrayList<>();
+	public static List<Point> validLocations = new ArrayList<>();
 	static Set<Point> validLocationsSet = new HashSet<>();
 	static Set<Point> landingLocations = new HashSet<>();
 
