@@ -42,7 +42,11 @@ public class Player {
 	static HashMap<Integer, RobotMemory> robotMemory;
 
 	static boolean seenEnemies = true;
+	static int unitsCantReachEnemy = 0;
+	static int unitsOnMap = 0;
 	private static int stuckCounter;
+	private static ArrayDeque<UnitType> researchOrder;
+	static boolean researchRocketsEarly = false;
 
 	public static Set<Point> getInitialEnemyUnitLocations() {
 		Set<Point> targets = new HashSet<>();
@@ -81,7 +85,7 @@ public class Player {
 				MapLocation karbLocation = new MapLocation(planet, i, d);
 				long karboniteAtLoc = map.initialKarboniteAt(karbLocation);
 				karbonite += karboniteAtLoc;
-				if(karboniteAtLoc > 0) {
+				if (karboniteAtLoc > 0) {
 					karbLocs.add(new Point(karbLocation.getX(), karbLocation.getY()));
 				}
 			}
@@ -163,24 +167,25 @@ public class Player {
 						}
 
 						switch (a.unitType()) {
-							case Ranger: // Fall through
-							case Knight: // Fall through
-							case Healer: {
-								int aDijValue = Player.armyNav.getDijkstraMapValue(a.location().mapLocation());
-								int bDijValue = Player.armyNav.getDijkstraMapValue(b.location().mapLocation());
-								return Integer.compare(aDijValue, bDijValue); // Lower is better
-							}
-							case Worker: {
-								int aDijValue = Player.workerNav.getDijkstraMapValue(a.location().mapLocation());
-								int bDijValue = Player.workerNav.getDijkstraMapValue(b.location().mapLocation());
-								return Integer.compare(aDijValue, bDijValue);
-							}
-							case Factory: {
-								// Sort factories by distance to enemy. This makes units default to spawning closer to enemy.
-								int aDijValue = Player.armyNav.getBuildingDijkstraMapValue(a.location().mapLocation());
-								int bDijValue = Player.armyNav.getBuildingDijkstraMapValue(b.location().mapLocation());
-								return Integer.compare(aDijValue, bDijValue);
-							}
+						case Ranger: // Fall through
+						case Knight: // Fall through
+						case Healer: {
+							int aDijValue = Player.armyNav.getDijkstraMapValue(a.location().mapLocation());
+							int bDijValue = Player.armyNav.getDijkstraMapValue(b.location().mapLocation());
+							return Integer.compare(aDijValue, bDijValue); // Lower is better
+						}
+						case Worker: {
+							int aDijValue = Player.workerNav.getDijkstraMapValue(a.location().mapLocation());
+							int bDijValue = Player.workerNav.getDijkstraMapValue(b.location().mapLocation());
+							return Integer.compare(aDijValue, bDijValue);
+						}
+						case Factory: {
+							// Sort factories by distance to enemy. This makes units default to spawning
+							// closer to enemy.
+							int aDijValue = Player.armyNav.getBuildingDijkstraMapValue(a.location().mapLocation());
+							int bDijValue = Player.armyNav.getBuildingDijkstraMapValue(b.location().mapLocation());
+							return Integer.compare(aDijValue, bDijValue);
+						}
 						}
 					}
 					return 0;
@@ -199,6 +204,37 @@ public class Player {
 		CombatUtils.initAtStartOfTurn();
 		NearbyUnitsCache.initializeAtStartOfTurn();
 		BuildUtils.initAtStartOfTurn();
+		updateResearchQueue();
+	}
+	
+	private static void initResearchQueue() {
+		researchOrder = new ArrayDeque<UnitType>();
+		researchOrder.add(Worker); // Worker 1 complete round 25
+		researchOrder.add(Ranger); // Ranger 1 complete round 50
+		researchOrder.add(Healer); // Healer 1 complete round 75
+		researchOrder.add(Healer); // Healer 2 complete round 175
+		researchOrder.add(Healer); // Healer 3 complete round 275
+		researchOrder.add(Ranger); // Ranger 2 complete round 375
+		researchOrder.add(Rocket); // Rocket 1 complete round 450
+		researchOrder.add(Rocket); // Rocket 2 complete round 550
+		researchOrder.add(Rocket); // Rocket 3 complete round 650// Remember to update the
+									// Utils.getMaxRocketCapacity if Rocket III timing is // changed
+		researchOrder.add(Ranger); // Ranger 3 complete round 850 (this is useless but might throw other team off)
+
+	}
+
+	private static void updateResearchQueue() {
+		if(gc.researchInfo().queue().size() > 0) {
+			return;
+		}
+		if(Player.researchRocketsEarly && gc.researchInfo().getLevel(Rocket) == 0) {
+			gc.queueResearch(Rocket);
+			Player.researchOrder.remove(Rocket);
+			Constants.START_BUILDING_ROCKETS_ROUND = gc.round() + 50;
+			Constants.START_GETTING_INTO_ROCKETS_ROUND = gc.round() + 50;
+		} else if(!researchOrder.isEmpty()){
+			gc.queueResearch(researchOrder.pop());
+		}
 	}
 
 	private static void countStuckWorkers() {
@@ -251,7 +287,7 @@ public class Player {
 
 		if (gc.getTimeLeftMs() > Constants.TIME_BUFFER_MS) {
 			countStuckWorkers();
-			//countAndKillStuckUnits(3);
+			// countAndKillStuckUnits(3);
 		}
 
 		CombatUtils.cleanupAtEndOfTurn();
@@ -267,32 +303,12 @@ public class Player {
 	}
 
 	private static void determineMaxNumberOfWorkers() {
-		// IF YOU CHANGE THE 10 HERE, YOU NEED TO CHANGE THE SOFT CAPPING. BE VERY CAREFUL.
+		// IF YOU CHANGE THE 10 HERE, YOU NEED TO CHANGE THE SOFT CAPPING. BE VERY
+		// CAREFUL.
 		WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 50.0), 10);
 	}
 
 	private static void determineIfClumping() {
-		/*
-		VecUnit starting = gc.startingMap(Planet.Earth).getInitial_units();
-		long minDist = Long.MAX_VALUE;
-		for (int outer = 0; outer < starting.size(); outer++) {
-			if (starting.get(outer).team() == Player.enemyTeam) {
-				continue;
-			}
-
-			for (int inner = 0; inner < starting.size(); inner++) {
-				if (starting.get(outer).team() == Player.friendlyTeam) {
-					continue;
-				}
-				minDist = Math.min(minDist, starting.get(outer).location().mapLocation()
-						.distanceSquaredTo(starting.get(inner).location().mapLocation()));
-			}
-		}
-		if (minDist >= 800) {
-			Constants.CLUMP_THRESHOLD = 125;
-		} else {
-			Constants.CLUMP_THRESHOLD = -1;
-		}*/
 		Constants.CLUMP_THRESHOLD = -1;
 	}
 
@@ -319,12 +335,12 @@ public class Player {
 
 		determineMaxNumberOfWorkers();
 		initArmyMap();
+		initResearchQueue();
 	}
 
 	public static void main(String[] args) {
 		initializeVariables();
 		RocketController.setup();
-		setupResearchQueue();
 
 		while (true) {
 			try {
@@ -350,6 +366,11 @@ public class Player {
 				CensusCounts.computeCensus(friendlyUnits);
 				// CombatUtils.tryToOneShotWithRangers(); Doesn't work well
 				moveUnits(friendlyUnits);
+				if (unitsCantReachEnemy == unitsOnMap && gc.round() < Constants.START_GETTING_INTO_ROCKETS_ROUND) {
+					setupEarlyRockets();
+				}
+				unitsCantReachEnemy = 0;
+				unitsOnMap = 0;
 
 				// Periodically update karbonite locations
 				if (gc.round() % Constants.KARBONITE_MAP_RECALCULATE_INTERVAL == 0 && planet == Planet.Earth) {
@@ -369,6 +390,10 @@ public class Player {
 				gc.nextTurn();
 			}
 		}
+	}
+
+	private static void setupEarlyRockets() {
+		researchRocketsEarly = true;
 	}
 
 	private static void moveNewlyCreatedUnits() {
@@ -414,7 +439,7 @@ public class Player {
 			for (Unit unit : enemyUnits) {
 				Location enemyLoc = unit.location();
 
-				if(enemyLoc.isOnPlanet(planet)) {
+				if (enemyLoc.isOnPlanet(planet)) {
 					armyNav.addTarget(enemyLoc.mapLocation());
 				}
 			}
@@ -430,19 +455,6 @@ public class Player {
 
 			armyNav.recalculateDistanceMap();
 		}
-	}
-
-	private static void setupResearchQueue() {
-		gc.queueResearch(Worker); // Worker 1 complete round 25
-		gc.queueResearch(Ranger); // Ranger 1 complete round 50
-		gc.queueResearch(Healer); // Healer 1 complete round 75
-		gc.queueResearch(Healer); // Healer 2 complete round 175
-		gc.queueResearch(Healer); // Healer 3 complete round 275
-		gc.queueResearch(Ranger); // Ranger 2 complete round 375
-		gc.queueResearch(Rocket); // Rocket 1 complete round 450
-		gc.queueResearch(Rocket); // Rocket 2 complete round 550
-		gc.queueResearch(Rocket); // Rocket 3 complete round 650// Remember to update the Utils.getMaxRocketCapacity if Rocket III timing is // changed
-		gc.queueResearch(Ranger); // Ranger 3 complete round 850 (this is useless but might throw other team off)
 	}
 
 	private static void updateUnitStates(ArrayList<Unit> units) {
@@ -533,6 +545,12 @@ public class Player {
 
 	private static void moveUnits(ArrayList<Unit> units) {
 		for (Unit unit : units) {
+			if (unit.location().isOnPlanet(planet)) {
+				if (armyNav.getDijkstraMapValue(unit.location().mapLocation()) != Integer.MAX_VALUE) {
+					unitsCantReachEnemy++;
+				}
+				unitsOnMap++;
+			}
 			moveUnit(unit);
 		}
 	}
