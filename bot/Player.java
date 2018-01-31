@@ -368,6 +368,12 @@ public class Player {
 				}
 
 				CensusCounts.computeCensus(friendlyUnits);
+
+				if (CensusCounts.getUnitCount(Factory) >= 3) {
+					Constants.START_BUILDING_ROCKETS_ROUND = gc.round();
+					Constants.START_GETTING_INTO_ROCKETS_ROUND = gc.round();
+				}
+
 				// CombatUtils.tryToOneShotWithRangers(); Doesn't work well
 				moveUnits(friendlyUnits);
 
@@ -454,10 +460,9 @@ public class Player {
 
 	private static void setupResearchQueue() {
 		if (shouldBuildEarlyRockets()) {
-			System.out.println("Building early rockets!");
 			researchRocketsEarly = true;
-			Constants.START_BUILDING_ROCKETS_ROUND = 75;
-			Constants.START_GETTING_INTO_ROCKETS_ROUND = 100;
+			Constants.START_BUILDING_ROCKETS_ROUND = 300;
+			Constants.START_GETTING_INTO_ROCKETS_ROUND = 300;
 			gc.queueResearch(Worker);
 			gc.queueResearch(Rocket);
 			gc.queueResearch(Ranger);

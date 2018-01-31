@@ -94,6 +94,9 @@ public class RangerController {
 		// Try to shoot at enemies we have seen first
 		for (Unit enemy : Player.enemyUnits) {
 			if (CombatUtils.getTargetHealth(enemy) > CombatUtils.getNumberSnipersAimedAt(enemy) * unit.damage()) {
+				if (enemy.location().isInGarrison()) {
+					continue;
+				}
 				MapLocation loc = enemy.location().mapLocation();
 				if (Player.gc.canBeginSnipe(id, loc)) {
 					Player.gc.beginSnipe(id, loc);
