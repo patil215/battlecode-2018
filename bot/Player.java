@@ -69,7 +69,7 @@ public class Player {
 	/**
 	 * Runs a weighted breadth-first search in order to find reachable karbonite.
 	 */
-	private static Set<Point> getInitialKarboniteLocations() {
+	private static Set<Point> getWorthwhileKarboniteLocations() {
 		long karbonite = 0;
 		Navigation karbNav = new Navigation(map, getInitialAllyUnitLocations());
 		Set<Point> karbLocs = new HashSet<>();
@@ -78,6 +78,13 @@ public class Player {
 				if (karbNav.distances[i][d] == Integer.MAX_VALUE) {
 					continue;
 				}
+				long ourDistance = karbNav.distances[i][d];
+				long theirDistance = armyNav.distances[i][d]; // Works because armyNav is set to initialSpawnLocs
+				if ((0.6 * ourDistance) > theirDistance) {
+					// Not worthwhile, too close relative to them than to us
+					continue;
+				}
+
 				MapLocation karbLocation = new MapLocation(planet, i, d);
 				long karboniteAtLoc = map.initialKarboniteAt(karbLocation);
 				karbonite += karboniteAtLoc;
@@ -321,12 +328,12 @@ public class Player {
 		getUnits(false, false);
 		determineIfClumping();
 
-		workerNav = new Navigation(map, getInitialKarboniteLocations());
+		initArmyMap();
 		builderNav = new Navigation(map, new HashSet<>(), Constants.BUILDER_NAV_SIZE);
+		workerNav = new Navigation(map, getWorthwhileKarboniteLocations());
 		completedFactoryNav = new Navigation(map, new HashSet<>());
 
 		determineMaxNumberOfWorkers();
-		initArmyMap();
 	}
 
 	public static void main(String[] args) {
