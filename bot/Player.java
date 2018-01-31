@@ -19,6 +19,8 @@ public class Player {
 	static ArrayList<Unit> initialUnits;
 	static boolean sentWorkerToMars = false;
 
+
+
 	// Initialized/updated once per turn
 	/**
 	 * These variables are used to minimize calls to gc.units() and gc.myUnits().
@@ -38,6 +40,7 @@ public class Player {
 	static Navigation armyNav;
 	static Navigation builderNav;
 	static Navigation completedFactoryNav;
+	static Navigation unitInitialLocationsNav;
 
 	static HashMap<Integer, RobotMemory> robotMemory;
 
@@ -597,5 +600,63 @@ public class Player {
 		} else {
 			armyNav = new Navigation(map, getInitialEnemyUnitLocations());
 		}
+	}
+	private static int countInaccessible(int xStart, int yStart, int dx, int dy, long mapWidth, long mapHeight, boolean[][] accessibleGrid) {
+		for(int newX = xStart + dx, newY = yStart + dy, result = 1;
+			newX >= 0 && newY >= 0 && newX < mapWidth && newY < mapHeight;
+			newX += dx, newY += dy, result++) {
+			if (!accessibleGrid[newX][newY]) {
+				return result;
+			}
+		}
+		return Integer.MAX_VALUE;
+	}
+
+	private static boolean shouldBuildEarlyRockets() {
+		unitInitialLocationsNav = new Navigation(map, getInitialAllyUnitLocations());
+
+		boolean[][] goodAccessibilityGrid = new boolean[(int) map.getWidth()][(int) map.getHeight()];
+		boolean[][] badAccessibilityGrid = new boolean[(int) map.getWidth()][(int) map.getHeight()];
+
+		long width = map.getWidth();
+		long height = map.getHeight();
+
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				if (armyNav.distances[x][y] == Integer.MAX_VALUE) {
+					badAccessibilityGrid[x][y] = false;
+				} else {
+					badAccessibilityGrid[x][y] = true;
+				}
+				if(unitInitialLocationsNav.distances[x][y] == Integer.MAX_VALUE) {
+					goodAccessibilityGrid[x][y] = false;
+				} else {
+					goodAccessibilityGrid[x][y] = true;
+				}
+			}
+		}
+
+		long smallestBridgeDistance = Integer.MAX_VALUE;
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				if (!goodAccessibilityGrid[x][y] && !badAccessibilityGrid[x][y]) {
+					long leftGoodDist = countInaccessible(x, y, -1, 0, width, height, goodAccessibilityGrid);
+					long rightGoodDist = countInaccessible(x, y, 1, 0, width, height, goodAccessibilityGrid);
+					long upGoodDist = countInaccessible(x, y, 0, 1, width, height, goodAccessibilityGrid);
+					long downGoodDist = countInaccessible(x, y, 0, -1, width, height, goodAccessibilityGrid);
+
+					long leftBadDist = countInaccessible(x, y, -1, 0, width, height, badAccessibilityGrid);
+					long rightBadDist = countInaccessible(x, y, 1, 0, width, height, badAccessibilityGrid);
+					long upBadDist = countInaccessible(x, y, 0, 1, width, height, badAccessibilityGrid);
+					long downBadDist = countInaccessible(x, y, 0, -1, width, height, badAccessibilityGrid);
+					smallestBridgeDistance = Math.min(smallestBridgeDistance, leftBadDist + rightGoodDist + 1);
+					smallestBridgeDistance = Math.min(smallestBridgeDistance, leftGoodDist + rightBadDist + 1);
+					smallestBridgeDistance = Math.min(smallestBridgeDistance, upGoodDist + downBadDist + 1);
+					smallestBridgeDistance = Math.min(smallestBridgeDistance, upBadDist + downGoodDist + 1);
+				}
+			}
+		}
+
+		return smallestBridgeDistance >= 7;
 	}
 }
