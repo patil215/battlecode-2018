@@ -13,8 +13,10 @@ public class Constants {
 	public static final int UPGRADED_ROCKET_CAPACITY = 12;
 	public static final long ROCKET_CAPACITY_UPGRADE_ROUND = 650;
 	public static final int KNIGHT_MICRO_NAV_MAXDIST = 10;
-	public static final long SEND_WORKER_TO_MARS_ROUND = 700;
+	public static final long SEND_WORKER_TO_MARS_ROUND = START_BUILDING_ROCKETS_ROUND;
+	public static final long REPLICATE_ON_MARS_ROUND = 740;
 	public static final int KILL_AFTER_USELESS_THRESHOLD = 10;
+	public static final int MAX_UNITS_TO_KILL = 2;
 
 	public static int CLUMP_THRESHOLD;
 

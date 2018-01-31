@@ -33,10 +33,12 @@ public class FactoryController {
 
 	private static void moveProduce(Unit unit) {
 		boolean isProducing = unit.isFactoryProducing() == 1;
-		if (CensusCounts.getUnitCount(UnitType.Worker) <= 1 && !isProducing
+
+		if (CensusCounts.workersOnEarth <= 1 && !isProducing
 				&& Player.gc.karbonite() >= bc.bcUnitTypeFactoryCost(UnitType.Worker)) {
 			Player.gc.produceRobot(unit.id(), UnitType.Worker);
 			CensusCounts.incrementUnitCount(UnitType.Worker);
+			CensusCounts.workersOnEarth++;
 		} else if (!isProducing && Player.gc.karbonite() >= bc.bcUnitTypeFactoryCost(UnitType.Ranger)) {
 			// && CensusCounts.getUnitCount(UnitType.Ranger) <= 10 && Player.gc.round() >
 			// 375) { // USED FOR LIMITING, REMEMBER TO TURN OFF

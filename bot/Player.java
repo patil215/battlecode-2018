@@ -201,6 +201,23 @@ public class Player {
 		BuildUtils.initAtStartOfTurn();
 	}
 
+	private static void countStuckWorkers() {
+		for (Unit unit : friendlyUnits) {
+			unit = Player.gc.unit(unit.id());
+
+			if (unit.unitType() != Worker) {
+				continue;
+			}
+
+			if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT && unit.abilityHeat() < Constants.MAX_ABILITY_HEAT) {
+				Utils.getMemory(unit).timeSinceLastMeaningfulAction++;
+			} else {
+				Utils.getMemory(unit).timeSinceLastMeaningfulAction = 0;
+			}
+		}
+
+	}
+
 	private static void countAndKillStuckUnits(int maxUnitsToKill) {
 		int numKilled = 0;
 		for (Unit unit : friendlyUnits) {
@@ -210,12 +227,12 @@ public class Player {
 			}
 			if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT && unit.attackHeat() < Constants.MAX_ATTACK_HEAT) {
 				// TODO might not kill healers when needed
-				Utils.getMemory(unit).timeSinceLastMoveOrShoot++;
+				Utils.getMemory(unit).timeSinceLastMeaningfulAction++;
 			} else {
-				Utils.getMemory(unit).timeSinceLastMoveOrShoot = 0;
+				Utils.getMemory(unit).timeSinceLastMeaningfulAction = 0;
 			}
 
-			if (Utils.getMemory(unit).timeSinceLastMoveOrShoot >= Constants.KILL_AFTER_USELESS_THRESHOLD) {
+			if (Utils.getMemory(unit).timeSinceLastMeaningfulAction >= Constants.KILL_AFTER_USELESS_THRESHOLD) {
 				try {
 					// Player.gc.disintegrateUnit(unit.id());
 					numKilled++;
@@ -233,6 +250,7 @@ public class Player {
 		moveNewlyCreatedUnits();
 
 		if (gc.getTimeLeftMs() > Constants.TIME_BUFFER_MS) {
+			countStuckWorkers();
 			//countAndKillStuckUnits(3);
 		}
 
@@ -324,7 +342,7 @@ public class Player {
 					armyNav = new Navigation(map, getInitialEnemyUnitLocations());
 				}
 
-				if (gc.round() == Constants.STOP_HARVESTING_KARB_GLOBALLY_ROUND) {
+				if (gc.round() == Constants.STOP_HARVESTING_KARB_GLOBALLY_ROUND && planet == Planet.Earth) {
 					workerNav.setThreshold(Constants.KARB_SMALL_HARVEST_DISTANCE);
 					workerNav.recalculateDistanceMap();
 				}
@@ -334,7 +352,13 @@ public class Player {
 				moveUnits(friendlyUnits);
 
 				// Periodically update karbonite locations
-				if (gc.round() % Constants.KARBONITE_MAP_RECALCULATE_INTERVAL == 0) {
+				if (gc.round() % Constants.KARBONITE_MAP_RECALCULATE_INTERVAL == 0 && planet == Planet.Earth) {
+					workerNav.recalculateDistanceMap();
+				}
+
+				// Reupdate worker nav on Mars
+				if (planet == Planet.Mars && gc.asteroidPattern().hasAsteroid(gc.round())) {
+					workerNav.addTarget(gc.asteroidPattern().asteroid(gc.round()).getLocation());
 					workerNav.recalculateDistanceMap();
 				}
 

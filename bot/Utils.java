@@ -175,6 +175,7 @@ public class Utils {
 		}
 
 		CensusCounts.incrementUnitCount(Worker);
+		CensusCounts.workersOnEarth++;
 		return true;
 	}
 

@@ -1,9 +1,9 @@
+import bc.Planet;
 import bc.Unit;
 import bc.UnitType;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 
 import static bc.UnitType.Rocket;
@@ -14,6 +14,8 @@ public class CensusCounts {
 	private static Map<WorkerController.Mode, Integer> workerModeCounts = new EnumMap<>(WorkerController.Mode.class);
 	private static Map<FactoryController.Mode, Integer> factoryModeCounts = new EnumMap<>(FactoryController.Mode.class);
 	private static Map<RangerController.Mode, Integer> rangerModeCounts  = new EnumMap<>(RangerController.Mode.class);
+	public static int workersOnEarth = 0;
+	public static int numberUnitsKilled = 0;
 
 	public static void computeCensus(ArrayList<Unit> units) {
 		resetCounts();
@@ -33,6 +35,9 @@ public class CensusCounts {
 			switch (unit.unitType()) {
 				case Worker: {
 					CensusCounts.incrementWorkerModeCount(Utils.getMemory(unit).workerMode);
+					if (unit.location().isOnPlanet(Planet.Earth)) {
+						workersOnEarth++;
+					}
 					break;
 				}
 
@@ -66,6 +71,8 @@ public class CensusCounts {
 		for (RangerController.Mode mode : RangerController.Mode.values()) {
 			rangerModeCounts.put(mode, 0);
 		}
+
+		workersOnEarth = 0;
 	}
 
 	public static void incrementUnitCount(UnitType type) {

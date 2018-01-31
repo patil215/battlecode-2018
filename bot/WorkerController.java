@@ -18,6 +18,31 @@ public class WorkerController {
 
 		if (!unit.location().isInGarrison()) {
 
+			// 0. Kill units if we're stuck and immediately place rocket
+			if (Utils.getMemory(unit).timeSinceLastMeaningfulAction >= Constants.AMOUNT_STUCK_BEFORE_KILL
+					&& CensusCounts.numberUnitsKilled < Constants.MAX_UNITS_TO_KILL
+					&& Player.gc.karbonite() >= Constants.ROCKET_COST
+					&& Player.gc.round() > Constants.START_BUILDING_ROCKETS_ROUND) {
+				for (Direction dir : Direction.values()) {
+					if (dir == Direction.Center) {
+						continue; // Don't kill ourselves lmfao
+					}
+
+					MapLocation unitLocation = unit.location().mapLocation().add(dir);
+					if (Player.gc.hasUnitAtLocation(unitLocation)) {
+						Unit allyUnit = Player.gc.senseUnitAtLocation(unitLocation);
+						if (allyUnit.team() == Player.friendlyTeam && Utils.isMilitary(allyUnit)) {
+							// Disintegrate unit
+							Player.gc.disintegrateUnit(allyUnit.id());
+							CensusCounts.numberUnitsKilled++;
+							// Start building rocket here
+							Utils.tryAndBuild(unit, UnitType.Rocket);
+							break;
+						}
+					}
+				}
+			}
+
 			// 1. Try to replicate
 			if (CensusCounts.getUnitCount(Worker) < MAX_NUMBER_WORKERS) {
 				Utils.tryAndReplicate(unit);
@@ -33,7 +58,9 @@ public class WorkerController {
 				return;
 			}
 
-			if (Player.gc.round() > Constants.SEND_WORKER_TO_MARS_ROUND && !Player.sentWorkerToMars) {
+			// 2.5 Get into rocket
+			if ((Player.gc.round() > Constants.SEND_WORKER_TO_MARS_ROUND && !Player.sentWorkerToMars)
+					|| Player.gc.round() == 749) {
 				Player.sentWorkerToMars = Utils.tryAndGetIntoRocket(unit);;
 			}
 
@@ -100,19 +127,30 @@ public class WorkerController {
 	}
 
 	private static void runMarsWorkerLogic(Unit unit) {
-		if (Player.gc.round() > 750) {
+		// 1. Try to replicate
+		if (Player.gc.round() > Constants.REPLICATE_ON_MARS_ROUND) {
 			Utils.tryAndReplicate(unit);
 		}
 
+		// 2. Try to flee
 		boolean fleed = false;
 		Unit nearbyEnemy = Utils.getMostDangerousNearbyEnemy(unit);
 		if (nearbyEnemy != null) {
 			fleed = Utils.tryAndFleeFrom(unit, nearbyEnemy);
 		}
 
+		// 3. Try to move to Karbonite
+		boolean harvesterMoveResult = false;
 		if (!fleed) {
+			harvesterMoveResult = Utils.tryToMoveAccordingToDijkstraMap(unit, Player.workerNav, false);
+		}
+
+		// 4. Move randomly
+		if (!fleed && !harvesterMoveResult) {
 			Utils.moveRandom(unit);
 		}
+
+		// 5. Harvest any Karbonite in adjacent squares
 		Utils.tryAndHarvest(unit);
 	}
 }
