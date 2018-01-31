@@ -54,5 +54,22 @@ public class RangerController {
 				moveRecon(unit);
 			}
 		}
+		
+		if(target != null) {
+			return;
+		}
+		
+		for (int index = 0; index < foes.size(); index++) {
+			Unit foe = foes.get(index);
+			long newScore = CombatUtils.targetScore(unit, foe);
+			if (newScore < bestTargetScore) {
+				target = foe;
+				bestTargetScore = newScore;
+			}
+		}
+		
+		if (target != null && unit.attackHeat() < Constants.MAX_ATTACK_HEAT && !CombatUtils.hasTriedToOneShot(unit)) {
+			CombatUtils.attack(unit, target);
+		}
 	}
 }
