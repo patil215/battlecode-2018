@@ -1,9 +1,10 @@
 import bc.MapLocation;
 import bc.Unit;
 import bc.UnitType;
+import bc.VecUnit;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class CombatUtils {
 	/**
@@ -13,6 +14,8 @@ public class CombatUtils {
 	Accordingly, these changes should be cached and taken into account.
 	 */
 	private static HashMap<Unit, Long> markedEnemyHealth = new HashMap<>();
+
+	private static HashMap<Unit, Unit> preferredRangerTargets = new HashMap<>();
 
 	static Navigation microNav = new Navigation(Player.map, new HashSet<>(), Constants.KNIGHT_MICRO_NAV_MAXDIST);
 
@@ -118,5 +121,79 @@ public class CombatUtils {
 		} else {
 			markedEnemyHealth.put(target, target.health() - attacker.damage());
 		}
+	}
+
+
+	public static void tryToOneShotWithRangers() {
+		long start = System.currentTimeMillis();
+
+		preferredRangerTargets.clear();
+
+		List<Unit> friendlyRangers = Player.friendlyUnits.stream()
+				.filter(unit -> (unit.unitType() == UnitType.Ranger && unit.location().isOnPlanet(Player.planet)
+						&& !unit.location().isInGarrison())).collect(Collectors.toList());
+
+		HashMap<Unit, ArrayList<Unit>> enemyToFriendlyRangers = new HashMap<>();
+
+		// Use cache, but reverse it so that enemies are used
+		for (Unit friendly : friendlyRangers) {
+			VecUnit enemies = NearbyUnitsCache.getEnemiesInVisionRange(friendly);
+			for (int i = 0; i < enemies.size(); i++) {
+				Unit enemy = enemies.get(i);
+				if (enemyToFriendlyRangers.containsKey(enemy)) {
+					enemyToFriendlyRangers.get(enemy).add(friendly);
+				} else {
+					ArrayList<Unit> list = new ArrayList<>();
+					list.add(friendly);
+					enemyToFriendlyRangers.put(enemy, list);
+
+				}
+			}
+		}
+
+		ArrayList<Unit> enemyUnits = new ArrayList<>(enemyToFriendlyRangers.keySet());
+
+		//Collections.shuffle(enemyUnits); // We go in random order to try to maximize optimality
+		Collections.sort(enemyUnits, (o1, o2) ->
+				Long.compare(CombatUtils.getTargetHealth(o1), CombatUtils.getTargetHealth(o2)));
+
+		for (Unit enemy : enemyUnits) {
+			List<Unit> friendliesInRange = enemyToFriendlyRangers.get(enemy);
+			friendliesInRange = friendliesInRange.stream().filter(friendly ->
+					(!preferredRangerTargets.containsKey(friendly)
+							&& friendly.attackHeat() < Constants.MAX_ATTACK_HEAT
+							&& Player.gc.canAttack(friendly.id(), enemy.id()))).collect(Collectors.toList());
+
+			// If we can't one shot this unit, skip it, and let it be assigned normally.
+			// Also skip if we're not really getting the benefit of collaborative one-shotting (i.e. the list of
+			// friendlies is only 1).
+			System.out.println(enemyToFriendlyRangers.size() + " enemies being considered");
+			System.out.println(friendliesInRange.size() + " friendlies in range");
+			if (friendliesInRange.size() < 2 ||
+					CombatUtils.getTargetHealth(enemy) > friendliesInRange.size() * friendliesInRange.get(0).damage()) {
+				continue;
+			}
+
+			// Sort by distance and assign in order of distance
+			Collections.sort(friendliesInRange, (a, b) ->
+					Long.compare(enemy.location().mapLocation().distanceSquaredTo(a.location().mapLocation()),
+							enemy.location().mapLocation().distanceSquaredTo(b.location().mapLocation())));
+
+			int index = 0;
+			while (CombatUtils.getTargetHealth(enemy) > 0 && index < friendliesInRange.size()) {
+				Unit friendly = friendliesInRange.get(index);
+				preferredRangerTargets.put(friendliesInRange.get(index), enemy);
+				System.out.println("Assigning " + friendly.id() + " to one-shot " + enemy.id());
+				// TODO it might not be safe to just call attack here...
+				CombatUtils.attack(friendly, enemy);
+				index++;
+			}
+		}
+		long end = System.currentTimeMillis();
+		System.out.println("Took " + (end - start) + " milliseconds.");
+	}
+
+	public static boolean hasTriedToOneShot(Unit unit) {
+		return preferredRangerTargets.containsKey(unit);
 	}
 }

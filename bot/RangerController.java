@@ -43,7 +43,7 @@ public class RangerController {
 			}
 		}
 
-		if (target != null && unit.attackHeat() < Constants.MAX_ATTACK_HEAT) {
+		if (target != null && unit.attackHeat() < Constants.MAX_ATTACK_HEAT && !CombatUtils.hasTriedToOneShot(unit)) {
 			CombatUtils.attack(unit, target);
 		}
 

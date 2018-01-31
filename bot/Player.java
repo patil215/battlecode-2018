@@ -329,6 +329,7 @@ public class Player {
 				}
 
 				CensusCounts.computeCensus(friendlyUnits);
+				// CombatUtils.tryToOneShotWithRangers(); Doesn't work well
 				moveUnits(friendlyUnits);
 
 				// Periodically update karbonite locations

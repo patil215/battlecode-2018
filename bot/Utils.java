@@ -374,7 +374,7 @@ private static Direction getFleeDirection(Unit self, Unit foe) {
 		return minDist;
 	}
 
-	private static boolean isMilitary(Unit unit) {
+	public static boolean isMilitary(Unit unit) {
 		UnitType type = unit.unitType();
 		return type == Ranger || type == Healer || type == Knight || type == Mage;
 	}

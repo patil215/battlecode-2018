@@ -44,4 +44,6 @@ public class Constants {
 
 	public static final int STOP_HARVESTING_KARB_GLOBALLY_ROUND = 150;
 	public static final int KARB_SMALL_HARVEST_DISTANCE = 3;
+
+	public static final int RANGER_DAMAGE = 30;
 }
