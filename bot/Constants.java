@@ -3,7 +3,6 @@ public class Constants {
 	public static final int MAX_ABILITY_HEAT = 10;
 	public static final int MAX_ATTACK_HEAT = 10;
 
-	public static final int START_BUILDING_ROCKETS_ROUND = 501;
 
 	public static final int RANGER_COST = 40;
 	public static final int ROCKET_COST = 150;
@@ -40,8 +39,10 @@ public class Constants {
 	public static final int KARBONITE_MAP_RECALCULATE_INTERVAL = 3;
 	public static final int ARMY_MAP_RECALCULATE_INTERVAL = 3;
 
-	public static final int START_GETTING_INTO_ROCKETS_ROUND = 500;
+	public final int START_GETTING_INTO_ROCKETS_ROUND = 500;
+	public final int START_BUILDING_ROCKETS_ROUND = 501;
 
 	public static final int STOP_HARVESTING_KARB_GLOBALLY_ROUND = 150;
 	public static final int KARB_SMALL_HARVEST_DISTANCE = 3;
+	public static final int RANGER_SHOOT_DISTANCE = 50;
 }

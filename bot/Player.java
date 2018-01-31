@@ -42,6 +42,8 @@ public class Player {
 	static HashMap<Integer, RobotMemory> robotMemory;
 
 	static boolean seenEnemies = true;
+	static int unitsCantReachEnemy = 0;
+	static int unitsOnMap = 0;
 	private static int stuckCounter;
 
 	public static Set<Point> getInitialEnemyUnitLocations() {
@@ -331,6 +333,12 @@ public class Player {
 
 				CensusCounts.computeCensus(friendlyUnits);
 				moveUnits(friendlyUnits);
+				if(unitsCantReachEnemy == unitsOnMap
+						&& gc.round() < Constants.START_GETTING_INTO_ROCKETS_ROUND) {
+					setupEarlyRockets();
+				}
+				unitsCantReachEnemy = 0;
+				unitsOnMap = 0;
 
 				// Periodically update karbonite locations
 				if (gc.round() % Constants.KARBONITE_MAP_RECALCULATE_INTERVAL == 0) {
@@ -344,6 +352,12 @@ public class Player {
 				gc.nextTurn();
 			}
 		}
+	}
+
+	private static void setupEarlyRockets() {
+		Constants.START_GETTING_INTO_ROCKETS_ROUND = gc.round() + 50;
+		Constants.START_BUILDING_ROCKETS_ROUND = Constants.START_GETTING_INTO_ROCKETS_ROUND + 1;
+
 	}
 
 	private static void moveNewlyCreatedUnits() {
@@ -508,6 +522,12 @@ public class Player {
 
 	private static void moveUnits(ArrayList<Unit> units) {
 		for (Unit unit : units) {
+			if(unit.location().isOnPlanet(planet)) {
+				if(armyNav.getDijkstraMapValue(unit.location().mapLocation()) {
+					unitsCantReachEnemy++;
+				}
+				unitsOnMap++;
+			}
 			moveUnit(unit);
 		}
 	}
