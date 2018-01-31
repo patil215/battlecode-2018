@@ -125,7 +125,7 @@ public class Player {
 		}
 	}
 
-	public static void getUnits(boolean sortFriendlyUnits) {
+	public static void getUnits(boolean sortFriendlyUnits, boolean sortEnemyUnits) {
 		allUnits = new ArrayList<>();
 		friendlyUnits = new ArrayList<>();
 		enemyUnits = new ArrayList<>();
@@ -189,13 +189,21 @@ public class Player {
 
 			}
 		}
+
+		// Sort by fraction of health from highest to lowest, which helps our snipers
+		if (sortEnemyUnits) try {
+			Collections.sort(enemyUnits, (a, b) ->
+					Double.compare((b.health() / (double) b.maxHealth()), (a.health() / (double) a.maxHealth())));
+		} catch (Exception e) {
+
+		}
 	}
 
 	private static void beginTurn() {
 		if (gc.round() == Constants.LIMIT_WORKER_REP_ROUND) {
 			WorkerController.MAX_NUMBER_WORKERS = Math.min(4, WorkerController.MAX_NUMBER_WORKERS);
 		}
-		getUnits(true);
+		getUnits(true, true);
 		CombatUtils.initAtStartOfTurn();
 		NearbyUnitsCache.initializeAtStartOfTurn();
 		BuildUtils.initAtStartOfTurn();
@@ -310,7 +318,7 @@ public class Player {
 		}
 
 		CensusCounts.resetCounts();
-		getUnits(false);
+		getUnits(false, false);
 		determineIfClumping();
 
 		workerNav = new Navigation(map, getInitialKarboniteLocations());
@@ -377,7 +385,7 @@ public class Player {
 				.collect(Collectors.toCollection(HashSet::new));
 
 		// Update units list, and run recently created units
-		Player.getUnits(true);
+		Player.getUnits(true, false);
 		for (Unit unit : Player.friendlyUnits) {
 			if (!oldIds.contains(unit.id())) {
 				moveUnit(unit);

@@ -14,8 +14,10 @@ public class CombatUtils {
 	Accordingly, these changes should be cached and taken into account.
 	 */
 	private static HashMap<Unit, Long> markedEnemyHealth = new HashMap<>();
-
 	private static HashMap<Unit, Unit> preferredRangerTargets = new HashMap<>();
+
+	// Maps from an enemy to the number of snipers that are aimed at it right now
+	private static HashMap<Unit, Integer> snipeMap = new HashMap<>();
 
 	static Navigation microNav = new Navigation(Player.map, new HashSet<>(), Constants.KNIGHT_MICRO_NAV_MAXDIST);
 
@@ -29,7 +31,8 @@ public class CombatUtils {
 				}
 			}
 			microNav.recalculateDistanceMap();
-		}		
+		}
+		snipeMap.clear();
 	}
 
 	public static void cleanupAtEndOfTurn() {
@@ -195,5 +198,21 @@ public class CombatUtils {
 
 	public static boolean hasTriedToOneShot(Unit unit) {
 		return preferredRangerTargets.containsKey(unit);
+	}
+
+	public static int getNumberSnipersAimedAt(Unit unit) {
+		if (snipeMap.containsKey(unit)) {
+			return snipeMap.get(unit);
+		}
+		snipeMap.put(unit, 0);
+		return 0;
+	}
+
+	public static void incrementNumberSnipersAimedAt(Unit unit) {
+		if (snipeMap.containsKey(unit)) {
+			snipeMap.put(unit, snipeMap.get(unit) + 1);
+		} else {
+			snipeMap.put(unit, 1);
+		}
 	}
 }
