@@ -1,3 +1,4 @@
+import static bc.Planet.Earth;
 import static bc.UnitType.*;
 
 import java.awt.*;
@@ -19,8 +20,6 @@ public class Player {
 	static ArrayList<Unit> initialUnits;
 	static boolean sentWorkerToMars = false;
 
-
-
 	// Initialized/updated once per turn
 	/**
 	 * These variables are used to minimize calls to gc.units() and gc.myUnits().
@@ -40,12 +39,13 @@ public class Player {
 	static Navigation armyNav;
 	static Navigation builderNav;
 	static Navigation completedFactoryNav;
-	static Navigation unitInitialLocationsNav;
+	static Navigation initialFriendlyLocationsNav;
+
+	static boolean researchRocketsEarly = false;
 
 	static HashMap<Integer, RobotMemory> robotMemory;
 
 	static boolean seenEnemies = true;
-	private static int stuckCounter;
 
 	public static Set<Point> getInitialEnemyUnitLocations() {
 		Set<Point> targets = new HashSet<>();
@@ -342,7 +342,9 @@ public class Player {
 	public static void main(String[] args) {
 		initializeVariables();
 		RocketController.setup();
-		setupResearchQueue();
+		if (planet == Earth) {
+			setupResearchQueue();
+		}
 
 		while (true) {
 			try {
@@ -360,7 +362,7 @@ public class Player {
 					armyNav = new Navigation(map, getInitialEnemyUnitLocations());
 				}
 
-				if (gc.round() == Constants.STOP_HARVESTING_KARB_GLOBALLY_ROUND && planet == Planet.Earth) {
+				if (gc.round() == Constants.STOP_HARVESTING_KARB_GLOBALLY_ROUND && planet == Earth) {
 					workerNav.setThreshold(Constants.KARB_SMALL_HARVEST_DISTANCE);
 					workerNav.recalculateDistanceMap();
 				}
@@ -370,7 +372,7 @@ public class Player {
 				moveUnits(friendlyUnits);
 
 				// Periodically update karbonite locations
-				if (gc.round() % Constants.KARBONITE_MAP_RECALCULATE_INTERVAL == 0 && planet == Planet.Earth) {
+				if (gc.round() % Constants.KARBONITE_MAP_RECALCULATE_INTERVAL == 0 && planet == Earth) {
 					workerNav.recalculateDistanceMap();
 				}
 
@@ -406,7 +408,7 @@ public class Player {
 
 	private static void updateArmyTargets() {
 		// Move towards rockets if we need to bail
-		if (planet == Planet.Earth && gc.round() >= Constants.START_GETTING_INTO_ROCKETS_ROUND) {
+		if (planet == Earth && gc.round() >= Constants.START_GETTING_INTO_ROCKETS_ROUND) {
 			armyNav.clearTargets();
 
 			// Move toward rockets
@@ -451,16 +453,33 @@ public class Player {
 	}
 
 	private static void setupResearchQueue() {
-		gc.queueResearch(Worker); // Worker 1 complete round 25
-		gc.queueResearch(Ranger); // Ranger 1 complete round 50
-		gc.queueResearch(Healer); // Healer 1 complete round 75
-		gc.queueResearch(Healer); // Healer 2 complete round 175
-		gc.queueResearch(Healer); // Healer 3 complete round 275
-		gc.queueResearch(Ranger); // Ranger 2 complete round 375
-		gc.queueResearch(Rocket); // Rocket 1 complete round 450
-		gc.queueResearch(Rocket); // Rocket 2 complete round 550
-		gc.queueResearch(Rocket); // Rocket 3 complete round 650// Remember to update the Utils.getMaxRocketCapacity if Rocket III timing is // changed
-		gc.queueResearch(Ranger); // Ranger 3 complete round 850 (this is useless but might throw other team off)
+		if (shouldBuildEarlyRockets()) {
+			System.out.println("Building early rockets!");
+			researchRocketsEarly = true;
+			Constants.START_BUILDING_ROCKETS_ROUND = 75;
+			Constants.START_GETTING_INTO_ROCKETS_ROUND = 100;
+			gc.queueResearch(Worker);
+			gc.queueResearch(Rocket);
+			gc.queueResearch(Ranger);
+			gc.queueResearch(Healer);
+			gc.queueResearch(Healer);
+			gc.queueResearch(Healer);
+			gc.queueResearch(Rocket);
+			gc.queueResearch(Rocket);
+			gc.queueResearch(Ranger);
+			gc.queueResearch(Ranger);
+		} else {
+			gc.queueResearch(Worker); // Worker 1 complete round 25
+			gc.queueResearch(Ranger); // Ranger 1 complete round 50
+			gc.queueResearch(Healer); // Healer 1 complete round 75
+			gc.queueResearch(Healer); // Healer 2 complete round 175
+			gc.queueResearch(Healer); // Healer 3 complete round 275
+			gc.queueResearch(Ranger); // Ranger 2 complete round 375
+			gc.queueResearch(Rocket); // Rocket 1 complete round 450
+			gc.queueResearch(Rocket); // Rocket 2 complete round 550
+			gc.queueResearch(Rocket); // Rocket 3 complete round 650// Remember to update the Utils.getMaxRocketCapacity if Rocket III timing is // changed
+			gc.queueResearch(Ranger); // Ranger 3 complete round 850 (this is useless but might throw other team off)
+		}
 	}
 
 	private static void updateUnitStates(ArrayList<Unit> units) {
@@ -605,7 +624,7 @@ public class Player {
 		for(int newX = xStart + dx, newY = yStart + dy, result = 1;
 			newX >= 0 && newY >= 0 && newX < mapWidth && newY < mapHeight;
 			newX += dx, newY += dy, result++) {
-			if (!accessibleGrid[newX][newY]) {
+			if (accessibleGrid[newX][newY]) {
 				return result;
 			}
 		}
@@ -613,7 +632,8 @@ public class Player {
 	}
 
 	private static boolean shouldBuildEarlyRockets() {
-		unitInitialLocationsNav = new Navigation(map, getInitialAllyUnitLocations());
+		Set<Point> initialAllies = getInitialAllyUnitLocations();
+		initialFriendlyLocationsNav = new Navigation(map, initialAllies);
 
 		boolean[][] goodAccessibilityGrid = new boolean[(int) map.getWidth()][(int) map.getHeight()];
 		boolean[][] badAccessibilityGrid = new boolean[(int) map.getWidth()][(int) map.getHeight()];
@@ -623,16 +643,14 @@ public class Player {
 
 		for (int x = 0; x < width; x++) {
 			for (int y = 0; y < height; y++) {
-				if (armyNav.distances[x][y] == Integer.MAX_VALUE) {
-					badAccessibilityGrid[x][y] = false;
-				} else {
-					badAccessibilityGrid[x][y] = true;
-				}
-				if(unitInitialLocationsNav.distances[x][y] == Integer.MAX_VALUE) {
-					goodAccessibilityGrid[x][y] = false;
-				} else {
-					goodAccessibilityGrid[x][y] = true;
-				}
+				badAccessibilityGrid[x][y] = armyNav.distances[x][y] != Integer.MAX_VALUE;
+				goodAccessibilityGrid[x][y] = initialFriendlyLocationsNav.distances[x][y] != Integer.MAX_VALUE;
+			}
+		}
+
+		for (Point ally : initialAllies) {
+			if (badAccessibilityGrid[ally.x][ally.y]) {
+				return false;
 			}
 		}
 
@@ -649,10 +667,14 @@ public class Player {
 					long rightBadDist = countInaccessible(x, y, 1, 0, width, height, badAccessibilityGrid);
 					long upBadDist = countInaccessible(x, y, 0, 1, width, height, badAccessibilityGrid);
 					long downBadDist = countInaccessible(x, y, 0, -1, width, height, badAccessibilityGrid);
-					smallestBridgeDistance = Math.min(smallestBridgeDistance, leftBadDist + rightGoodDist + 1);
-					smallestBridgeDistance = Math.min(smallestBridgeDistance, leftGoodDist + rightBadDist + 1);
-					smallestBridgeDistance = Math.min(smallestBridgeDistance, upGoodDist + downBadDist + 1);
-					smallestBridgeDistance = Math.min(smallestBridgeDistance, upBadDist + downGoodDist + 1);
+					long newSmallestBridgeDistance = Integer.MAX_VALUE;
+					newSmallestBridgeDistance = Math.min(newSmallestBridgeDistance, leftBadDist + rightGoodDist + 1);
+					newSmallestBridgeDistance = Math.min(newSmallestBridgeDistance, leftGoodDist + rightBadDist + 1);
+					newSmallestBridgeDistance = Math.min(newSmallestBridgeDistance, upGoodDist + downBadDist + 1);
+					newSmallestBridgeDistance = Math.min(newSmallestBridgeDistance, upBadDist + downGoodDist + 1);
+					if(newSmallestBridgeDistance < smallestBridgeDistance) {
+						smallestBridgeDistance = newSmallestBridgeDistance;
+					}
 				}
 			}
 		}

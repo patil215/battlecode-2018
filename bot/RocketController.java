@@ -66,7 +66,12 @@ public class RocketController {
 
 	public static List<Point> validLocations = new ArrayList<>();
 	static Set<Point> validLocationsSet = new HashSet<>();
+	static List<Point> surroundingsFreeLocations = new ArrayList<>();
 	static Set<Point> landingLocations = new HashSet<>();
+
+	private static final int dx[] = {-1, 0, 1, 0, 1, 1, -1, -1};
+	private static final int dy[] = {0, -1, 0, 1, -1, 1, -1, 1};
+
 
 	static boolean setupCalled = false;
 	public static void setup() {
@@ -84,38 +89,36 @@ public class RocketController {
 			}
 		}
 		validLocationsSet.addAll(validLocations);
+		for (Point point : validLocations) {
+			boolean surroundingsFree = true;
+			for(int i = 0; i < 8; i++) {
+				Point neighbor = new Point(point.x + dx[i], point.y + dy[i]);
+				surroundingsFree &= validLocationsSet.contains(neighbor);
+			}
+			if(surroundingsFree) {
+				surroundingsFreeLocations.add(point);
+			}
+		}
 	}
 
 	private static Random rand = new Random();
 
-	private static boolean allSurroundingFree(MapLocation location) {
-		for (Direction dir : Direction.values()) {
-			MapLocation surroundingLocation = location.add(dir);
-			if (!validLocationsSet.contains(new Point(surroundingLocation.getX(), surroundingLocation.getY()))) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	private static MapLocation findValidLocation(Unit unit) {
 		// Try ones with all squares free that we haven't landed on already
 		for (int i = 0; i < 10; i++) {
-			Point loc = validLocations.get(rand.nextInt(validLocations.size()));
+			Point loc = surroundingsFreeLocations.get(rand.nextInt(surroundingsFreeLocations.size()));
 			MapLocation proposedLocation = new MapLocation(Planet.Mars, loc.x, loc.y);
-			Point proposedPoint = new Point(proposedLocation.getX(), proposedLocation.getY());
-			if (!landingLocations.contains(proposedPoint)
-					&& allSurroundingFree(proposedLocation)
+			if (!landingLocations.contains(loc)
 					&& Player.gc.canLaunchRocket(unit.id(), proposedLocation)) {
 				return proposedLocation;
 			}
 		}
 
 		// Didn't work, try any now
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 22; i++) {
 			Point loc = validLocations.get(rand.nextInt(validLocations.size()));
 			MapLocation proposedLocation = new MapLocation(Planet.Mars, loc.x, loc.y);
-			if (Player.gc.canLaunchRocket(unit.id(), proposedLocation)) {
+			if (!landingLocations.contains(loc) && Player.gc.canLaunchRocket(unit.id(), proposedLocation)) {
 				return proposedLocation;
 			}
 		}
