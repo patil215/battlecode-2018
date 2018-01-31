@@ -59,11 +59,14 @@ public class RocketController {
 	private static void tryToLaunch(Unit unit) {
 		MapLocation location = findValidLocation(unit);
 		if (location != null) {
+			landingLocations.add(new Point(location.getX(), location.getY()));
 			Player.gc.launchRocket(unit.id(), location);
 		}
 	}
 
 	static List<Point> validLocations = new ArrayList<>();
+	static Set<Point> validLocationsSet = new HashSet<>();
+	static Set<Point> landingLocations = new HashSet<>();
 
 	static boolean setupCalled = false;
 	public static void setup() {
@@ -80,11 +83,36 @@ public class RocketController {
 				}
 			}
 		}
+		validLocationsSet.addAll(validLocations);
 	}
 
 	private static Random rand = new Random();
+
+	private static boolean allSurroundingFree(MapLocation location) {
+		for (Direction dir : Direction.values()) {
+			MapLocation surroundingLocation = location.add(dir);
+			if (!validLocationsSet.contains(new Point(surroundingLocation.getX(), surroundingLocation.getY()))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	private static MapLocation findValidLocation(Unit unit) {
-		for (int i = 0; i < 20; i++) {
+		// Try ones with all squares free that we haven't landed on already
+		for (int i = 0; i < 10; i++) {
+			Point loc = validLocations.get(rand.nextInt(validLocations.size()));
+			MapLocation proposedLocation = new MapLocation(Planet.Mars, loc.x, loc.y);
+			Point proposedPoint = new Point(proposedLocation.getX(), proposedLocation.getY());
+			if (!landingLocations.contains(proposedPoint)
+					&& allSurroundingFree(proposedLocation)
+					&& Player.gc.canLaunchRocket(unit.id(), proposedLocation)) {
+				return proposedLocation;
+			}
+		}
+
+		// Didn't work, try any now
+		for (int i = 0; i < 10; i++) {
 			Point loc = validLocations.get(rand.nextInt(validLocations.size()));
 			MapLocation proposedLocation = new MapLocation(Planet.Mars, loc.x, loc.y);
 			if (Player.gc.canLaunchRocket(unit.id(), proposedLocation)) {
