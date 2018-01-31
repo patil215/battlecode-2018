@@ -1,4 +1,6 @@
 import bc.*;
+import java.awt.Point;
+import java.util.*;
 
 /**
  * General strategy:
@@ -47,7 +49,7 @@ public class RocketController {
 				(Player.gc.round() % Constants.ROCKET_LAUNCH_INTERVAL == 0)) {
 			tryToLaunch(unit);
 			return;
-		}
+				}
 	}
 
 	private static void runMarsLogic(Unit unit) {
@@ -61,11 +63,30 @@ public class RocketController {
 		}
 	}
 
-	private static MapLocation findValidLocation(Unit unit) {
+	static List<Point> validLocations = new ArrayList<>();
+
+	static boolean setupCalled = false;
+	public static void setup() {
+		if(setupCalled) {
+			return;
+		}
+		setupCalled = true;
 		PlanetMap map = Player.gc.startingMap(Planet.Mars);
+		for(int x = 0; x < map.getWidth(); x++) {
+			for(int y = 0; y < map.getHeight(); y++) {
+				MapLocation loc = new MapLocation(Planet.Mars, x, y);
+				if(map.onMap(loc) && map.isPassableTerrainAt(loc) == 1) {
+					validLocations.add(new Point(x, y));
+				}
+			}
+		}
+	}
+
+	private static Random rand = new Random();
+	private static MapLocation findValidLocation(Unit unit) {
 		for (int i = 0; i < 20; i++) {
-			MapLocation proposedLocation = new MapLocation(Planet.Mars, (int) (Math.random() * map.getWidth()),
-					(int) (Math.random() * map.getHeight()));
+			Point loc = validLocations.get(rand.nextInt(validLocations.size()));
+			MapLocation proposedLocation = new MapLocation(Planet.Mars, loc.x, loc.y);
 			if (Player.gc.canLaunchRocket(unit.id(), proposedLocation)) {
 				return proposedLocation;
 			}
