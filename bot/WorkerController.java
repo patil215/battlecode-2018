@@ -100,6 +100,7 @@ public class WorkerController {
 				randomMoveResult = Utils.moveRandom(unit);
 			}
 
+			Utils.tryAndRepair(unit);
 			// 9. Harvest any Karbonite in adjacent squares
 			Utils.tryAndHarvest(unit);
 		}

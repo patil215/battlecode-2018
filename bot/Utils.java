@@ -30,8 +30,7 @@ public class Utils {
 	}
 
 	static int countNearbyFriendlyWorkers(MapLocation loc) {
-		VecUnit workers = Player.gc.senseNearbyUnitsByType(loc, DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS,
-				Worker);
+		VecUnit workers = Player.gc.senseNearbyUnitsByType(loc, DISTANCE_SQUARED_FOR_ONLY_SURROUNDINGS, Worker);
 		int numOurTeam = 0;
 		for (int i = 0; i < workers.size(); i++) {
 			if (workers.get(i).team() == Player.friendlyTeam) {
@@ -97,26 +96,26 @@ public class Utils {
 		MapLocation blueprintLoc = workerLoc.add(dir);
 
 		// TODO refactor this
-		if (WorkerController.MAX_NUMBER_WORKERS==10) {
-			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 50.0), 15);
-		} else if(WorkerController.MAX_NUMBER_WORKERS == 15) {
-			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 50.0), 20);
-		}else if(WorkerController.MAX_NUMBER_WORKERS == 20) {
-			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 50.0), 25);
-		} else if(WorkerController.MAX_NUMBER_WORKERS == 25) {
-			WorkerController.MAX_NUMBER_WORKERS=Math.min((int) (Player.reachableKarbonite / 50.0), 30);
+		if (WorkerController.MAX_NUMBER_WORKERS == 10) {
+			WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 50.0), 15);
+		} else if (WorkerController.MAX_NUMBER_WORKERS == 15) {
+			WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 50.0), 20);
+		} else if (WorkerController.MAX_NUMBER_WORKERS == 20) {
+			WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 50.0), 25);
+		} else if (WorkerController.MAX_NUMBER_WORKERS == 25) {
+			WorkerController.MAX_NUMBER_WORKERS = Math.min((int) (Player.reachableKarbonite / 50.0), 30);
 		}
 
 		// Assign number of knights if first factory
-		if (Constants.BEGINNING_KNIGHTS == -1) { 
+		if (Constants.BEGINNING_KNIGHTS == -1) {
 			int distance;
 			if (Player.seenEnemies) {
 				distance = Player.armyNav.getDijkstraMapValue(blueprintLoc);
 			} else {
-				Navigation enemyNav = new Navigation(Player.map, Player.getInitialEnemyUnitLocations()); 
+				Navigation enemyNav = new Navigation(Player.map, Player.getInitialEnemyUnitLocations());
 				distance = enemyNav.getDijkstraMapValue(blueprintLoc);
 			}
-			// Black magic 
+			// Black magic
 			Constants.BEGINNING_KNIGHTS = Math.max(0, 5 - (distance / 3));
 		}
 
@@ -170,7 +169,7 @@ public class Utils {
 		Direction karbDir = Player.workerNav.getNextDirection(worker);
 		if (bestCount == 0 && karbDir != null) {
 			Player.gc.replicate(worker.id(), karbDir);
-		} else { 
+		} else {
 			Player.gc.replicate(worker.id(), bestDir);
 		}
 
@@ -229,7 +228,7 @@ public class Utils {
 	public static boolean tryAndGetIntoFactory(Unit unit) {
 		for (Unit potentialFactory : Player.friendlyUnits) {
 			if (potentialFactory.unitType() == UnitType.Factory && potentialFactory.structureIsBuilt() == 1
-					// Make sure factory has one slot to still produce
+			// Make sure factory has one slot to still produce
 					&& potentialFactory.structureGarrison().size() < potentialFactory.structureMaxCapacity() - 1) {
 				if (Player.gc.canLoad(potentialFactory.id(), unit.id())) {
 					Player.gc.load(potentialFactory.id(), unit.id());
@@ -279,7 +278,7 @@ public class Utils {
 	/**
 	 * Returns null if can't move in any direction.
 	 */
-private static Direction getFleeDirection(Unit self, Unit foe) {
+	private static Direction getFleeDirection(Unit self, Unit foe) {
 		Direction away = bc
 				.bcDirectionOpposite(self.location().mapLocation().directionTo(foe.location().mapLocation()));
 		if (Player.gc.canMove(self.id(), away)) {
@@ -325,9 +324,8 @@ private static Direction getFleeDirection(Unit self, Unit foe) {
 			MapLocation unitLocation = unit.location().mapLocation();
 
 			if (foe.unitType() == UnitType.Mage || foe.unitType() == UnitType.Knight
-					|| foe.unitType() == UnitType.Ranger
-					|| (foe.unitType() == UnitType.Factory
-					&& CombatUtils.getTargetHealth(foe) == Constants.MAX_FACTORY_HEALTH)) {
+					|| foe.unitType() == UnitType.Ranger || (foe.unitType() == UnitType.Factory
+							&& CombatUtils.getTargetHealth(foe) == Constants.MAX_FACTORY_HEALTH)) {
 				long newThreatDistance = unitLocation.distanceSquaredTo(foe.location().mapLocation());
 				if (newThreatDistance < bestThreatDistance && newThreatDistance < unit.attackRange()) {
 					threat = foe;
@@ -366,8 +364,8 @@ private static Direction getFleeDirection(Unit self, Unit foe) {
 
 	public static long getDistanceToClosestEnemySpawn(MapLocation mapLocation) {
 		long minDist = Long.MAX_VALUE;
-		for(Unit spawnUnit : Player.initialUnits) {
-			if(spawnUnit.team() == Player.friendlyTeam) {
+		for (Unit spawnUnit : Player.initialUnits) {
+			if (spawnUnit.team() == Player.friendlyTeam) {
 				continue;
 			}
 			minDist = Math.min(minDist, mapLocation.distanceSquaredTo(spawnUnit.location().mapLocation()));
@@ -378,5 +376,22 @@ private static Direction getFleeDirection(Unit self, Unit foe) {
 	public static boolean isMilitary(Unit unit) {
 		UnitType type = unit.unitType();
 		return type == Ranger || type == Healer || type == Knight || type == Mage;
+	}
+
+	public static void tryAndRepair(Unit unit) {
+		for (Direction dir : Direction.values()) {
+			if (dir == Direction.Center) {
+				continue;
+			}
+			MapLocation testLoc = unit.location().mapLocation().add(dir);
+			if (Player.gc.hasUnitAtLocation(testLoc)) {
+				Unit target = Player.gc.senseUnitAtLocation(testLoc);
+				if (target.unitType() == UnitType.Factory && target.health() < target.maxHealth()
+						&& target.structureIsBuilt() != 0 && Player.gc.canRepair(unit.id(), target.id())) {
+					Player.gc.repair(unit.id(), target.id());
+					return;
+				}
+			}
+		}
 	}
 }

@@ -48,7 +48,7 @@ public class FactoryController {
 				knightsProduced++;
 			} else if (CensusCounts.getUnitCount(UnitType.Ranger) < Constants.MAX_RANGERS) {
 				if (CensusCounts
-						.getUnitCount(UnitType.Ranger) < (((CensusCounts.getUnitCount(UnitType.Healer) + 1) * 3))) {
+						.getUnitCount(UnitType.Ranger) < (((CensusCounts.getUnitCount(UnitType.Healer) + 1) *3))) {
 					Player.gc.produceRobot(unit.id(), UnitType.Ranger);
 					CensusCounts.incrementUnitCount(UnitType.Ranger);
 				} else {
