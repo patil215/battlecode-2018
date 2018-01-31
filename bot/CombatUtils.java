@@ -80,7 +80,7 @@ public class CombatUtils {
 			score = targetHealth;
 			break;
 		}
-		if (!self.location().isInGarrison()) {
+		if (!self.location().isInGarrison() && !target.location().isInGarrison()) {
 			return score + (((double) self.location().mapLocation().distanceSquaredTo(target.location().mapLocation()))
 					/ self.visionRange());
 		}

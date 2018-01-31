@@ -3,8 +3,6 @@ public class Constants {
 	public static final int MAX_ABILITY_HEAT = 10;
 	public static final int MAX_ATTACK_HEAT = 10;
 
-	public static final int START_BUILDING_ROCKETS_ROUND = 501;
-
 	public static final int RANGER_COST = 40;
 	public static final int ROCKET_COST = 150;
 	public static final int FACTORY_COST = 200;
@@ -14,7 +12,6 @@ public class Constants {
 	public static final int UPGRADED_ROCKET_CAPACITY = 12;
 	public static final long ROCKET_CAPACITY_UPGRADE_ROUND = 650;
 	public static final int KNIGHT_MICRO_NAV_MAXDIST = 10;
-	public static final long SEND_WORKER_TO_MARS_ROUND = START_BUILDING_ROCKETS_ROUND;
 	public static final long REPLICATE_ON_MARS_ROUND = 740;
 	public static final int KILL_AFTER_USELESS_THRESHOLD = 10;
 	public static final int MAX_UNITS_TO_KILL = 2;
@@ -43,7 +40,8 @@ public class Constants {
 	public static final int KARBONITE_MAP_RECALCULATE_INTERVAL = 3;
 	public static final int ARMY_MAP_RECALCULATE_INTERVAL = 3;
 
-	public static final int START_GETTING_INTO_ROCKETS_ROUND = 500;
+	public static long START_BUILDING_ROCKETS_ROUND = 501;
+	public static long START_GETTING_INTO_ROCKETS_ROUND = 500;
 
 	public static final int STOP_HARVESTING_KARB_GLOBALLY_ROUND = 150;
 	public static final int KARB_SMALL_HARVEST_DISTANCE = 3;
