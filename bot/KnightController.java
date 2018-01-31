@@ -49,10 +49,10 @@ public class KnightController {
 		VecUnit targets =
 				Player.gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), unit.attackRange(), Player.enemyTeam);
 		Unit target = null;
-		long bestTargetScore = Long.MAX_VALUE;
+		double bestTargetScore = Long.MAX_VALUE;
 		for (int index = 0; index < targets.size(); index++) {
 			Unit foe = targets.get(index);
-			long newScore = CombatUtils.targetScore(unit, foe);
+			double newScore = CombatUtils.targetScore(unit, foe);
 			if (newScore < bestTargetScore) {
 				target = foe;
 				bestTargetScore = newScore;

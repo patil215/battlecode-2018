@@ -41,10 +41,10 @@ public class RangerController {
 		Unit threat = Utils.getMostDangerousNearbyEnemy(unit);
 
 		Unit target = null;
-		long bestTargetScore = Long.MAX_VALUE;
+		double bestTargetScore = Long.MAX_VALUE;
 		for (int index = 0; index < foes.size(); index++) {
 			Unit foe = foes.get(index);
-			long newScore = CombatUtils.targetScore(unit, foe);
+			double newScore = CombatUtils.targetScore(unit, foe);
 			if (newScore < bestTargetScore) {
 				target = foe;
 				bestTargetScore = newScore;
@@ -69,7 +69,7 @@ public class RangerController {
 
 		for (int index = 0; index < foes.size(); index++) {
 			Unit foe = foes.get(index);
-			long newScore = CombatUtils.targetScore(unit, foe);
+			double newScore = CombatUtils.targetScore(unit, foe);
 			if (newScore < bestTargetScore) {
 				target = foe;
 				bestTargetScore = newScore;

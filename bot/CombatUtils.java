@@ -8,10 +8,11 @@ import java.util.stream.Collectors;
 
 public class CombatUtils {
 	/**
-	Used to keep track of enemyTeam health decreasing after being marked.
-	This is necessary because if other units on our team "intend" to shoot at a particular unit on the enemyTeam team,
-	before the turn has ended, that means the effective health of that unit on the enemyTeam team is lower.
-	Accordingly, these changes should be cached and taken into account.
+	 * Used to keep track of enemyTeam health decreasing after being marked. This is
+	 * necessary because if other units on our team "intend" to shoot at a
+	 * particular unit on the enemyTeam team, before the turn has ended, that means
+	 * the effective health of that unit on the enemyTeam team is lower.
+	 * Accordingly, these changes should be cached and taken into account.
 	 */
 	private static HashMap<Unit, Long> markedEnemyHealth = new HashMap<>();
 	private static HashMap<Unit, Unit> preferredRangerTargets = new HashMap<>();
@@ -47,50 +48,65 @@ public class CombatUtils {
 		return target.health();
 	}
 
-	private static long rangerSubscore(Unit target) {
+	private static double rangerSubscore(Unit self, Unit target) {
 		long targetHealth = getTargetHealth(target);
 		if (targetHealth == 0) {
 			return Long.MAX_VALUE; // Make sure we don't "overkill" units
 		}
+		double score;
 		switch (target.unitType()) {
-			case Mage:
-				return targetHealth / 2;
-			case Knight:
-				return targetHealth * 2;
-			case Ranger:
-				return targetHealth * 2;
-			case Healer:
-				return targetHealth * 3;
-			case Factory:
-				return targetHealth * 4;
-			case Worker:
-				return targetHealth * 5;
-			case Rocket:
-				return targetHealth * 6;
-			default:
-				return targetHealth;
+		case Mage:
+			score = targetHealth / 2;
+			break;
+		case Knight:
+			score = targetHealth * 2;
+			break;
+		case Ranger:
+			score = targetHealth * 2;
+			break;
+		case Healer:
+			score = targetHealth * 3;
+			break;
+		case Factory:
+			score = targetHealth * 4;
+			break;
+		case Worker:
+			score = targetHealth * 5;
+			break;
+		case Rocket:
+			score = targetHealth * 6;
+			break;
+		default:
+			score = targetHealth;
+			break;
 		}
+		if (!self.location().isInGarrison()) {
+			return score + (((double) self.location().mapLocation().distanceSquaredTo(target.location().mapLocation()))
+					/ self.visionRange());
+		}
+		return score;
 	}
 
-	private static long knightSubscore(Unit target) {
-		return rangerSubscore(target);
+	private static double knightSubscore(Unit self, Unit target) {
+		return rangerSubscore(self, target);
 	}
 
 	/**
-	 * Returns a score for a target. If the target is not attackable, returns Long.MAX_VALUE.
+	 * Returns a score for a target. If the target is not attackable, returns
+	 * Long.MAX_VALUE.
 	 */
-	public static long targetScore(Unit attacker, Unit target) {
+	public static double targetScore(Unit attacker, Unit target) {
 		if (target == null || !Player.gc.canAttack(attacker.id(), target.id())) {
 			return Long.MAX_VALUE;
 		}
 
 		switch (attacker.unitType()) {
-			case Ranger:
-				return rangerSubscore(target);
-			case Knight:
-				return knightSubscore(target);
-			default:
-				return knightSubscore(target);
+		case Ranger:
+			return rangerSubscore(attacker, target);
+		case Knight:
+			return knightSubscore(attacker, target);
+		default:
+			return knightSubscore(attacker, target);
 		}
 	}
 
@@ -126,15 +142,15 @@ public class CombatUtils {
 		}
 	}
 
-
 	public static void tryToOneShotWithRangers() {
 		long start = System.currentTimeMillis();
 
 		preferredRangerTargets.clear();
 
-		List<Unit> friendlyRangers = Player.friendlyUnits.stream()
-				.filter(unit -> (unit.unitType() == UnitType.Ranger && unit.location().isOnPlanet(Player.planet)
-						&& !unit.location().isInGarrison())).collect(Collectors.toList());
+		List<Unit> friendlyRangers = Player.friendlyUnits
+				.stream().filter(unit -> (unit.unitType() == UnitType.Ranger
+						&& unit.location().isOnPlanet(Player.planet) && !unit.location().isInGarrison()))
+				.collect(Collectors.toList());
 
 		HashMap<Unit, ArrayList<Unit>> enemyToFriendlyRangers = new HashMap<>();
 
@@ -156,30 +172,33 @@ public class CombatUtils {
 
 		ArrayList<Unit> enemyUnits = new ArrayList<>(enemyToFriendlyRangers.keySet());
 
-		//Collections.shuffle(enemyUnits); // We go in random order to try to maximize optimality
-		Collections.sort(enemyUnits, (o1, o2) ->
-				Long.compare(CombatUtils.getTargetHealth(o1), CombatUtils.getTargetHealth(o2)));
+		// Collections.shuffle(enemyUnits); // We go in random order to try to maximize
+		// optimality
+		Collections.sort(enemyUnits,
+				(o1, o2) -> Long.compare(CombatUtils.getTargetHealth(o1), CombatUtils.getTargetHealth(o2)));
 
 		for (Unit enemy : enemyUnits) {
 			List<Unit> friendliesInRange = enemyToFriendlyRangers.get(enemy);
-			friendliesInRange = friendliesInRange.stream().filter(friendly ->
-					(!preferredRangerTargets.containsKey(friendly)
+			friendliesInRange = friendliesInRange.stream()
+					.filter(friendly -> (!preferredRangerTargets.containsKey(friendly)
 							&& friendly.attackHeat() < Constants.MAX_ATTACK_HEAT
-							&& Player.gc.canAttack(friendly.id(), enemy.id()))).collect(Collectors.toList());
+							&& Player.gc.canAttack(friendly.id(), enemy.id())))
+					.collect(Collectors.toList());
 
 			// If we can't one shot this unit, skip it, and let it be assigned normally.
-			// Also skip if we're not really getting the benefit of collaborative one-shotting (i.e. the list of
+			// Also skip if we're not really getting the benefit of collaborative
+			// one-shotting (i.e. the list of
 			// friendlies is only 1).
 			System.out.println(enemyToFriendlyRangers.size() + " enemies being considered");
 			System.out.println(friendliesInRange.size() + " friendlies in range");
-			if (friendliesInRange.size() < 2 ||
-					CombatUtils.getTargetHealth(enemy) > friendliesInRange.size() * friendliesInRange.get(0).damage()) {
+			if (friendliesInRange.size() < 2 || CombatUtils.getTargetHealth(enemy) > friendliesInRange.size()
+					* friendliesInRange.get(0).damage()) {
 				continue;
 			}
 
 			// Sort by distance and assign in order of distance
-			Collections.sort(friendliesInRange, (a, b) ->
-					Long.compare(enemy.location().mapLocation().distanceSquaredTo(a.location().mapLocation()),
+			Collections.sort(friendliesInRange,
+					(a, b) -> Long.compare(enemy.location().mapLocation().distanceSquaredTo(a.location().mapLocation()),
 							enemy.location().mapLocation().distanceSquaredTo(b.location().mapLocation())));
 
 			int index = 0;
