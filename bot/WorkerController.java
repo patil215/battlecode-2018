@@ -59,8 +59,8 @@ public class WorkerController {
 			}
 
 			// 2.5 Get into rocket
-			if ((Player.gc.round() > Constants.SEND_WORKER_TO_MARS_ROUND && !Player.sentWorkerToMars)
-					|| Player.gc.round() == 749) {
+			if ((Player.gc.round() > Constants.START_GETTING_INTO_ROCKETS_ROUND && !Player.sentWorkerToMars)
+					|| (Player.gc.round() < 749 || Player.researchRocketsEarly)) {
 				Player.sentWorkerToMars = Utils.tryAndGetIntoRocket(unit);;
 			}
 
