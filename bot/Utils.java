@@ -255,15 +255,6 @@ public class Utils {
 		return false;
 	}
 
-	public static boolean allUnitsStuck() {
-		for (Unit unit : Player.friendlyUnits) {
-			if (unit.unitType() != UnitType.Factory && unit.unitType() != UnitType.Rocket && unit.movementHeat() != 0) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	public static boolean moveRandom(Unit unit) {
 		if (unit.movementHeat() >= Constants.MAX_MOVEMENT_HEAT) {
 			return false;

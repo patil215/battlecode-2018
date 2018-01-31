@@ -201,26 +201,39 @@ public class Player {
 		BuildUtils.initAtStartOfTurn();
 	}
 
-	private static void eliminateUnitIfStuck() {
-		if (gc.planet() == Planet.Earth && Utils.allUnitsStuck()) {
-			stuckCounter++;
-		} else {
-			stuckCounter = 0;
-		}
-		if (stuckCounter > Constants.AMOUNT_STUCK_BEFORE_KILL
-				&& friendlyUnits.size() > 1
-				&& gc.round() > 100
-				&& gc.planet() == Planet.Earth) {
-			gc.disintegrateUnit(Player.friendlyUnits.get((int) (Math.random() * friendlyUnits.size())).id());
-			stuckCounter = 0;
+	private static void countAndKillStuckUnits(int maxUnitsToKill) {
+		int numKilled = 0;
+		for (Unit unit : friendlyUnits) {
+			UnitType type = unit.unitType();
+			if (!(type == Ranger || type == Healer || type == Mage || type == Knight)) {
+				continue;
+			}
+			if (unit.movementHeat() < Constants.MAX_MOVEMENT_HEAT && unit.attackHeat() < Constants.MAX_ATTACK_HEAT) {
+				// TODO might not kill healers when needed
+				Utils.getMemory(unit).timeSinceLastMoveOrShoot++;
+			} else {
+				Utils.getMemory(unit).timeSinceLastMoveOrShoot = 0;
+			}
+
+			if (Utils.getMemory(unit).timeSinceLastMoveOrShoot >= Constants.KILL_AFTER_USELESS_THRESHOLD) {
+				try {
+					// Player.gc.disintegrateUnit(unit.id());
+					numKilled++;
+					if (numKilled >= maxUnitsToKill) {
+						break;
+					}
+				} catch (Exception e) {
+					break;
+				}
+			}
 		}
 	}
 
 	private static void finishTurn() {
 		moveNewlyCreatedUnits();
 
-		if (gc.getTimeLeftMs() >= Constants.TIME_BUFFER_MS) {
-			eliminateUnitIfStuck();
+		if (gc.getTimeLeftMs() > Constants.TIME_BUFFER_MS) {
+			//countAndKillStuckUnits(3);
 		}
 
 		CombatUtils.cleanupAtEndOfTurn();
