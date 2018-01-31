@@ -50,25 +50,28 @@ public class HealerController {
 	}
 
 	/**
-	 * Picks best target based off of health.
+	 * Picks best target based off of potential.
 	 */
+	
 	private static Unit pickBestOverchargeTarget(Unit self, VecUnit nearbyFriendlies) {
-		long lowestHealth = Long.MAX_VALUE;
-		long largestHeat = 0;
-		Unit overchargeTarget = null;
-		for (int i = 0; i < nearbyFriendlies.size(); i++) {
-			Unit unit = nearbyFriendlies.get(i);
-			long newHeat = unit.unitType() == UnitType.Knight ? unit.abilityHeat() : 0;
-			long newHealth = unit.health();
-			if (newHeat > largestHeat || (newHeat == largestHeat && newHealth < lowestHealth)) {
-				if (unit.unitType() == UnitType.Ranger && Player.gc.canOvercharge(self.id(), unit.id())) {
-					overchargeTarget = unit;
-					lowestHealth = newHealth;
-					largestHeat = newHeat;
-				}
+		Unit lowestPotential = null;
+		for(int i = 0; i < nearbyFriendlies.size(); i++) {
+			Unit target = nearbyFriendlies.get(i);
+			if(target.unitType()!= UnitType.Ranger && target.unitType() != UnitType.Knight) {
+				continue;
+			}
+			if(!Player.gc.canOvercharge(self.id(), target.id())) {
+				continue;
+			}
+			if(lowestPotential == null) {
+				lowestPotential = target;
+				continue;
+			}
+			if(Player.armyNav.getDijkstraMapValue(target.location().mapLocation()) < Player.armyNav.getDijkstraMapValue(lowestPotential.location().mapLocation())) {
+				lowestPotential = target;
 			}
 		}
-		return overchargeTarget;
+		return lowestPotential;
 	}
 
 	private static long healTargetScore(Unit unit) {

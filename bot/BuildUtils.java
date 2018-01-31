@@ -36,7 +36,7 @@ public class BuildUtils {
 		List<Point> oldTargets = new ArrayList<>(Player.completedFactoryNav.getTargets());
 		for(Point target : oldTargets) {
 			MapLocation targetLoc = new MapLocation(Player.planet, target.x, target.y);
-			if(Player.gc.hasUnitAtLocation(targetLoc)) {
+			if(Player.gc.canSenseLocation(targetLoc) && Player.gc.hasUnitAtLocation(targetLoc)) {
 				Unit building = Player.gc.senseUnitAtLocation(targetLoc);
 				if (building.team() != Player.friendlyTeam
 						|| (building.unitType() != UnitType.Factory 
@@ -126,7 +126,6 @@ public class BuildUtils {
 		if (!wasAbleToFindValidWorker) {
 			addToBestFactoryLocations(allWorkers);
 		}
-
 	}
 
 	private static boolean addToBestFactoryLocations(ArrayList<Unit> workersToConsider) {
@@ -151,7 +150,7 @@ public class BuildUtils {
 							&& distToEnemySpawnProposed == distToEnemySpawnBest) {
 						bestFactoryLocations.add(proposedLoc);
 					} else if (numSurroundingWorkersProposed > numSurroundingWorkersBest ||
-							(numSurroundingWorkersProposed == numSurroundingWorkersBest && distToEnemySpawnProposed < distToEnemySpawnBest)) {
+							(numSurroundingWorkersProposed == numSurroundingWorkersBest && distToEnemySpawnProposed > distToEnemySpawnBest)) {
 						bestFactoryLocations.clear();
 						bestFactoryLocations.add(proposedLoc);
 					}
@@ -202,7 +201,7 @@ public class BuildUtils {
 							&& distToEnemySpawnProposed == distToEnemySpawnBest) {
 						bestRocketLocations.add(proposedLoc);
 					} else if (numSurroundingMilitaryProposed > numSurroundingMilitaryBest ||
-							(numSurroundingMilitaryProposed == numSurroundingMilitaryBest && distToEnemySpawnProposed < distToEnemySpawnBest)) {
+							(numSurroundingMilitaryProposed == numSurroundingMilitaryBest && distToEnemySpawnProposed > distToEnemySpawnBest)) {
 						bestRocketLocations.clear();
 						bestRocketLocations.add(proposedLoc);
 					}
