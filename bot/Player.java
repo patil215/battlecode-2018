@@ -369,9 +369,9 @@ public class Player {
 
 				CensusCounts.computeCensus(friendlyUnits);
 
-				if (CensusCounts.getUnitCount(Factory) >= 3) {
+				if (CensusCounts.getUnitCount(Factory) >= 3 && researchRocketsEarly) {
 					Constants.START_BUILDING_ROCKETS_ROUND = gc.round();
-					Constants.START_GETTING_INTO_ROCKETS_ROUND = gc.round();
+					Constants.START_GETTING_INTO_ROCKETS_ROUND = gc.round() + 50;
 				}
 
 				// CombatUtils.tryToOneShotWithRangers(); Doesn't work well
