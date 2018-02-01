@@ -57,17 +57,22 @@ public class HealerController {
 		Unit lowestPotential = null;
 		for(int i = 0; i < nearbyFriendlies.size(); i++) {
 			Unit target = nearbyFriendlies.get(i);
-			if(target.unitType()!= UnitType.Ranger && target.unitType() != UnitType.Knight) {
+			if (target.unitType()!= UnitType.Ranger && target.unitType() != UnitType.Knight) {
 				continue;
 			}
-			if(!Player.gc.canOvercharge(self.id(), target.id())) {
+			if (!Player.gc.canOvercharge(self.id(), target.id())) {
 				continue;
 			}
-			if(lowestPotential == null) {
+			if (lowestPotential == null) {
 				lowestPotential = target;
 				continue;
 			}
-			if(Player.armyNav.getDijkstraMapValue(target.location().mapLocation()) < Player.armyNav.getDijkstraMapValue(lowestPotential.location().mapLocation())) {
+			if (Player.armyNav.getDijkstraMapValue(target.location().mapLocation()) < Player.armyNav.getDijkstraMapValue(lowestPotential.location().mapLocation())) {
+				lowestPotential = target;
+			}
+			if (Player.armyNav.getDijkstraMapValue(target.location().mapLocation())
+					== Player.armyNav.getDijkstraMapValue(lowestPotential.location().mapLocation())
+					&& target.health() < lowestPotential.health()) {
 				lowestPotential = target;
 			}
 		}
