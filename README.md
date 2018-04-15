@@ -1,6 +1,14 @@
 # Battlecode 2018
 
-This is the source code for our bot for the Battlecode 2018 competition. Our team managed to make its way to the top 16, and over to MIT for the finalist's tournament - where we eventually placed 9th.
+This is the source code for our entry into the Battlecode 2018 competition.
+
+Our team name was Steam Locomotive, composed of the following individuals:
+* Neil Patil
+* Niels Kornerup
+* Ryan Rice
+* John Herrick
+
+Our team placed top 16 in the qualifying tournament, and was invited to MIT for the finalist's tournament - where we eventually placed 9th.
 
 You can see a livestream of the competition [here](https://www.youtube.com/watch?v=QdljkowowC4).
 
